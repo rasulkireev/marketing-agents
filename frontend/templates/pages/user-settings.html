@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load webpack_loader static %}
+{% load widget_tweaks %}
+
+{% block meta %}
+  <title>SEO Blog Bot - User Settings</title>
+{% endblock meta %}
+
+{% block content %}
+  <div class="container px-4 py-8 mx-auto max-w-3xl bg-white lg:min-w-0 md:pt-10 lg:flex-1">
+    {% include "components/confirm-email.html" with email_verified=email_verified %}
+    <div class="p-4 border-t border-b border-gray-200 sm:p-6 lg:p-8 xl:border-t-0">
+      <div class="flex justify-between items-center">
+        <h1 class="flex-1 pt-2 text-xl font-medium">Settings</h1>
+      </div>
+    </div>
+
+    {% if not has_subscription %}
+    <div class="p-6 mt-6 mb-8 bg-gray-50 rounded-lg">
+      <h3 class="mb-4 text-lg font-medium leading-6 text-gray-900">Upgrade Your Account</h3>
+      <p class="mb-4 text-sm text-gray-600">Choose a plan that suits your needs:</p>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="rounded-md shadow">
+          <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly' %}"
+             class="flex justify-center items-center px-4 py-3 h-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent transition duration-150 ease-in-out md:text-base hover:bg-pink-700">
+            Monthly - $10/m
+          </a>
+        </div>
+        <div class="rounded-md shadow">
+          <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly' %}"
+             class="flex justify-center items-center px-4 py-3 h-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent transition duration-150 ease-in-out md:text-base hover:bg-pink-700">
+            Yearly - $100/y
+          </a>
+        </div>
+        <div class="rounded-md shadow">
+          <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time' %}"
+             class="flex justify-center items-center px-4 py-3 h-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent transition duration-150 ease-in-out md:text-base hover:bg-pink-700">
+            One-time - $500
+          </a>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="p-6 mt-6 mb-8 bg-gray-50 rounded-lg">
+      <h3 class="mb-4 text-lg font-medium leading-6 text-gray-900">Manage Your Subscription</h3>
+      <div class="rounded-md shadow">
+        <a
+          href="{% url 'create_customer_portal_session' %}"
+          class="flex justify-center items-center px-5 py-3 text-base font-medium text-white bg-pink-600 rounded-md border border-transparent hover:bg-pink-700">
+          Update Subscription
+        </a>
+      </div>
+    </div>
+    {% endif %}
+    
+
+    <div class="px-6 py-4">
+      <div class="flex flex-col">
+        <h3 class="mb-6 text-lg font-medium leading-6 text-gray-900">Personal Information</h3>
+        <div class="mt-5 md:mt-0">
+          <form action="" method="post">
+            {% csrf_token %}
+            <div class="overflow-hidden sm:rounded-md">
+              <div class="px-2 py-5">
+                <div class="grid grid-cols-6 gap-6">
+                  {{ form.non_field_errors }}
+                  <div class="col-span-6 sm:col-span-3">
+                    {{ form.first_name.errors | safe }}
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700">First name</label>
+                    {% render_field form.first_name id="first-name" name="first-name" type="text" autocomplete="given-name" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-{{ cookiecutter.project_main_color }}-500 focus:ring-{{ cookiecutter.project_main_color }}-500 sm:text-sm" %}
+                  </div>
+
+                  <div class="col-span-6 sm:col-span-3">
+                    {{ form.last_name.errors | safe }}
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Last name</label>
+                    {% render_field form.last_name id="last-name" name="last-name" type="text" autocomplete="family-name" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-{{ cookiecutter.project_main_color }}-500 focus:ring-{{ cookiecutter.project_main_color }}-500 sm:text-sm" %}
+                  </div>
+
+                  <div class="col-span-6">
+                    {{ form.email.errors | safe }}
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email address</label>
+                    {% render_field form.email id="email-address" name="email-address" type="email" autocomplete="email" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-{{ cookiecutter.project_main_color }}-500 focus:ring-{{ cookiecutter.project_main_color }}-500 sm:text-sm" %}
+                  </div>
+                </div>
+              </div>
+              <div class="mt-6 text-right">
+                <button type="submit" class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                  Save Changes
+                </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="block" aria-hidden="true">
+      <div class="py-5">
+        <div class="border-t border-gray-200"></div>
+      </div>
+    </div>
+
+  </div>
+{% endblock content %}

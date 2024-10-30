@@ -1,0 +1,78 @@
+[tool.poetry]
+name = "seo_blog_bot"
+version = "0.1.0"
+description = "Best SEO Blog Writer entity in the universe!"
+authors = ["Rasul Kireev <kireevr1996@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django-allauth = {extras = ["socialaccount"], version = "^64.0.0"}
+python-webpack-boilerplate = "^1.0.0"
+django-widget-tweaks = "^1.4.12"
+mkdocs = "^1.4.2"
+mkdocstrings = "^0.20.0"
+mkdocs-material = "^9.0.12"
+django = "^5.0.4"
+django-environ = "^0.11.2"
+psycopg2 = "^2.9.9"
+ipython = "^8.27.0"
+django-extensions = "^3.2.3"
+pillow = "^10.4.0"
+django-q2 = "^1.7.2"
+whitenoise = "^6.7.0"
+django-storages = {extras = ["s3"], version = "^1.14.4"}
+structlog = "^24.4.0"
+django-structlog = "^8.1.0"
+markdown = "^3.7"
+sentry-sdk = {extras = ["django"], version = "^2.14.0"}
+opentelemetry-exporter-otlp = "^1.27.0"
+opentelemetry-distro = "^0.48b0"
+opentelemetry-instrumentation-django = "^0.48b0"
+opentelemetry-api = "^1.27.0"
+opentelemetry-sdk = "^1.27.0"
+opentelemetry-instrumentation-psycopg2 = "^0.48b0"
+opentelemetry-instrumentation-redis = "^0.48b0"
+opentelemetry-instrumentation-logging = "^0.48b0"
+gunicorn = "^23.0.0"
+pytest = "^8.3.3"
+pytest-django = "^4.9.0"
+redis = "^5.0.8"
+django-anymail = {extras = ["mailgun"], version = "^12.0"}
+posthog = "^3.6.6"
+dj-stripe = "~2.8.4"
+stripe = "~4.0.0"
+anthropic = "^0.37.1"
+
+
+[tool.poetry.dev-dependencies]
+
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^2.17.1"
+pylint-django = "^2.5.3"
+pre-commit = "^3.2.1"
+mkdocs = "^1.6.0"
+mkdocs-material = "^9.5.23"
+
+[tool.isort]
+profile = "django"
+combine_as_imports = true
+include_trailing_comma = true
+line_length = 120
+multi_line_output = 3
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.djlint]
+profile="django"
+ignore = "H031,H006,H023,H021,H011"
+
+[tool.ruff]
+line-length = 120
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

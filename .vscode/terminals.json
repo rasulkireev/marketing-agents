@@ -1,0 +1,14 @@
+{
+  "autorun": false,
+  "terminals": [
+    {
+      "name": "Backend",
+      "focus": true,
+      "command": "poetry run python manage.py runserver"
+    },
+    {
+      "name": "Frontend",
+      "command": "pnpm run start"
+    }
+  ]
+}

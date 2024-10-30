@@ -1,0 +1,261 @@
+{% load webpack_loader static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- Other meta stuff -->
+  <link rel="apple-touch-icon" href="{% static 'vendors/images/logo.png' %}" />
+  <link rel="apple-touch-icon" href="{% static 'vendors/images/logo.png' %}" />
+  <link rel="icon" type="image/png" sizes="16x16 32x32 500x500" href="{% static 'vendors/images/logo.png' %}" />
+
+  {% block meta %}
+  <title>SEO Blog Bot</title>
+  <meta name="description" content="Best SEO Blog Writer entity in the universe!" />
+  <meta name="keywords" content="django" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://{{ request.get_host }}/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="SEO Blog Bot" />
+  <meta property="og:url" content="https://{{ request.get_host }}/" />
+  <meta property="og:description" content="Best SEO Blog Writer entity in the universe!" />
+  <meta property="og:image" content="https://osig.app/g?site=meta&style=logo&font=markerfelt&title=SEO Blog Bot&subtitle=Best SEO Blog Writer entity in the universe!&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+  <meta property="og:locale" content="en_US" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:creator" content="@rasulkireev" />
+  <meta name="twitter:site" content="@rasulkireev" />
+  <meta name="twitter:title" content="SEO Blog Bot" />
+  <meta name="twitter:description" content="Best SEO Blog Writer entity in the universe!" />
+  <meta name="twitter:image" content="https://osig.app/g?site=x&style=logo&font=markerfelt&title=SEO Blog Bot&subtitle=Best SEO Blog Writer entity in the universe!&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+  {% endblock meta %}
+
+  {% stylesheet_pack 'index' %}
+  {% javascript_pack 'index' attrs='defer' %}
+</head>
+
+<body>
+  {% block default_messages %}
+    {% include 'components/messages.html' with messages=messages %}
+  {% endblock default_messages %}
+
+  <div class="bg-white">
+    <header class="bg-white">
+      <nav class="flex justify-between items-center p-6 mx-auto max-w-7xl lg:px-8" aria-label="Global">
+
+        <!-- Small Screen -->
+        <div class="flex justify-between items-center w-full lg:hidden">
+
+          <div class="relative">
+            <div data-controller="dropdown">
+              <button type="button" data-action="dropdown#toggle click@window->dropdown#hide" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                <span class="sr-only">Open user menu</span>
+                <svg class="w-6 h-6 group-[.open]:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+                <svg class="hidden w-6 h-6 group-[.open]:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+              <div data-dropdown-target="menu" class="hidden lg:hidden" role="dialog" aria-modal="true">
+                <!-- Background backdrop, show/hide based on slide-over state. -->
+                <div class="fixed inset-0 z-10"></div>
+                <div class="overflow-y-auto fixed inset-y-0 right-0 z-10 px-6 py-6 w-full bg-white sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+                  <div class="flex justify-start items-center">
+                    <button data-action="dropdown#toggle click@window->dropdown#hide" type="button">
+                      <span class="sr-only">Close menu</span>
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="flow-root mt-6">
+                    <div class="flex flex-col justify-start space-y-1">
+                      <a href="{% url 'home' %}" class="flex flex-row justify-center items-center p-1.5 -m-1.5 mb-2 space-x-2">
+                        <img class="w-auto h-8" src="{% static 'vendors/images/logo.png' %}" alt="OSIG Logo" />
+                        <span class="text-base font-semibold text-gray-700">OSIG</span>
+                      </a>
+                      <a href="{% url 'home' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
+                        Home
+                      </a>
+                      <a href="{% url 'blog_posts' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
+                        Blog
+                      </a>
+                      
+                      <a href="{% url 'pricing' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
+                        Pricing
+                      </a>
+                      
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile dropdown (right) -->
+          <div class="relative">
+            {% if user.is_authenticated %}
+            <div data-controller="dropdown">
+              <button type="button" data-action="dropdown#toggle click@window->dropdown#hide"
+                class="flex text-sm bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                <span class="sr-only">Open user menu</span>
+                <img class="object-cover p-1 w-10 h-10 bg-gray-100 rounded-full border-2 border-gray-500"
+                  src="{% static 'vendors/images/unknown-man.png' %}" alt="No Personal Photo" />
+              </button>
+              <div data-dropdown-target="menu" class="hidden lg:hidden" role="dialog" aria-modal="true">
+                <!-- Background backdrop, show/hide based on slide-over state. -->
+                <div class="fixed inset-0 z-10"></div>
+                <div class="overflow-y-auto fixed inset-y-0 right-0 z-10 px-6 py-6 w-full bg-white sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+                  <div class="flex justify-end items-center">
+                    <button data-action="dropdown#toggle click@window->dropdown#hide" type="button"
+                      class="p-2.5 -m-2.5 text-gray-700 rounded-md">
+                      <span class="sr-only">Close menu</span>
+                      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                        aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="flow-root mt-6">
+                    <div class="flex justify-end">
+                      <a href="{% url 'settings' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
+                        Settings
+                      </a>
+                    </div>
+                    <div class="-my-6 divide-y divide-gray-500/10">
+                      <div class="py-6">
+                        <form method="post" class="flex justify-end" action="{% url 'account_logout' %}">
+                          {% csrf_token %}
+                          <button
+                            class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50"
+                            role="menuitem"
+                            data-action="dropdown#toggle"
+                            tabindex="-1"
+                            id="user-menu-item-2"
+                            type="submit"
+                          >
+                              Sign Out
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="text-base font-semibold leading-6 text-gray-900">
+              Log in <span aria-hidden="true">&rarr;</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Large Screen -->
+        <div class="hidden lg:flex lg:justify-between lg:items-center lg:w-full"">
+          <div class="flex gap-x-12 items-center">
+            <a href="{% url 'home' %}" class="flex flex-row justify-between items-center p-1.5 -m-1.5 space-x-2">
+              <img class="w-auto h-8" src="{% static 'vendors/images/logo.png' %}" alt="SEO Blog Bot Logo" />
+              <span class="text-base font-semibold text-gray-700">SEO Blog Bot</span>
+            </a>
+          </div>
+          <div class="flex items-center space-x-8">
+            <a href="{% url 'blog_posts' %}" class="text-base font-semibold leading-6 text-gray-900 hover:text-gray-700">
+              Blog
+            </a>
+            
+            <a href="{% url 'pricing' %}" class="text-base font-semibold leading-6 text-gray-900 hover:text-gray-700">
+              Pricing
+            </a>
+            
+            {% if user.is_authenticated %}
+            <!-- Profile dropdown -->
+            <div data-controller="dropdown" class="relative ml-3">
+              <div>
+                <button type="button" data-action="dropdown#toggle click@window->dropdown#hide"
+                  class="flex text-sm bg-gray-800 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                  id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                  <span class="sr-only">Open user menu</span>
+                  <img class="object-cover p-1 w-10 h-10 bg-gray-100 rounded-full border-2 border-gray-500"
+                    src="{% static 'vendors/images/unknown-man.png' %}" alt="No Personal Photo" />
+                </button>
+              </div>
+              <div data-dropdown-target="menu"
+                class="hidden absolute right-0 z-10 py-1 mt-2 w-48 bg-white rounded-md ring-1 ring-black ring-opacity-5 shadow-lg origin-top-right focus:outline-none"
+                role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                <a href="{% url 'settings' %}" class="flex justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-300">
+                  Settings
+                </a>
+                <form method="post" action="{% url 'account_logout' %}">
+                  {% csrf_token %}
+                  <button
+                    class="flex justify-start px-4 py-2 w-full text-sm text-gray-700 hover:bg-gray-300"
+                    role="menuitem"
+                    data-action="dropdown#toggle"
+                    tabindex="-1"
+                    id="user-menu-item-2"
+                    type="submit"
+                  >
+                      Sign Out
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="text-base font-semibold leading-6 text-gray-900">
+                Log in <span aria-hidden="true">&rarr;</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+      </nav>
+    </header>
+
+    <div class="px-2 sm:px-0">
+      {% block content %}
+      {% endblock content %}
+    </div>
+
+    <footer class="bg-white">
+      <div class="px-6 py-12 mx-auto max-w-7xl md:flex md:items-center md:justify-between lg:px-8">
+        <div class="mt-8 md:mt-0">
+          <p class="text-xs leading-5 text-center text-gray-500">
+            &copy; 2024 <a href="https://lvtd.dev?ref={{ request.get_host }}">LVTD, LLC</a>. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  {% block schema %}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SEO Blog Bot",
+      "description": "Best SEO Blog Writer entity in the universe!",
+      "thumbnailUrl": "https://osig.app/g?site=x&style=logo&font=markerfelt&title=SEO Blog Bot&subtitle=Best SEO Blog Writer entity in the universe!&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %},
+      "url": "https://{{ request.get_host }}/",
+      "author": {
+        "@type": "Person",
+        "givenName": "Rasul",
+        "familyName": "Kireev",
+        "url": "https://rasulkireev.com/"
+      }
+    }
+    </script>
+  {% endblock schema %}
+
+</body>
+
+</html>

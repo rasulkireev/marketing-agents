@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load webpack_loader static %}
+
+{% block meta %}
+<title>SEO Blog Bot - Pricing</title>
+<meta name="description" content="How much to use SEO Blog Bot?" />
+<meta name="keywords" content="" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://{{ request.get_host }}{% url 'pricing' %}"/>
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="SEO Blog Bot - Pricing" />
+<meta property="og:url" content="https://{{ request.get_host }}{% url 'pricing' %}"/>
+<meta property="og:description" content="How much to use SEO Blog Bot?" />
+<meta property="og:image" content="https://osig.app/g?site=x&style=logo&font=markerfelt&title=SEO Blog Bot - Pricing&subtitle=How much to use SEO Blog Bot?&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:creator" content="@rasulkireev" />
+<meta name="twitter:site" content="@rasulkireev" />
+<meta name="twitter:title" content="SEO Blog Bot - Pricing" />
+<meta name="twitter:description" content="How much to use SEO Blog Bot?" />
+<meta name="twitter:image" content="https://osig.app/g?site=x&style=logo&font=markerfelt&title=SEO Blog Bot - Pricing&subtitle=How much to use SEO Blog Bot?&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+{% endblock meta %}
+
+{% block content %}
+<div class="py-24 bg-white sm:py-32">
+  <div class="px-6 mx-auto max-w-7xl lg:px-8">
+    <div class="mx-auto max-w-4xl sm:text-center">
+      <h2 class="text-base font-semibold leading-7 text-indigo-600">Pricing</h2>
+      <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Free to use and self-host</p>
+    </div>
+    <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 sm:text-center">Our app is completely free to use for anyone and can be <a href="https://github.com/rasulkireev/osig" class="prose">self-hosted</a>. For additional features and support, check out our paid plans below.</p>
+    <div class="flow-root mt-20">
+      <div class="grid isolate grid-cols-1 gap-y-16 -mt-16 max-w-sm divide-y divide-gray-100 sm:mx-auto lg:-mx-8 lg:mt-0 lg:max-w-none lg:grid-cols-3 lg:divide-x lg:divide-y-0 xl:-mx-4">
+        <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
+          <h3 id="tier-basic" class="text-base font-semibold leading-7 text-gray-900">Monthly</h3>
+          <p class="flex gap-x-1 items-baseline mt-6">
+            <span class="text-5xl font-bold tracking-tight text-gray-900">$10</span>
+            <span class="text-sm font-semibold leading-6 text-gray-600">/month</span>
+          </p>
+          {% if user.is_authenticated %}
+            {% if has_pro_subscription %}
+              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">You are a pro!</a>
+            {% else %}
+              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+          {% endif %}
+          <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              Remove the watermark
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              More styling options
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              48-hour support response time
+            </li>
+          </ul>
+        </div>
+        <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
+          <h3 id="tier-essential" class="text-base font-semibold leading-7 text-gray-900">Annual</h3>
+          <p class="flex gap-x-1 items-baseline mt-6">
+            <span class="text-5xl font-bold tracking-tight text-gray-900">$100</span>
+            <span class="text-sm font-semibold leading-6 text-gray-600">/year</span>
+          </p>
+          {% if user.is_authenticated %}
+            {% if has_pro_subscription %}
+              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">You are a pro!</a>
+            {% else %}
+              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+          {% endif %}
+          <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              Remove the watermark
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              More styling options
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              48-hour support response time
+            </li>
+          </ul>
+        </div>
+        <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
+          <h3 id="tier-growth" class="text-base font-semibold leading-7 text-gray-900">One-time</h3>
+          <p class="flex gap-x-1 items-baseline mt-6">
+            <span class="text-5xl font-bold tracking-tight text-gray-900">$500</span>
+          </p>
+          {% if user.is_authenticated %}
+            {% if has_pro_subscription %}
+              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">You are a pro!</a>
+            {% else %}
+              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+          {% endif %}
+          <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              Remove the watermark
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              More styling options
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+              </svg>
+              48-hour support response time
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block schema %}
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "SEO Blog Bot - Pricing",
+    "description": "How much to use SEO Blog Bot?",
+    "thumbnailUrl": "https://osig.app/g?site=x&style=logo&font=markerfelt&title=SEO Blog Bot - Pricing&subtitle=How much to use SEO Blog Bot?&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}",
+    "url": "https://{{ request.get_host }}{% url 'pricing' %}",
+    "author": {
+      "@type": "Person",
+      "givenName": "Rasul",
+      "familyName": "Kireev",
+      "url": "https://rasulkireev.com/"
+    }
+  }
+  </script>
+{% endblock schema %}
