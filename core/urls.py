@@ -9,7 +9,10 @@ urlpatterns = [
     # blog
     path("blog", views.BlogView.as_view(), name="blog_posts"),
     path("blog/<slug:slug>", views.BlogPostView.as_view(), name="blog_post"),
-    
+    # app
+    path('scan/', views.ProjectScanView.as_view(), name='project_scan'),
+    path('project/<int:project_id>/status/', views.ProjectStatusView.as_view(), name='project_status'),
+
     # utils
     path("resend-confirmation/", views.resend_confirmation_email, name="resend_confirmation"),
     # payments
@@ -20,5 +23,5 @@ urlpatterns = [
         name="user_upgrade_checkout_session",
     ),
     path("create-customer-portal/", views.create_customer_portal_session, name="create_customer_portal_session"),
-    
+
 ]

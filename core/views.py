@@ -13,8 +13,10 @@ from django.conf import settings
 from django.contrib import messages
 from django.urls import reverse, reverse_lazy
 from django.views.generic import TemplateView, UpdateView, ListView, DetailView, FormView
+from django.views import View
 from django_q.tasks import async_task
 from djstripe import models as djstripe_models
+from django.http import JsonResponse
 
 from core.utils import check_if_profile_has_pro_subscription
 from core.forms import ProfileUpdateForm, ProjectScanForm
@@ -31,14 +33,6 @@ logger = get_seo_blog_bot_logger(__name__)
 class HomeView(FormView):
     template_name = "pages/home.html"
     form_class = ProjectScanForm
-    success_url = reverse_lazy('home')
-
-    def form_valid(self, form):
-        url = form.cleaned_data['url']
-        project = Project.objects.create(url=url)
-        async_task(populate_project_fields, project.id)
-        messages.success(self.request, "Your project has been submitted for scanning. Please check back later for results.")
-        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -169,3 +163,50 @@ class BlogPostView(DetailView):
     model = BlogPost
     template_name = "blog/blog_post.html"
     context_object_name = "blog_post"
+
+
+class ProjectScanView(View):
+    def post(self, request, *args, **kwargs):
+        url = request.POST.get('url')
+        if not url:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'URL is required'
+            }, status=400)
+
+        project = Project.objects.create(
+            url=url,
+            profile=request.user.profile if request.user.is_authenticated else None
+        )
+        async_task(populate_project_fields, project.id)
+
+        return JsonResponse({
+            'status': 'success',
+            'project': {
+                'id': project.id,
+                'url': url,
+                'created_at': project.created_at.isoformat(),
+            },
+            'message': 'Project submitted successfully'
+        })
+
+
+class ProjectStatusView(View):
+    def get(self, request, project_id):
+        try:
+            project = Project.objects.get(id=project_id)
+            return JsonResponse({
+                'status': 'success',
+                'completed': bool(project.name),
+                'project': {
+                    'id': project.id,
+                    'url': project.url,
+                    'name': project.name,
+                    'created_at': project.created_at.isoformat(),
+                }
+            })
+        except Project.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Project not found'
+            }, status=404)

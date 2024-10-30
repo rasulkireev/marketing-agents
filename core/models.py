@@ -128,6 +128,9 @@ class Project(BaseModel):
         ENGLISH = 'English', 'English'
         # Add other languages as needed
 
+    profile = models.ForeignKey(
+        Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects"
+    )
     url = models.URLField(max_length=200)
     name = models.CharField(max_length=255)
     type = models.CharField(

@@ -7,8 +7,11 @@
     <h1 class="mx-auto mb-6 max-w-2xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
       Best SEO Blog Writer entity in the universe!
     </h1>
-    <div class="mt-10">
-      <form method="post" class="mx-auto max-w-md">
+    <div class="mt-10" data-controller="project-scan">
+      <form method="post"
+            class="mx-auto max-w-md"
+            data-project-scan-target="form"
+            data-action="submit->project-scan#scan">
         {% csrf_token %}
 
         {{ form.non_field_errors }}
@@ -19,18 +22,65 @@
           {% render_field form.url class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter project URL" %}
         </div>
 
-        <button type="submit" class="px-4 py-2 w-full text-white bg-blue-500 rounded transition duration-150 ease-in-out hover:bg-blue-600 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 active:bg-blue-700">
-          Scan Project
-        </button>
+        <div class="flex gap-2">
+          <button type="submit"
+                  data-project-scan-target="submitButton"
+                  class="flex-1 px-4 py-2 text-white bg-blue-500 rounded transition duration-150 ease-in-out hover:bg-blue-600 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 active:bg-blue-700">
+            Scan Project
+          </button>
+          <button type="button"
+                  data-action="click->project-scan#clearStoredProject"
+                  class="px-4 py-2 text-gray-700 bg-gray-100 rounded transition duration-150 ease-in-out hover:bg-gray-200 focus:outline-none focus:ring focus:ring-gray-200">
+            Clear
+          </button>
+        </div>
       </form>
-    </div>
-    <div class="flex flex-col gap-x-6 justify-center items-center mt-10 md:flex-row md:items-end">
-      <a
-        class="block px-3 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600"
-        href="{% url 'account_signup' %}"
-      >
-        Get Started
-      </a>
+
+      <!-- Spinner -->
+      <div data-project-scan-target="spinner"
+           class="hidden mt-4">
+        <svg class="mx-auto w-8 h-8 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-2 text-sm text-gray-600">Analyzing website...</p>
+      </div>
+
+      <!-- Result Area in home.html -->
+      <div data-project-scan-target="result" class="mt-4">
+        <!-- Progress will be inserted here by the controller -->
+      </div>
+
+      <!-- Add this template for the progress indicators -->
+      <template data-project-scan-target="progressTemplate">
+        <div class="p-4 mx-auto mt-4 max-w-md bg-gray-50 rounded-lg">
+          <div class="space-y-3">
+            <div class="flex gap-3 items-center" data-project-scan-target="analysisStep">
+              <svg class="w-5 h-5 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="text-sm text-gray-600">Analyzing <span class="font-medium" data-project-scan-target="urlDisplay"></span></span>
+            </div>
+
+            <div class="flex gap-3 items-center" data-project-scan-target="generationStep">
+              <svg class="w-5 h-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="text-sm text-gray-400">Generating content</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Template for checkmark icon -->
+      <template data-project-scan-target="checkmarkTemplate">
+        <svg class="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+      </template>
+
     </div>
   </div>
 </div>
