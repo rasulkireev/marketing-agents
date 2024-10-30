@@ -34,7 +34,15 @@ def populate_project_fields(project_id: int):
         'Authorization': 'Bearer jina_79ed0444a37e40258d3b2f1f6bed6341YYruxpo_QlhqZNJUasu707xne3t6'
     }
 
-    response = requests.get(jina_url, headers=jina_headers)
+    try:
+        response = requests.get(jina_url, headers=jina_headers)
+    except ConnectionError as e:
+        logger.error(
+            "Failed to get info from Jina Reader AI.",
+            error=str(e)
+        )
+        return "Failed to get info from Jina Reader AI."
+
     page_content = response.text
 
     claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
@@ -100,3 +108,5 @@ def populate_project_fields(project_id: int):
             "Error updating project",
             error=str(e)
         )
+
+    return f"Project ({project.id}) updated successfully"
