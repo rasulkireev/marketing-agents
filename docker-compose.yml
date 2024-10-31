@@ -94,7 +94,6 @@ services:
       - 8.8.8.8
       - 8.8.4.4
 
-
   minio:
     image: minio/minio
     ports:

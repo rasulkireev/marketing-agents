@@ -158,3 +158,20 @@ class Project(BaseModel):
 
     def __str__(self):
         return self.name
+
+
+class BlogPostTitleSuggestion(BaseModel):
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="blog_post_title_suggestions")
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+
+    class Category(models.TextChoices):
+        GENERAL_AUDIENCE = 'General Audience', 'General Audience'
+        NICH_AUDIENCE = 'Niche Audience', 'Niche Audience'
+        INDUSTRY_COMPANY = 'Industry/Company', 'Industry/Company'
+
+    category = models.CharField(
+        max_length=50,
+        choices=Category.choices,
+        default=Category.GENERAL_AUDIENCE
+    )

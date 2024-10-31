@@ -2,11 +2,15 @@ import json
 import requests
 import anthropic
 from django.conf import settings
+from core.utils import generate_blog_titles_with_claude, save_blog_titles
+from django_q.tasks import async_task
 
 from core.models import Project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
+
 logger = get_seo_blog_bot_logger(__name__)
+
 
 def add_email_to_buttondown(email, tag):
     data = {
@@ -109,4 +113,48 @@ def populate_project_fields(project_id: int):
             error=str(e)
         )
 
+    async_task(
+        generate_blog_post_titles_task,
+        project_id,
+        task_name=f"Generate blog titles for project {project_id}"
+    )
+
     return f"Project ({project.id}) updated successfully"
+
+
+def generate_blog_post_titles_task(project_id: int) -> str:
+    """
+    Main task function to be called by Django Q2
+    """
+    try:
+        # Get project data
+        project = Project.objects.get(id=project_id)
+        project_data = {
+            'name': project.name,
+            'type': project.type,
+            'summary': project.summary,
+            'blog_theme': project.blog_theme,
+            'key_features': project.key_features,
+            'target_audience_summary': project.target_audience_summary,
+            'pain_points': project.pain_points,
+            'product_usage': project.product_usage,
+        }
+
+        titles = generate_blog_titles_with_claude(project_data)
+
+        if not titles:
+            return f"No titles generated for project {project_id}"
+
+        # Save titles to database
+        save_blog_titles(project_id, titles)
+
+        return f"Successfully generated {len(titles)} titles for project {project_id}"
+
+    except Exception as e:
+        error_msg = f"Error generating blog post titles: {str(e)}"
+        logger.error(
+            "Failed to generate blog post titles",
+            error=str(e),
+            project_id=project_id
+        )
+        return error_msg

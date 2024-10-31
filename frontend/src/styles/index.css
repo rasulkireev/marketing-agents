@@ -1,3 +1,13 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+@layer components {
+  .blur-sm {
+    filter: blur(4px);
+  }
+
+  .pointer-events-none {
+    pointer-events: none;
+  }
+}

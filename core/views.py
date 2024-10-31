@@ -152,7 +152,6 @@ def create_customer_portal_session(request):
     return redirect(session.url, code=303)
 
 
-
 class BlogView(ListView):
     model = BlogPost
     template_name = "blog/blog_posts.html"
@@ -195,6 +194,8 @@ class ProjectStatusView(View):
     def get(self, request, project_id):
         try:
             project = Project.objects.get(id=project_id)
+            title_suggestions = project.blog_post_title_suggestions.all()
+
             return JsonResponse({
                 'status': 'success',
                 'completed': bool(project.name),
@@ -202,7 +203,16 @@ class ProjectStatusView(View):
                     'id': project.id,
                     'url': project.url,
                     'name': project.name,
+                    'summary': project.summary,
                     'created_at': project.created_at.isoformat(),
+                    'title_suggestions': [
+                        {
+                            'id': suggestion.id,
+                            'title': suggestion.title,
+                            'description': suggestion.description,
+                            'category': suggestion.category
+                        } for suggestion in title_suggestions
+                    ]
                 }
             })
         except Project.DoesNotExist:
