@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+<title>SEO Blog Bot - {{ project.name }}</title>
+<meta name="description" content="{{ project.summary }}" />
+{% endblock meta %}
+
+{% block content %}
+<div class="py-24 bg-white sm:py-32">
+  <div class="px-6 mx-auto max-w-7xl lg:px-8">
+    <!-- Project Header -->
+    <div class="mx-auto max-w-4xl sm:text-center">
+      <h2 class="text-base font-semibold leading-7 text-pink-600">Project Analysis</h2>
+      <div class="flex gap-3 justify-center items-center">
+        <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">{{ project.name }}</p>
+        <span class="px-3 py-1 mt-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-full">{{ project.get_type_display }}</span>
+      </div>
+      <p class="mt-6 text-lg leading-8 text-gray-600">{{ project.summary }}</p>
+    </div>
+
+    <!-- Project Details -->
+    <div class="mx-auto mt-10 max-w-4xl">
+      <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
+        <!-- Detailed Info -->
+        <div class="space-y-6">
+          <div>
+            <dt class="text-sm font-semibold text-gray-600">Key Features</dt>
+            <dd class="mt-1 text-sm text-gray-600">{{ project.key_features|linebreaks }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-gray-600">Target Audience</dt>
+            <dd class="mt-1 text-sm text-gray-600">{{ project.target_audience_summary }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-gray-600">Pain Points Addressed</dt>
+            <dd class="mt-1 text-sm text-gray-600">{{ project.pain_points|linebreaks }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-gray-600">Product Usage</dt>
+            <dd class="mt-1 text-sm text-gray-600">{{ project.product_usage }}</dd>
+          </div>
+        </div>
+      </div>
+
+      {% if project.blog_post_title_suggestions.exists %}
+      <!-- Blog Post Suggestions -->
+      <div class="mt-16">
+        <h3 class="text-2xl font-bold tracking-tight text-gray-900">Suggested Blog Posts</h3>
+        {% if project.should_blur_suggestions %}
+        <div class="p-4 mt-8 bg-pink-50 rounded-lg border border-pink-200">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg class="w-5 h-5 text-pink-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-pink-800">Unlock All Suggestions</h3>
+              <div class="mt-2 text-sm text-pink-700">
+                <p>Subscribe to see all {{ project.blog_post_title_suggestions.count }} blog post suggestions without blur and unlock premium features.</p>
+                <a href="{% url 'pricing' %}" class="inline-flex items-center px-4 py-2 mt-3 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700">
+                  View Pricing
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        <div class="mt-6 space-y-8">
+          {% for suggestion in project.blog_post_title_suggestions.all %}
+            <div class="pl-4 border-l-4 border-pink-600 {% if project.should_blur_suggestions and forloop.counter > 2 %}relative{% endif %}"
+                 data-controller="generate-content"
+                 data-generate-content-suggestion-id-value="{{ suggestion.id }}">
+              <!-- Header section with toggle -->
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h4 class="text-lg font-semibold text-gray-900">{{ suggestion.title }}</h4>
+                  <p class="mt-2 text-gray-600">{{ suggestion.description }}</p>
+                  <span class="mt-1 text-sm text-gray-500">Category: {{ suggestion.get_category_display }}</span>
+                </div>
+
+                <div class="flex gap-x-3 items-center">
+                  <div data-generate-content-target="status">
+                    {% with generated_post=suggestion.generated_blog_posts.first %}
+                      {% if generated_post %}
+                        {% if generated_post.content %}
+                          <div class="flex gap-x-2 items-center">
+                            <div class="text-green-500">
+                              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                              </svg>
+                            </div>
+                            <button data-action="generate-content#toggle" class="flex items-center text-gray-500 hover:text-gray-700">
+                              <svg data-generate-content-target="chevron" class="w-5 h-5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          </div>
+                        {% else %}
+                          <div class="w-5 h-5 rounded-full border-2 animate-spin border-t-pink-600"></div>
+                        {% endif %}
+                      {% endif %}
+                    {% endwith %}
+                  </div>
+                  <div data-generate-content-target="buttonContainer">
+                    {% with generated_post=suggestion.generated_blog_posts.first %}
+                      {% if not generated_post %}
+                        <button
+                          data-action="generate-content#generate"
+                          class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
+                          Generate
+                        </button>
+                      {% endif %}
+                    {% endwith %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dropdown content -->
+              <div data-generate-content-target="dropdown" class="hidden mt-4">
+                <div data-generate-content-target="content">
+                  {% with generated_post=suggestion.generated_blog_posts.first %}
+                    {% if generated_post and generated_post.content %}
+                      <div class="space-y-4">
+                        <div data-controller="copy" class="relative">
+                          <label for="slug-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Slug</label>
+                          <input
+                            type="text"
+                            id="slug-{{ generated_post.id }}"
+                            value="{{ generated_post.slug }}"
+                            data-copy-target="source"
+                            class="block pr-20 mt-1 w-full h-10 font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                            readonly
+                          >
+                          <button
+                            data-action="copy#copy"
+                            data-copy-target="button"
+                            class="absolute right-2 top-[30px] px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                          >
+                            Copy
+                          </button>
+                        </div>
+
+                        <div data-controller="copy" class="relative">
+                          <label for="tags-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Tags</label>
+                          <input
+                            type="text"
+                            id="tags-{{ generated_post.id }}"
+                            value="{{ generated_post.tags }}"
+                            data-copy-target="source"
+                            class="block pr-20 mt-1 w-full h-10 font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                            readonly
+                          >
+                          <button
+                            data-action="copy#copy"
+                            data-copy-target="button"
+                            class="absolute right-2 top-[30px] px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                          >
+                            Copy
+                          </button>
+                        </div>
+
+                        <div data-controller="copy" class="relative">
+                          <label for="description-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Description</label>
+                          <textarea
+                            id="description-{{ generated_post.id }}"
+                            data-copy-target="source"
+                            class="block pr-20 mt-1 w-full font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                            rows="3"
+                            readonly
+                          >{{ generated_post.description }}</textarea>
+                          <button
+                            data-action="copy#copy"
+                            data-copy-target="button"
+                            class="absolute right-2 bottom-2 px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                          >
+                            Copy
+                          </button>
+                        </div>
+
+                        <div data-controller="copy" class="relative mb-4">
+                          <label for="content-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Content</label>
+                          <textarea
+                            id="content-{{ generated_post.id }}"
+                            data-copy-target="source"
+                            class="block pr-20 mt-1 mb-2 w-full h-96 font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500"
+                            readonly
+                          >{{ generated_post.content }}</textarea>
+                          <button
+                            data-action="copy#copy"
+                            data-copy-target="button"
+                            class="absolute right-2 bottom-2 px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

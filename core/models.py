@@ -131,7 +131,7 @@ class Project(BaseModel):
     profile = models.ForeignKey(
         Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects"
     )
-    url = models.URLField(max_length=200)
+    url = models.URLField(max_length=200, unique=True)
     name = models.CharField(max_length=255)
     type = models.CharField(
         max_length=50,
@@ -159,6 +159,12 @@ class Project(BaseModel):
     def __str__(self):
         return self.name
 
+    def should_blur_suggestions(self):
+        if not self.profile:
+            return True
+        current_state = self.profile.current_state
+        return False # current_state not in [ProfileStates.SUBSCRIBED, ProfileStates.CANCELLED]
+
 
 class BlogPostTitleSuggestion(BaseModel):
     project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="blog_post_title_suggestions")
@@ -175,3 +181,14 @@ class BlogPostTitleSuggestion(BaseModel):
         choices=Category.choices,
         default=Category.GENERAL_AUDIENCE
     )
+
+
+class GeneratedBlogPost(BaseModel):
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="generated_blog_posts")
+    title = models.ForeignKey(BlogPostTitleSuggestion, null=True, blank=True, on_delete=models.CASCADE, related_name="generated_blog_posts")
+    description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=250)
+    tags = models.TextField()
+    content = models.TextField()
+    icon = models.ImageField(upload_to="blog_post_icons/", blank=True)
+    image = models.ImageField(upload_to="blog_post_images/", blank=True)

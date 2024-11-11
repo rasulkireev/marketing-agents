@@ -1,6 +1,5 @@
 from urllib.parse import urlencode
 
-from core.tasks import populate_project_fields
 import stripe
 
 from allauth.account.models import EmailAddress
@@ -17,12 +16,21 @@ from django.views import View
 from django_q.tasks import async_task
 from djstripe import models as djstripe_models
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from core.models import BlogPostTitleSuggestion, GeneratedBlogPost
+from django.utils.text import slugify
+from django_q.tasks import async_task
 
 from core.utils import check_if_profile_has_pro_subscription
 from core.forms import ProfileUpdateForm, ProjectScanForm
 from core.models import Profile, BlogPost, Project
 
 from seo_blog_bot.utils import get_seo_blog_bot_logger
+from django.db import IntegrityError
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -30,9 +38,8 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 logger = get_seo_blog_bot_logger(__name__)
 
-class HomeView(FormView):
+class HomeView(TemplateView):
     template_name = "pages/home.html"
-    form_class = ProjectScanForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -42,6 +49,15 @@ class HomeView(FormView):
             context["show_confetti"] = True
         elif payment_status == "failed":
             messages.error(self.request, "Something went wrong with the payment.")
+
+        context["form"] = ProjectScanForm()
+
+        # Add projects to context for authenticated users
+        if self.request.user.is_authenticated:
+            context["projects"] = Project.objects.filter(
+                profile=self.request.user.profile
+            ).order_by('-created_at')
+
         return context
 
 
@@ -66,8 +82,6 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         context["has_subscription"] = user.profile.subscription is not None
 
         return context
-
-
 
 
 @login_required
@@ -164,59 +178,67 @@ class BlogPostView(DetailView):
     context_object_name = "blog_post"
 
 
-class ProjectScanView(View):
-    def post(self, request, *args, **kwargs):
-        url = request.POST.get('url')
-        if not url:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'URL is required'
-            }, status=400)
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "project/project_detail.html"
+    context_object_name = "project"
 
-        project = Project.objects.create(
-            url=url,
-            profile=request.user.profile if request.user.is_authenticated else None
-        )
-        async_task(populate_project_fields, project.id)
+    def get_queryset(self):
+        # Ensure users can only see their own projects
+        return Project.objects.filter(profile=self.request.user.profile)
 
+
+@login_required
+@require_POST
+def generate_blog_content(request, suggestion_id):
+    suggestion = BlogPostTitleSuggestion.objects.get(id=suggestion_id)
+
+    # Create a placeholder GeneratedBlogPost
+    generated_post = GeneratedBlogPost.objects.create(
+        project=suggestion.project,
+        title=suggestion,
+        slug=slugify(suggestion.title),
+        description=suggestion.description,
+        tags="",  # Will be populated by the task
+        content=""  # Will be populated by the task
+    )
+
+    # Queue the content generation task
+    async_task(
+        'core.tasks.generate_blog_content_task',
+        generated_post.id,
+        suggestion.title,
+        suggestion.project,
+        task_name=f"Generate blog content for {suggestion.title}"
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'redirect_url': reverse('project_detail', kwargs={'pk': suggestion.project.id})
+    })
+
+@login_required
+def check_content_status(request, suggestion_id):
+    suggestion = get_object_or_404(
+        BlogPostTitleSuggestion,
+        id=suggestion_id,
+        project__profile=request.user.profile
+    )
+    generated_post = suggestion.generated_blog_posts.first()
+
+    if not generated_post:
         return JsonResponse({
-            'status': 'success',
-            'project': {
-                'id': project.id,
-                'url': url,
-                'created_at': project.created_at.isoformat(),
-            },
-            'message': 'Project submitted successfully'
+            "is_generated": False,
+            "content": None,
+            "slug": None,
+            "tags": None,
+            "description": None
         })
 
-
-class ProjectStatusView(View):
-    def get(self, request, project_id):
-        try:
-            project = Project.objects.get(id=project_id)
-            title_suggestions = project.blog_post_title_suggestions.all()
-
-            return JsonResponse({
-                'status': 'success',
-                'completed': bool(project.name),
-                'project': {
-                    'id': project.id,
-                    'url': project.url,
-                    'name': project.name,
-                    'summary': project.summary,
-                    'created_at': project.created_at.isoformat(),
-                    'title_suggestions': [
-                        {
-                            'id': suggestion.id,
-                            'title': suggestion.title,
-                            'description': suggestion.description,
-                            'category': suggestion.category
-                        } for suggestion in title_suggestions
-                    ]
-                }
-            })
-        except Project.DoesNotExist:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Project not found'
-            }, status=404)
+    return JsonResponse({
+        "is_generated": bool(generated_post.content),
+        "content": generated_post.content if generated_post.content else None,
+        "slug": generated_post.slug if generated_post.slug else None,
+        "tags": generated_post.tags if generated_post.tags else None,
+        "description": generated_post.description if generated_post.description else None
+    }, json_dumps_params={"ensure_ascii": False})

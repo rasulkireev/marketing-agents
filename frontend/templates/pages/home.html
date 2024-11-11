@@ -7,122 +7,97 @@
     <h1 class="mx-auto mb-6 max-w-2xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
       Best SEO Blog Writer entity in the universe!
     </h1>
-    <div class="mt-10" data-controller="project-scan">
-      <form method="post"
-            class="mx-auto max-w-md"
-            data-project-scan-target="form"
-            data-action="submit->project-scan#scan">
-        {% csrf_token %}
 
-        {{ form.non_field_errors }}
+    {% if user.is_authenticated %}
+      <div data-controller="scan-progress">
+        <form data-action="submit->scan-progress#handleSubmit" class="mx-auto mt-10 max-w-md">
+          {% csrf_token %}
+          <div class="flex gap-x-4">
+            {% render_field form.url class="flex-auto px-3.5 py-2 min-w-0 text-gray-900 rounded-md border-0 ring-1 ring-inset ring-gray-300 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6" placeholder="Enter your website URL" %}
+            <button type="submit" class="flex-none px-3.5 py-2.5 text-sm font-semibold text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Scan</button>
+          </div>
 
-        <div class="mb-4">
-          {{ form.url.errors }}
-          <label for="{{ form.url.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-700">Give this a try 👇</label>
-          {% render_field form.url class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" placeholder="Enter project URL" %}
-        </div>
-
-        <div class="flex gap-2">
-          <button type="submit"
-                  data-project-scan-target="submitButton"
-                  class="flex-1 px-4 py-2 text-white bg-blue-500 rounded transition duration-150 ease-in-out hover:bg-blue-600 focus:outline-none focus:border-blue-700 focus:ring focus:ring-blue-200 active:bg-blue-700">
-            Scan Project
-          </button>
-          <button type="button"
-                  data-action="click->project-scan#clearStoredProject"
-                  class="px-4 py-2 text-gray-700 bg-gray-100 rounded transition duration-150 ease-in-out hover:bg-gray-200 focus:outline-none focus:ring focus:ring-gray-200">
-            Clear
-          </button>
-        </div>
-      </form>
-
-      <!-- Spinner -->
-      <div data-project-scan-target="spinner" class="hidden mt-4">
-        <svg class="mx-auto w-8 h-8 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p class="mt-2 text-sm text-gray-600">Analyzing website...</p>
-      </div>
-
-      <!-- Result Area in home.html -->
-      <div data-project-scan-target="result" class="mt-4">
-        <!-- Progress will be inserted here by the controller -->
-      </div>
-
-      <template data-project-scan-target="progressTemplate">
-        <div class="p-4 mx-auto mt-4 max-w-md bg-gray-50 rounded-lg">
-          <div class="space-y-3">
-            <div class="flex gap-3 items-center" data-project-scan-target="analysisStep">
-              <svg class="w-5 h-5 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span class="text-sm text-gray-600">Analyzing <span class="font-medium" data-project-scan-target="urlDisplay"></span></span>
-            </div>
-
-            <!-- Updated name and description section with left alignment -->
-            <div class="pl-8 space-y-1" data-project-scan-target="projectInfo" style="display: none;">
-              <div class="text-sm text-left text-gray-600">
-                <span>Name:</span>
-                <span class="font-medium" data-project-scan-target="nameDisplay"></span>
+          <!-- Progress Indicators -->
+          <div data-scan-progress-target="progress" class="hidden mt-6">
+            <div class="space-y-4">
+              <!-- Project Details -->
+              <div class="flex gap-x-3 items-center">
+                <div data-scan-progress-target="detailsSpinner" class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-pink-600"></div>
+                <div data-scan-progress-target="detailsCheck" class="hidden text-green-500">
+                  <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span>Analyzing website content...</span>
               </div>
-              <div class="text-sm text-left text-gray-600">
-                <span>Description:</span>
-                <span class="font-medium" data-project-scan-target="descriptionDisplay"></span>
+
+              <!-- Blog Suggestions -->
+              <div class="flex gap-x-3 items-center">
+                <div data-scan-progress-target="suggestionsSpinner" class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                <div data-scan-progress-target="suggestionsCheck" class="hidden text-green-500">
+                  <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <span>Generating blog post suggestions...</span>
               </div>
             </div>
+          </div>
 
-            <div class="flex gap-3 items-center" data-project-scan-target="generationStep">
-              <svg class="w-5 h-5 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span class="text-sm text-gray-600">Generating Title Suggestions</span>
+          <!-- Results Button -->
+          <a href="#" data-scan-progress-target="resultsButton" class="inline-flex hidden justify-center px-4 py-2 mt-6 w-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+            Show Results
+          </a>
+        </form>
+
+        <div class="px-6 mx-auto mt-16 max-w-7xl lg:px-8">
+          <div class="mx-auto max-w-2xl">
+            <h2 class="text-2xl font-bold tracking-tight text-gray-900">Your Projects</h2>
+            <div class="mt-6 space-y-4" data-scan-progress-target="projectsList">
+              {% if projects %}
+                {% for project in projects %}
+                  <div class="flex gap-x-6 justify-between items-center p-5 bg-white rounded-lg border shadow-sm">
+                    <div class="min-w-0">
+                      <div class="flex gap-x-3 items-start">
+                        <h3 class="font-semibold leading-6 text-gray-900">
+                          {% if project.name %}
+                            {{ project.name }}
+                          {% else %}
+                            {{ project.url }}
+                          {% endif %}
+                        </h3>
+                        <p class="px-1.5 py-0.5 mt-0.5 text-xs font-medium text-gray-600 whitespace-nowrap bg-gray-50 rounded-md ring-1 ring-inset ring-gray-500/10">
+                          {{ project.get_type_display }}
+                        </p>
+                      </div>
+                      {% if project.summary %}
+                        <p class="mt-1 text-sm leading-5 text-gray-500 truncate">{{ project.summary }}</p>
+                      {% endif %}
+                    </div>
+                    <div class="flex flex-none gap-x-4 items-center">
+                      <a href="{% url 'project_detail' project.id %}"
+                         class="px-2.5 py-1.5 text-sm font-semibold text-gray-900 bg-white rounded-md ring-1 ring-inset ring-gray-300 shadow-sm hover:bg-gray-50">
+                        View details
+                      </a>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <div data-empty-state>
+                  <p class="text-sm text-gray-500">No projects yet. Add your first project above.</p>
+                </div>
+              {% endif %}
             </div>
           </div>
         </div>
-      </template>
-
-      <!-- Template for checkmark icon -->
-      <template data-project-scan-target="checkmarkTemplate">
-        <svg class="w-5 h-5 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-        </svg>
-      </template>
-
-      <template data-project-scan-target="projectDetailsTemplate">
-        <div class="p-4 mx-auto mt-4 max-w-2xl bg-white rounded-lg shadow">
-          <h2 class="text-xl font-semibold text-gray-900" data-project-scan-target="projectName"></h2>
-          <p class="mt-2 text-gray-600" data-project-scan-target="projectSummary"></p>
-        </div>
-      </template>
-
-      <template data-project-scan-target="titleSuggestionsTemplate">
-        <div class="p-4 mx-auto mt-4 max-w-2xl">
-          <h3 class="mb-4 text-lg font-semibold text-gray-900">Blog Post Title Suggestions</h3>
-          <div class="space-y-4" data-project-scan-target="suggestionsList">
-            <!-- Suggestions will be inserted here -->
-          </div>
-          <div class="mt-4 text-center">
-            <button type="button"
-                    class="font-medium text-blue-600 hover:text-blue-800"
-                    data-action="click->project-scan#showAllSuggestions">
-              Show All Suggestions
-            </button>
-          </div>
-        </div>
-      </template>
-
-      <template data-project-scan-target="suggestionTemplate">
-        <div class="p-4 bg-gray-50 rounded-lg transition-all duration-200">
-          <h4 class="font-medium text-gray-900"></h4>
-          <p class="mt-1 text-gray-600"></p>
-          <span class="inline-block px-2 py-1 mt-2 text-xs font-medium text-gray-600 bg-gray-200 rounded"></span>
-        </div>
-      </template>
-
-    </div>
+      </div>
+    {% else %}
+      <div class="mx-auto mt-10 max-w-sm">
+        <a href="{% url 'account_signup' %}" class="flex justify-center px-4 py-2 w-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+          Sign up to start scanning
+        </a>
+      </div>
+    {% endif %}
   </div>
 </div>
 
