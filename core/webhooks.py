@@ -144,4 +144,3 @@ def handle_deleted_subscription(**kwargs):
             customer_id=customer_id,
             error=str(e),
         )
-

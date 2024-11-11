@@ -3,7 +3,6 @@ from django.conf import settings
 
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
-
 logger = get_seo_blog_bot_logger(__name__)
 
 

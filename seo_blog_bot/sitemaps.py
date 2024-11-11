@@ -1,10 +1,8 @@
 from django.contrib import sitemaps
-from django.urls import reverse
 from django.contrib.sitemaps import GenericSitemap
-
+from django.urls import reverse
 
 from core.models import BlogPost
-
 
 
 class StaticViewSitemap(sitemaps.Sitemap):
@@ -23,7 +21,6 @@ class StaticViewSitemap(sitemaps.Sitemap):
             "home",
             "uses",
             "pricing",
-            
             "blog_posts",
         ]
 
@@ -38,9 +35,9 @@ class StaticViewSitemap(sitemaps.Sitemap):
         """
         return reverse(item)
 
+
 sitemaps = {
     "static": StaticViewSitemap,
-    
     "blog": GenericSitemap(
         {"queryset": BlogPost.objects.all(), "date_field": "created_at"},
         priority=0.85,

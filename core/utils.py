@@ -1,14 +1,13 @@
 import json
+
 import anthropic
 import requests
-from requests.exceptions import ConnectionError
-
-from django.forms.utils import ErrorList
 from django.conf import settings
 from django.db import transaction
+from django.forms.utils import ErrorList
+from requests.exceptions import ConnectionError
 
 from core.models import BlogPostTitleSuggestion, Profile, Project
-
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -109,15 +108,15 @@ def generate_blog_titles_with_claude(project_data: dict) -> list:
         )
         response = message.content[0].text.strip()
 
-        response = response.replace('\n', ' ').replace('\r', '')
-        if response.startswith('```json'):
-            response = response.replace('```json', '')
-        if response.endswith('```'):
-            response = response.replace('```', '')
+        response = response.replace("\n", " ").replace("\r", "")
+        if response.startswith("```json"):
+            response = response.replace("```json", "")
+        if response.endswith("```"):
+            response = response.replace("```", "")
         response = response.strip()
 
         data = json.loads(response)
-        return data.get('titles', [])
+        return data.get("titles", [])
 
     except json.JSONDecodeError as e:
         logger.error(
@@ -144,32 +143,22 @@ def save_blog_titles(project_id: int, titles: list) -> None:
     project = Project.objects.get(id=project_id)
 
     category_mapping = {
-        'General Audience': BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE,
-        'Niche Audience': BlogPostTitleSuggestion.Category.NICH_AUDIENCE,
-        'Industry/Company': BlogPostTitleSuggestion.Category.INDUSTRY_COMPANY
+        "General Audience": BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE,
+        "Niche Audience": BlogPostTitleSuggestion.Category.NICH_AUDIENCE,
+        "Industry/Company": BlogPostTitleSuggestion.Category.INDUSTRY_COMPANY,
     }
 
     suggestions = []
     for title_data in titles:
         try:
-            category = category_mapping.get(
-                title_data['category'],
-                BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE
-            )
+            category = category_mapping.get(title_data["category"], BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE)
             suggestions.append(
                 BlogPostTitleSuggestion(
-                    project=project,
-                    title=title_data['title'],
-                    description=title_data['description'],
-                    category=category
+                    project=project, title=title_data["title"], description=title_data["description"], category=category
                 )
             )
         except KeyError as e:
-            logger.error(
-                "Missing required field in title data",
-                error=str(e),
-                title_data=title_data
-            )
+            logger.error("Missing required field in title data", error=str(e), title_data=title_data)
             continue
 
     if suggestions:
@@ -177,18 +166,13 @@ def save_blog_titles(project_id: int, titles: list) -> None:
 
 
 def process_project_url(url: str) -> dict:
-    jina_url = f'https://r.jina.ai/{url}'
-    jina_headers = {
-        'Authorization': f'Bearer {settings.JINA_READER_API_KEY}'
-    }
+    jina_url = f"https://r.jina.ai/{url}"
+    jina_headers = {"Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
 
     try:
         response = requests.get(jina_url, headers=jina_headers)
     except ConnectionError as e:
-        logger.error(
-            "Failed to get info from Jina Reader AI.",
-            error=str(e)
-        )
+        logger.error("Failed to get info from Jina Reader AI.", error=str(e))
         raise ValueError("Failed to get info from Jina Reader AI")
 
     page_content = response.text

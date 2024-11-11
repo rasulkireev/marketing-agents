@@ -1,7 +1,9 @@
 from ninja import Schema
 
+
 class ProjectScanIn(Schema):
     url: str
+
 
 class ProjectScanOut(Schema):
     project_id: int
@@ -10,13 +12,16 @@ class ProjectScanOut(Schema):
     url: str
     summary: str = ""
 
+
 class GenerateTitleSuggestionsIn(Schema):
     project_id: int
+
 
 class TitleSuggestionOut(Schema):
     category: str
     title: str
     description: str
+
 
 class GenerateTitleSuggestionsOut(Schema):
     suggestions: list[TitleSuggestionOut]
