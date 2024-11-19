@@ -48,4 +48,4 @@ class ProfileUpdateForm(forms.ModelForm):
 class ProjectScanForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['url']
+        fields = ["url"]

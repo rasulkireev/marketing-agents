@@ -94,7 +94,6 @@ services:
       - 8.8.8.8
       - 8.8.4.4
 
-
   minio:
     image: minio/minio
     ports:
@@ -121,8 +120,8 @@ services:
       /bin/sh -c "
       sleep 5 &&
       /usr/bin/mc config host add myminio http://minio:9000 seo_blog_bot seo_blog_bot &&
-      /usr/bin/mc mb myminio/seo_blog_bot-dev &&
-      /usr/bin/mc anonymous set download myminio/seo_blog_bot-dev &&
+      /usr/bin/mc mb myminio/seo-blog-bot-dev &&
+      /usr/bin/mc anonymous set download myminio/seo-blog-bot-dev &&
       exit 0;
       "
 

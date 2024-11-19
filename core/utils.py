@@ -1,7 +1,13 @@
+import json
+
+import anthropic
+import requests
+from django.conf import settings
+from django.db import transaction
 from django.forms.utils import ErrorList
+from requests.exceptions import ConnectionError
 
-from core.models import Profile
-
+from core.models import BlogPostTitleSuggestion, Profile, Project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -30,6 +36,7 @@ class DivErrorList(ErrorList):
             </div>
          """
 
+
 def check_if_profile_has_pro_subscription(profile_id):
     has_pro_subscription = False
     if profile_id:
@@ -41,3 +48,174 @@ def check_if_profile_has_pro_subscription(profile_id):
 
     return has_pro_subscription
 
+
+def generate_blog_titles_with_claude(project_data: dict) -> list:
+    """
+    Generate blog titles using Claude
+    """
+    claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
+
+    prompt = f"""
+    Generate blog post titles for the following project:
+    - Project Name: {project_data['name']}
+    - Project Type: {project_data['type']}
+    - Project Summary: {project_data['summary']}
+    - Blog Theme: {project_data['blog_theme']}
+    - Key Features: {project_data['key_features']}
+    - Target Audience: {project_data['target_audience_summary']}
+    - Pain Points: {project_data['pain_points']}
+    - Product Usage: {project_data['product_usage']}
+
+    Generate exactly 15 blog post titles (5 for each category) and format them as a JSON array with the following structure:
+    {{
+        "titles": [
+            {{
+                "category": "General Audience",
+                "title": "Example Title 1",
+                "description": "This title works because..."
+            }},
+            {{
+                "category": "Niche Audience",
+                "title": "Example Title 2",
+                "description": "This title works because..."
+            }},
+            {{
+                "category": "Industry/Company",
+                "title": "Example Title 3",
+                "description": "This title works because..."
+            }}
+        ]
+    }}
+
+    Ensure each title:
+    1. Is specific and clear about what the reader will learn
+    2. Includes numbers where appropriate
+    3. Creates curiosity without being clickbait
+    4. Promises value or solution to a problem
+    5. Is timeless rather than time-sensitive
+    6. Uses power words to enhance appeal
+
+    Provide exactly 5 titles for each category (General Audience, Niche Audience, Industry/Company).
+    Return only valid JSON, no additional text or explanations outside the JSON structure.
+    """
+
+    try:
+        message = claude.messages.create(
+            model="claude-3-5-sonnet-latest",
+            max_tokens=1500,
+            temperature=0.7,
+            messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+        )
+        response = message.content[0].text.strip()
+
+        response = response.replace("\n", " ").replace("\r", "")
+        if response.startswith("```json"):
+            response = response.replace("```json", "")
+        if response.endswith("```"):
+            response = response.replace("```", "")
+        response = response.strip()
+
+        data = json.loads(response)
+        return data.get("titles", [])
+
+    except json.JSONDecodeError as e:
+        logger.error(
+            "Error parsing JSON from Claude",
+            error=str(e),
+            prompt=prompt,
+            response=response,
+        )
+        return []
+    except Exception as e:
+        logger.error(
+            "Error generating titles with Claude",
+            error=str(e),
+            prompt=prompt,
+        )
+        return []
+
+
+@transaction.atomic
+def save_blog_titles(project_id: int, titles: list) -> None:
+    """
+    Save generated blog titles to the database
+    """
+    project = Project.objects.get(id=project_id)
+
+    category_mapping = {
+        "General Audience": BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE,
+        "Niche Audience": BlogPostTitleSuggestion.Category.NICH_AUDIENCE,
+        "Industry/Company": BlogPostTitleSuggestion.Category.INDUSTRY_COMPANY,
+    }
+
+    suggestions = []
+    for title_data in titles:
+        try:
+            category = category_mapping.get(title_data["category"], BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE)
+            suggestions.append(
+                BlogPostTitleSuggestion(
+                    project=project, title=title_data["title"], description=title_data["description"], category=category
+                )
+            )
+        except KeyError as e:
+            logger.error("Missing required field in title data", error=str(e), title_data=title_data)
+            continue
+
+    if suggestions:
+        BlogPostTitleSuggestion.objects.bulk_create(suggestions)
+
+
+def process_project_url(url: str) -> dict:
+    jina_url = f"https://r.jina.ai/{url}"
+    jina_headers = {"Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
+
+    try:
+        response = requests.get(jina_url, headers=jina_headers)
+    except ConnectionError as e:
+        logger.error("Failed to get info from Jina Reader AI.", error=str(e))
+        raise ValueError("Failed to get info from Jina Reader AI")
+
+    page_content = response.text
+
+    claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
+
+    prompt = f"""
+    Based on the following web page content, please extract information to populate a Project object. If any information is not available, leave it as an empty string.
+
+    Web page content:
+    {page_content}
+
+    Please provide the information in a JSON format with the following structure:
+    {{
+        "name": "Project name",
+        "type": "One of: SaaS, Hospitality, Job Board, Legal Services, Marketing, News and Magazine, Online Tools, Ecommerce, Educational, Entertainment, Financial Services, Health & Wellness, Personal Blog, Real Estate, Sports, Travel and Tourism",
+        "summary": "Brief summary of the website/project",
+        "blog_theme": "Main topics or theme of the blog/content",
+        "founders": "Names of founders if mentioned",
+        "key_features": "Key features or functionalities",
+        "target_audience_summary": "Description of target audience",
+        "pain_points": "Problems or challenges addressed",
+        "product_usage": "How the product/service is typically used"
+    }}
+
+    Return only the JSON object, nothing else. Ensure it's valid JSON format.
+    """
+
+    message = claude.messages.create(
+        model="claude-3-5-sonnet-latest",
+        max_tokens=1000,
+        temperature=0,
+        messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+    )
+    response = message.content[0].text.strip()
+
+    try:
+        return json.loads(response)
+    except json.JSONDecodeError as e:
+        logger.error(
+            "Error parsing JSON from Claude",
+            error=str(e),
+            prompt=prompt,
+            response=response,
+        )
+        raise ValueError("Failed to parse AI response")

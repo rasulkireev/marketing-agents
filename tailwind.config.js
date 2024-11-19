@@ -1,6 +1,7 @@
 module.exports = {
   content: [
     './frontend/templates/**/*.html',
+    './frontend/src/**/*.js',
     './core/**/*.py',
   ],
   theme: {

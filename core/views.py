@@ -1,44 +1,35 @@
 from urllib.parse import urlencode
 
-from core.tasks import populate_project_fields
 import stripe
-
 from allauth.account.models import EmailAddress
 from allauth.account.utils import send_email_confirmation
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.shortcuts import redirect
-from django.conf import settings
-from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import TemplateView, UpdateView, ListView, DetailView, FormView
+from django.utils.text import slugify
+from django.views.decorators.http import require_POST
+from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 from django_q.tasks import async_task
 from djstripe import models as djstripe_models
 
-from core.utils import check_if_profile_has_pro_subscription
 from core.forms import ProfileUpdateForm, ProjectScanForm
-from core.models import Profile, BlogPost, Project
-
+from core.models import BlogPost, BlogPostTitleSuggestion, GeneratedBlogPost, Profile, Project
+from core.utils import check_if_profile_has_pro_subscription
 from seo_blog_bot.utils import get_seo_blog_bot_logger
-
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 logger = get_seo_blog_bot_logger(__name__)
 
-class HomeView(FormView):
-    template_name = "pages/home.html"
-    form_class = ProjectScanForm
-    success_url = reverse_lazy('home')
 
-    def form_valid(self, form):
-        url = form.cleaned_data['url']
-        project = Project.objects.create(url=url)
-        async_task(populate_project_fields, project.id)
-        messages.success(self.request, "Your project has been submitted for scanning. Please check back later for results.")
-        return super().form_valid(form)
+class HomeView(TemplateView):
+    template_name = "pages/home.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -48,6 +39,13 @@ class HomeView(FormView):
             context["show_confetti"] = True
         elif payment_status == "failed":
             messages.error(self.request, "Something went wrong with the payment.")
+
+        context["form"] = ProjectScanForm()
+
+        # Add projects to context for authenticated users
+        if self.request.user.is_authenticated:
+            context["projects"] = Project.objects.filter(profile=self.request.user.profile).order_by("-created_at")
+
         return context
 
 
@@ -72,8 +70,6 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         context["has_subscription"] = user.profile.subscription is not None
 
         return context
-
-
 
 
 @login_required
@@ -158,7 +154,6 @@ def create_customer_portal_session(request):
     return redirect(session.url, code=303)
 
 
-
 class BlogView(ListView):
     model = BlogPost
     template_name = "blog/blog_posts.html"
@@ -169,3 +164,62 @@ class BlogPostView(DetailView):
     model = BlogPost
     template_name = "blog/blog_post.html"
     context_object_name = "blog_post"
+
+
+class ProjectDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "project/project_detail.html"
+    context_object_name = "project"
+
+    def get_queryset(self):
+        # Ensure users can only see their own projects
+        return Project.objects.filter(profile=self.request.user.profile)
+
+
+@login_required
+@require_POST
+def generate_blog_content(request, suggestion_id):
+    suggestion = BlogPostTitleSuggestion.objects.get(id=suggestion_id)
+
+    # Create a placeholder GeneratedBlogPost
+    generated_post = GeneratedBlogPost.objects.create(
+        project=suggestion.project,
+        title=suggestion,
+        slug=slugify(suggestion.title),
+        description=suggestion.description,
+        tags="",  # Will be populated by the task
+        content="",  # Will be populated by the task
+    )
+
+    # Queue the content generation task
+    async_task(
+        "core.tasks.generate_blog_content_task",
+        generated_post.id,
+        suggestion.title,
+        suggestion.project,
+        task_name=f"Generate blog content for {suggestion.title}",
+    )
+
+    return JsonResponse(
+        {"status": "success", "redirect_url": reverse("project_detail", kwargs={"pk": suggestion.project.id})}
+    )
+
+
+@login_required
+def check_content_status(request, suggestion_id):
+    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=request.user.profile)
+    generated_post = suggestion.generated_blog_posts.first()
+
+    if not generated_post:
+        return JsonResponse({"is_generated": False, "content": None, "slug": None, "tags": None, "description": None})
+
+    return JsonResponse(
+        {
+            "is_generated": bool(generated_post.content),
+            "content": generated_post.content if generated_post.content else None,
+            "slug": generated_post.slug if generated_post.slug else None,
+            "tags": generated_post.tags if generated_post.tags else None,
+            "description": generated_post.description if generated_post.description else None,
+        },
+        json_dumps_params={"ensure_ascii": False},
+    )

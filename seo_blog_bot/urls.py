@@ -14,8 +14,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
 from django.contrib.sitemaps.views import sitemap
+from django.urls import include, path
 from django.views.generic import TemplateView
 
 from seo_blog_bot.sitemaps import sitemaps
@@ -26,7 +26,6 @@ urlpatterns = [
     path("anymail/", include("anymail.urls")),
     path("uses", TemplateView.as_view(template_name="pages/uses.html"), name="uses"),
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
-
     path("", include("core.urls")),
     path(
         "sitemap.xml",
