@@ -121,14 +121,14 @@ export default class extends Controller {
     input.value = value;
     input.id = id;
     input.setAttribute("data-copy-target", "source");
-    input.className = `block mt-1 ${isTextarea ? "mb-2" : ""} w-full font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm pr-20 ${extraClasses}`;
+    input.className = `block mt-1 ${isTextarea ? "mb-2" : ""} w-full font-mono text-sm rounded-md border sm:text-sm pr-20 ${extraClasses}`;
     input.readOnly = true;
 
     // Create copy button
     const copyButton = document.createElement("button");
     copyButton.setAttribute("data-action", "copy#copy");
     copyButton.setAttribute("data-copy-target", "button");
-    copyButton.className = "absolute right-2" + (isTextarea ? " bottom-2" : " top-[30px]") + " px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:bg-pink-700 active:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2";
+    copyButton.className = "absolute right-2" + (isTextarea ? " bottom-2" : " top-[30px]") + " px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700";
     copyButton.textContent = "Copy";
 
     // Add elements to the div
