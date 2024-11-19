@@ -41,14 +41,14 @@ The following notes are applicable only after you got the app running locally vi
 ## Deployment
 
 1. Create 4 apps on CapRover.
-  - `seo_blog_bot`
-  - `seo_blog_bot-workers`
-  - `seo_blog_bot-postgres`
-  - `seo_blog_bot-redis`
+  - `seo-blog-bot`
+  - `seo-blog-bot-workers`
+  - `seo-blog-bot-postgres`
+  - `seo-blog-bot-redis`
 
 2. Create a new CapRover app token for:
-   - `seo_blog_bot`
-   - `seo_blog_bot-workers`
+   - `seo-blog-bot`
+   - `seo-blog-bot-workers`
 
 3. Add Environment Variables to those same apps from `.env`.
 

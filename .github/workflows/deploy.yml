@@ -6,7 +6,7 @@ on:
         - main
 
 env:
-  PROJECT_NAME: seo_blog_bot
+  PROJECT_NAME: seo-blog-bot
 
 jobs:
   build-and-deploy:

@@ -144,7 +144,7 @@ STATICFILES_DIRS = [
     BASE_DIR.joinpath("frontend/build"),
 ]
 
-bucket_name = f"seo_blog_bot-{ENVIRONMENT}"
+bucket_name = f"seo-blog-bot-{ENVIRONMENT}"
 
 STORAGES = {
     "default": {
