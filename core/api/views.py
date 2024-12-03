@@ -95,10 +95,7 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
     }
 
     try:
-        # Generate titles
         titles = generate_blog_titles_with_claude(project_data)
-
-        # Save titles to database
         save_blog_titles(project.id, titles)
 
         return {"suggestions": titles}

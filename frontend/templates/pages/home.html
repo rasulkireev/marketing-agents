@@ -4,9 +4,45 @@
 {% block content %}
 <div class="isolate relative px-6 mt-16 sm:mt-24 lg:px-8">
   <div class="mx-auto text-center">
-    <h1 class="mx-auto mb-6 max-w-2xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-      Best SEO Blog Writer entity in the universe!
+    <h1 class="mx-auto mb-4 max-w-2xl text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+      Get some awesome blog post ideas for <span class="text-pink-600">YOUR</span> project!
     </h1>
+
+    <p class="mx-auto my-8 max-w-2xl text-lg text-gray-600">
+      Generate SEO-optimized blog posts in 3 simple steps:
+    </p>
+
+    <div class="grid grid-cols-1 gap-6 mx-auto mb-10 max-w-3xl md:grid-cols-3">
+      <div class="p-4 bg-white rounded-lg">
+        <div class="mb-2 text-pink-600">
+          <svg class="mx-auto w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold">1. Submit Your URL</h3>
+        <p class="text-sm text-gray-600">Share your project or website link</p>
+      </div>
+
+      <div class="p-4 bg-white rounded-lg">
+        <div class="mb-2 text-pink-600">
+          <svg class="mx-auto w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold">2. Get Blog Ideas</h3>
+        <p class="text-sm text-gray-600">We analyze your content and suggest engaging blog topics</p>
+      </div>
+
+      <div class="p-4 bg-white rounded-lg">
+        <div class="mb-2 text-pink-600">
+          <svg class="mx-auto w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold">3. Generate Full Posts</h3>
+        <p class="text-sm text-gray-600">Choose your favorite title and get a complete blog post</p>
+      </div>
+    </div>
 
     {% if user.is_authenticated %}
       <div data-controller="scan-progress">
@@ -94,7 +130,7 @@
     {% else %}
       <div class="mx-auto mt-10 max-w-sm">
         <a href="{% url 'account_signup' %}" class="flex justify-center px-4 py-2 w-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
-          Sign up to start scanning
+          Get Starter for Free
         </a>
       </div>
     {% endif %}
