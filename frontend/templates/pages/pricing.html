@@ -27,48 +27,85 @@
 <div class="py-24 bg-white sm:py-32">
   <div class="px-6 mx-auto max-w-7xl lg:px-8">
     <div class="mx-auto max-w-4xl sm:text-center">
-      <h2 class="text-base font-semibold leading-7 text-indigo-600">Pricing</h2>
+      <h2 class="text-base font-semibold leading-7 text-pink-600">Pricing</h2>
       <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Free to use and self-host</p>
     </div>
     <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 sm:text-center">Our app is completely free to use for anyone and can be <a href="https://github.com/rasulkireev/osig" class="prose">self-hosted</a>. For additional features and support, check out our paid plans below.</p>
+
+    <!-- Free Plan -->
+    <div class="pt-16 mx-auto max-w-sm">
+      <h3 id="tier-free" class="text-base font-semibold leading-7 text-gray-900">Free</h3>
+      <p class="flex gap-x-1 items-baseline mt-6">
+        <span class="text-5xl font-bold tracking-tight text-gray-900">$0</span>
+        <span class="text-sm font-semibold leading-6 text-gray-600">/forever</span>
+      </p>
+      {% if user.is_authenticated %}
+        <a href="#" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-pink-600 bg-white rounded-md ring-1 ring-inset ring-pink-200 shadow-sm hover:ring-pink-300">Current plan</a>
+      {% else %}
+        <a href="{% url 'account_signup' %}" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-pink-600 bg-white rounded-md ring-1 ring-inset ring-pink-200 shadow-sm hover:ring-pink-300">Get started</a>
+      {% endif %}
+      <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+        <li class="flex gap-x-3">
+          <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+          </svg>
+          15 blog post suggestions
+        </li>
+        <li class="flex gap-x-3">
+          <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+          </svg>
+          5 full blog posts
+        </li>
+      </ul>
+    </div>
+
+    <!-- Paid Plan -->
     <div class="flow-root mt-20">
       <div class="grid isolate grid-cols-1 gap-y-16 -mt-16 max-w-sm divide-y divide-gray-100 sm:mx-auto lg:-mx-8 lg:mt-0 lg:max-w-none lg:grid-cols-3 lg:divide-x lg:divide-y-0 xl:-mx-4">
-        <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
-          <h3 id="tier-basic" class="text-base font-semibold leading-7 text-gray-900">Monthly</h3>
-          <p class="flex gap-x-1 items-baseline mt-6">
-            <span class="text-5xl font-bold tracking-tight text-gray-900">$10</span>
-            <span class="text-sm font-semibold leading-6 text-gray-600">/month</span>
-          </p>
-          {% if user.is_authenticated %}
-            {% if has_pro_subscription %}
-              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">You are a pro!</a>
-            {% else %}
-              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
-            {% endif %}
+
+      <!-- Monthly Plan -->
+      <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
+        <h3 id="tier-monthly" class="text-base font-semibold leading-7 text-gray-900">Monthly</h3>
+        <p class="flex gap-x-1 items-baseline mt-6">
+          <span class="text-5xl font-bold tracking-tight text-gray-900">$10</span>
+          <span class="text-sm font-semibold leading-6 text-gray-600">/month</span>
+        </p>
+        {% if user.is_authenticated %}
+          {% if has_pro_subscription %}
+            <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
           {% else %}
-            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+            <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
           {% endif %}
-          <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
-            <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-              </svg>
-              Remove the watermark
-            </li>
-            <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-              </svg>
-              More styling options
-            </li>
-            <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-              </svg>
-              48-hour support response time
-            </li>
-          </ul>
-        </div>
+        {% else %}
+          <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
+        {% endif %}
+        <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+          <li class="flex gap-x-3">
+            <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+            </svg>
+            Unlimited blog suggestions
+          </li>
+          <li class="flex gap-x-3">
+            <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+            </svg>
+            Unlimited full blog posts
+          </li>
+          <li class="flex gap-x-3">
+            <svg class="flex-none w-5 h-6 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
+            </svg>
+            <span class="flex items-center">
+              Suggest blog post ideas
+              <span class="inline-flex items-center px-2 py-0.5 ml-2 text-xs font-medium text-gray-800 bg-gray-100 rounded">Coming soon</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+        <!-- Annual -->
         <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
           <h3 id="tier-essential" class="text-base font-semibold leading-7 text-gray-900">Annual</h3>
           <p class="flex gap-x-1 items-baseline mt-6">
@@ -77,34 +114,39 @@
           </p>
           {% if user.is_authenticated %}
             {% if has_pro_subscription %}
-              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">You are a pro!</a>
+              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
             {% else %}
-              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
             {% endif %}
           {% else %}
-            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
           {% endif %}
           <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
             <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
               </svg>
-              Remove the watermark
+              Unlimited blog suggestions
             </li>
             <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
               </svg>
-              More styling options
+              Unlimited full blog posts
             </li>
             <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <svg class="flex-none w-5 h-6 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
               </svg>
-              48-hour support response time
+              <span class="flex items-center">
+                Suggest blog post ideas
+                <span class="inline-flex items-center px-2 py-0.5 ml-2 text-xs font-medium text-gray-800 bg-gray-100 rounded">Coming soon</span>
+              </span>
             </li>
           </ul>
         </div>
+
+        <!-- One-time -->
         <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
           <h3 id="tier-growth" class="text-base font-semibold leading-7 text-gray-900">One-time</h3>
           <p class="flex gap-x-1 items-baseline mt-6">
@@ -112,31 +154,34 @@
           </p>
           {% if user.is_authenticated %}
             {% if has_pro_subscription %}
-              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">You are a pro!</a>
+              <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
             {% else %}
-              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
             {% endif %}
           {% else %}
-            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Buy plan</a>
+            <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
           {% endif %}
           <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
             <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
               </svg>
-              Remove the watermark
+              Unlimited blog suggestions
             </li>
             <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
               </svg>
-              More styling options
+              Unlimited full blog posts
             </li>
             <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-indigo-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
+              <svg class="flex-none w-5 h-6 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
               </svg>
-              48-hour support response time
+              <span class="flex items-center">
+                Suggest blog post ideas
+                <span class="inline-flex items-center px-2 py-0.5 ml-2 text-xs font-medium text-gray-800 bg-gray-100 rounded">Coming soon</span>
+              </span>
             </li>
           </ul>
         </div>
