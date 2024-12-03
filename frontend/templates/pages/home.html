@@ -6,6 +6,12 @@
   <div class="mx-auto text-center">
     {% if user.is_authenticated %}
       <div data-controller="scan-progress">
+        <div class="mx-auto max-w-md text-center">
+          <h2 class="mb-2 text-xl font-semibold text-gray-900">Ready to create content?</h2>
+          <p class="mb-6 text-base text-gray-600">
+            Enter your project's homepage URL below. We'll analyze it to generate relevant blog post ideas for your audience.
+          </p>
+        </div>
         <form data-action="submit->scan-progress#handleSubmit" class="mx-auto mt-10 max-w-md">
           {% csrf_token %}
           <div class="flex gap-x-4">
