@@ -16,60 +16,136 @@
         <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">{{ project.name }}</p>
         <span class="px-3 py-1 mt-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-full">{{ project.get_type_display }}</span>
       </div>
-      <p class="mt-6 text-lg leading-8 text-gray-600">{{ project.summary }}</p>
     </div>
 
     <!-- Project Details -->
-    <div class="mx-auto mt-10 max-w-4xl">
+    <div
+      class="mx-auto mt-10 max-w-4xl"
+      data-controller="title-suggestions"
+      data-title-suggestions-project-id-value="{{ project.id }}"
+    >
+      <!-- Project Details Form -->
       <div class="p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <!-- Detailed Info -->
-        <div class="space-y-6">
-          <div>
-            <dt class="text-sm font-semibold text-gray-600">Key Features</dt>
-            <dd class="mt-1 text-sm text-gray-600">{{ project.key_features|linebreaks }}</dd>
+        <h3 class="mb-4 text-2xl font-bold tracking-tight text-gray-900">Project Details</h3>
+        <form
+        data-controller="project-details"
+        data-project-details-project-id-value="{{ project.id }}"
+        data-action="project-details#save"
+        >
+          {% csrf_token %}
+          <div class="space-y-6">
+            <div>
+              <label for="summary" class="block text-sm font-semibold text-gray-600">Summary</label>
+              <textarea
+                id="summary"
+                name="summary"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="4"
+              >{{ project.summary }}</textarea>
+            </div>
+
+            <div>
+              <label for="key_features" class="block text-sm font-semibold text-gray-600">Key Features</label>
+              <textarea
+                id="key_features"
+                name="key_features"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="4"
+              >{{ project.key_features }}</textarea>
+            </div>
+
+            <div>
+              <label for="target_audience" class="block text-sm font-semibold text-gray-600">Target Audience</label>
+              <textarea
+                id="target_audience"
+                name="target_audience_summary"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="3"
+              >{{ project.target_audience_summary }}</textarea>
+            </div>
+
+            <div>
+              <label for="pain_points" class="block text-sm font-semibold text-gray-600">Pain Points Addressed</label>
+              <textarea
+                id="pain_points"
+                name="pain_points"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="4"
+              >{{ project.pain_points }}</textarea>
+            </div>
+
+            <div>
+              <label for="product_usage" class="block text-sm font-semibold text-gray-600">Product Usage</label>
+              <textarea
+                id="product_usage"
+                name="product_usage"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="4"
+              >{{ project.product_usage }}</textarea>
+            </div>
+
+            <div>
+              <label for="blog_theme" class="block text-sm font-semibold text-gray-600">Blog Theme</label>
+              <textarea
+                id="blog_theme"
+                name="blog_theme"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="3"
+              >{{ project.blog_theme }}</textarea>
+            </div>
+
+            <div>
+              <label for="founders" class="block text-sm font-semibold text-gray-600">Founders</label>
+              <textarea
+                id="founders"
+                name="founders"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                rows="2"
+              >{{ project.founders }}</textarea>
+            </div>
+
+            <div>
+              <label for="language" class="block text-sm font-semibold text-gray-600">Language</label>
+              <select
+                id="language"
+                name="language"
+                data-project-details-target="input"
+                class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+              >
+                {% for value, label in project.Language.choices %}
+                  <option value="{{ value }}" {% if project.language == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="flex justify-end">
+              <button
+                type="submit"
+                class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+              >
+                Save Changes
+              </button>
+            </div>
           </div>
-          <div>
-            <dt class="text-sm font-semibold text-gray-600">Target Audience</dt>
-            <dd class="mt-1 text-sm text-gray-600">{{ project.target_audience_summary }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-gray-600">Pain Points Addressed</dt>
-            <dd class="mt-1 text-sm text-gray-600">{{ project.pain_points|linebreaks }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-gray-600">Product Usage</dt>
-            <dd class="mt-1 text-sm text-gray-600">{{ project.product_usage }}</dd>
-          </div>
-        </div>
+        </form>
       </div>
 
-      {% if project.blog_post_title_suggestions.exists %}
       <!-- Blog Post Suggestions -->
-      <div class="mt-16">
+      <div
+        class="mt-16 {% if not project.blog_post_title_suggestions.exists %}hidden{% endif %}"
+        data-title-suggestions-target="suggestionsContainer"
+      >
         <h3 class="text-2xl font-bold tracking-tight text-gray-900">Suggested Blog Posts</h3>
-        {% if project.should_blur_suggestions %}
-        <div class="p-4 mt-8 bg-pink-50 rounded-lg border border-pink-200">
-          <div class="flex items-start">
-            <div class="flex-shrink-0">
-              <svg class="w-5 h-5 text-pink-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-pink-800">Unlock All Suggestions</h3>
-              <div class="mt-2 text-sm text-pink-700">
-                <p>Subscribe to see all {{ project.blog_post_title_suggestions.count }} blog post suggestions without blur and unlock premium features.</p>
-                <a href="{% url 'pricing' %}" class="inline-flex items-center px-4 py-2 mt-3 text-sm font-medium text-white bg-pink-600 rounded-md hover:bg-pink-700">
-                  View Pricing
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-        <div class="mt-6 space-y-8">
+
+        <div class="mt-6 space-y-8" data-title-suggestions-target="suggestionsList">
           {% for suggestion in project.blog_post_title_suggestions.all %}
-            <div class="pl-4 border-l-4 border-pink-600 {% if project.should_blur_suggestions and forloop.counter > 2 %}relative{% endif %}"
+            <div class="pl-4 border-l-4 border-pink-600"
                  data-controller="generate-content"
                  data-generate-content-suggestion-id-value="{{ suggestion.id }}">
               <!-- Header section with toggle -->
@@ -203,9 +279,50 @@
             </div>
           {% endfor %}
         </div>
-
       </div>
-      {% endif %}
+
+      <div
+        data-controller="content-idea"
+        data-content-idea-project-id-value="{{ project.id }}"
+      >
+        <div class="flex gap-4 justify-center items-center my-6">
+          <button
+            data-action="content-idea#toggleForm"
+            class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          >
+            Suggest Content Idea
+          </button>
+          <button
+            data-action="title-suggestions#generate"
+            class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+          >
+            Generate {% if project.blog_post_title_suggestions.exists %}More{% else %}Post Suggestions{% endif %}
+          </button>
+        </div>
+
+        <!-- Content Idea Form (Hidden by default) -->
+        <div data-content-idea-target="form" class="hidden mt-4">
+          <div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <textarea
+                data-content-idea-target="input"
+                rows="3"
+                class="block p-2.5 w-full text-gray-900 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500"
+                placeholder="Describe your content idea..."
+              ></textarea>
+              <div class="flex justify-end mt-3">
+                <button
+                  data-action="content-idea#generate"
+                  class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

@@ -1,4 +1,4 @@
-Generate blog post titles for the following project:
+Generate a blog post title for the following project and requirements:
 - Project URL: {{ project.url }}
 - Project Name: {{ project.name }}
 - Project Type: {{ project.type }}
@@ -10,35 +10,25 @@ Generate blog post titles for the following project:
 - Pain Points: {{ project.pain_points }}
 - Product Usage: {{ project.product_usage }}
 - Language: {{ project.language }}
+- User's specific request: {{ user_prompt }}
 
-Generate exactly 15 blog post titles (5 for each category) and format them as a JSON array with the following structure:
+Generate a single blog post title and format it as a JSON object with the following structure:
 {
-    "titles": [
-        {
-            "category": "General Audience",
-            "title": "Example Title 1",
-            "description": "This title works because..."
-        },
-        {
-            "category": "Niche Audience",
-            "title": "Example Title 2",
-            "description": "This title works because..."
-        },
-        {
-            "category": "Industry/Company",
-            "title": "Example Title 3",
-            "description": "This title works because..."
-        }
-    ]
+    "category": "General Audience",
+    "title": "Example Title 1",
+    "description": "This title works because..."
 }
 
-Ensure each title:
+Ensure the title:
 1. Is specific and clear about what the reader will learn
 2. Includes numbers where appropriate
 3. Creates curiosity without being clickbait
 4. Promises value or solution to a problem
 5. Is timeless rather than time-sensitive
 6. Uses power words to enhance appeal
+7. Incorporates the requested keywords naturally
+8. Matches the requested style
+9. Addresses the specified category
+10. Considers any additional notes provided
 
-Provide exactly 5 titles for each category (General Audience, Niche Audience, Industry/Company).
 Return only valid JSON, no additional text or explanations outside the JSON structure.

@@ -127,30 +127,37 @@ class Project(BaseModel):
 
     class Language(models.TextChoices):
         ENGLISH = "English", "English"
+        SPANISH = "Spanish", "Spanish"
+        FRENCH = "French", "French"
+        GERMAN = "German", "German"
+        ITALIAN = "Italian", "Italian"
+        PORTUGUESE = "Portuguese", "Portuguese"
+        RUSSIAN = "Russian", "Russian"
+        JAPANESE = "Japanese", "Japanese"
+        CANTONESE = "Cantonese", "Cantonese"
+        MANDARIN = "Mandarin", "Mandarin"
+        ARABIC = "Arabic", "Arabic"
+        KOREAN = "Korean", "Korean"
+        HINDI = "Hindi", "Hindi"
+        UKRAINIAN = "Ukrainian", "Ukrainian"
         # Add other languages as needed
 
     profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects")
     url = models.URLField(max_length=200, unique=True)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=Type.choices, default=Type.SAAS)
-    summary = models.TextField()
-    blog_theme = models.TextField()
+    summary = models.TextField(blank=True)
+    blog_theme = models.TextField(blank=True)
     founders = models.TextField(blank=True)
-    key_features = models.TextField()
+    key_features = models.TextField(blank=True)
     language = models.CharField(max_length=50, choices=Language.choices, default=Language.ENGLISH)
-    target_audience_summary = models.TextField()
-    pain_points = models.TextField()
-    product_usage = models.TextField()
+    target_audience_summary = models.TextField(blank=True)
+    pain_points = models.TextField(blank=True)
+    product_usage = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=Style.choices, default=Style.DIGITAL_ART)
 
     def __str__(self):
         return self.name
-
-    def should_blur_suggestions(self):
-        if not self.profile:
-            return True
-        # current_state = self.profile.current_state
-        return False  # current_state not in [ProfileStates.SUBSCRIBED, ProfileStates.CANCELLED]
 
 
 class BlogPostTitleSuggestion(BaseModel):
