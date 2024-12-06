@@ -21,6 +21,7 @@ Context for content generation:
 - Blog theme: {{ suggestion.project.blog_theme }}
 - Language: {{ suggestion.project.language }}
 - Founders: {{ suggestion.project.founders }}
+- Links: {{ suggestion.project.links }}
 
 For the given title '{{ suggestion.title }}', please create:
 

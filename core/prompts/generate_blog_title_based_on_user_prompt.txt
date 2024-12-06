@@ -10,6 +10,7 @@ Generate a blog post title for the following project and requirements:
 - Pain Points: {{ project.pain_points }}
 - Product Usage: {{ project.product_usage }}
 - Language: {{ project.language }}
+- Links: {{ project.links }}
 - User's specific request: {{ user_prompt }}
 
 Generate a single blog post title and format it as a JSON object with the following structure:

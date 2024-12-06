@@ -154,6 +154,7 @@ class Project(BaseModel):
     target_audience_summary = models.TextField(blank=True)
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
+    links = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=Style.choices, default=Style.DIGITAL_ART)
 
     def __str__(self):

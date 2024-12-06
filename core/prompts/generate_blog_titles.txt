@@ -10,6 +10,7 @@ Generate blog post titles for the following project:
 - Pain Points: {{ project.pain_points }}
 - Product Usage: {{ project.product_usage }}
 - Language: {{ project.language }}
+- Links: {{ project.links }}
 
 Generate exactly 15 blog post titles (5 for each category) and format them as a JSON array with the following structure:
 {
