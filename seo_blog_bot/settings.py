@@ -79,7 +79,10 @@ ROOT_URLCONF = "seo_blog_bot.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [str(BASE_DIR.joinpath("frontend", "templates"))],
+        "DIRS": [
+            str(BASE_DIR.joinpath("frontend", "templates")),
+            str(BASE_DIR.joinpath("core", "prompts")),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
