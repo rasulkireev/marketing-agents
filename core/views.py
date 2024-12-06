@@ -8,17 +8,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
-from django.utils.text import slugify
-from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
-from django_q.tasks import async_task
 from djstripe import models as djstripe_models
 
 from core.forms import ProfileUpdateForm, ProjectScanForm
-from core.models import BlogPost, BlogPostTitleSuggestion, GeneratedBlogPost, Profile, Project
+from core.models import BlogPost, Profile, Project
 from core.utils import check_if_profile_has_pro_subscription
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -174,52 +170,3 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         # Ensure users can only see their own projects
         return Project.objects.filter(profile=self.request.user.profile)
-
-
-@login_required
-@require_POST
-def generate_blog_content(request, suggestion_id):
-    suggestion = BlogPostTitleSuggestion.objects.get(id=suggestion_id)
-
-    # Create a placeholder GeneratedBlogPost
-    generated_post = GeneratedBlogPost.objects.create(
-        project=suggestion.project,
-        title=suggestion,
-        slug=slugify(suggestion.title),
-        description=suggestion.description,
-        tags="",  # Will be populated by the task
-        content="",  # Will be populated by the task
-    )
-
-    # Queue the content generation task
-    async_task(
-        "core.tasks.generate_blog_content_task",
-        generated_post.id,
-        suggestion.title,
-        suggestion.project,
-        task_name=f"Generate blog content for {suggestion.title}",
-    )
-
-    return JsonResponse(
-        {"status": "success", "redirect_url": reverse("project_detail", kwargs={"pk": suggestion.project.id})}
-    )
-
-
-@login_required
-def check_content_status(request, suggestion_id):
-    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=request.user.profile)
-    generated_post = suggestion.generated_blog_posts.first()
-
-    if not generated_post:
-        return JsonResponse({"is_generated": False, "content": None, "slug": None, "tags": None, "description": None})
-
-    return JsonResponse(
-        {
-            "is_generated": bool(generated_post.content),
-            "content": generated_post.content if generated_post.content else None,
-            "slug": generated_post.slug if generated_post.slug else None,
-            "tags": generated_post.tags if generated_post.tags else None,
-            "description": generated_post.description if generated_post.description else None,
-        },
-        json_dumps_params={"ensure_ascii": False},
-    )

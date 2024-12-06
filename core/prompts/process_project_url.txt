@@ -1,0 +1,22 @@
+Based on the following web page content, please extract and infer the requested information.
+Feel free to make reasonable inferences based on the available content, context, and industry knowledge.
+Aim to provide comprehensive, detailed responses for each field.
+
+Web page content:
+{{ page_content }}
+
+Please provide the information in a JSON format with the following structure:
+{
+    "name": "Official project/company name as stated, or most commonly used name in the content",
+    "type": "One of: SaaS, Hospitality, Job Board, Legal Services, Marketing, News and Magazine, Online Tools, Ecommerce, Educational, Entertainment, Financial Services, Health & Wellness, Personal Blog, Real Estate, Sports, Travel and Tourism. Infer from the content, features, and target audience",
+    "summary": "A detailed 4-5 sentence description covering: what the project/website does, its main purpose, primary value proposition, unique selling points, and its position in the market. Include both explicit information and reasonable inferences",
+    "blog_theme": "Comprehensive description of content themes, topics, and categories. Include both explicit themes and implied focus areas. Describe the overall content strategy and editorial direction. Separate multiple themes with semicolons",
+    "founders": "Names of founders with their roles, backgrounds, and relevant experience where available. Include any mentioned team members if founders aren't specified. Separate multiple people with semicolons",
+    "key_features": "Extensive list of features, functionalities, and services. For each feature, describe its purpose, benefits, and user value. Include both stated and implied features based on the content. Separate features with semicolons",
+    "target_audience_summary": "Detailed profile of likely users including demographics, professional backgrounds, industry sectors, behavior patterns, needs, and use cases. Combine explicit mentions with logical inferences about who would benefit most from the product/service. Separate different aspects with semicolons",
+    "pain_points": "Comprehensive analysis of problems and challenges addressed, including explicit and implicit pain points. Describe the current market situation, user frustrations, industry inefficiencies, and how the product/service solves each issue. Separate different points with semicolons",
+    "product_usage": "Detailed walkthrough of how users would interact with the product/service, including: typical user journey, common scenarios, integration possibilities, usage patterns, and practical applications. Combine stated information with logical usage scenarios. Separate different aspects with semicolons",
+    "links": "List of all links found on the page, including internal and external links. Format like this: Link Text: https://example.com\n"
+}
+
+Return only the JSON object, nothing else. Ensure it's valid JSON format and all values are strings. Use semicolons to separate multiple items within a single string value. Feel free to make reasonable inferences, but keep them grounded in the available content and context.

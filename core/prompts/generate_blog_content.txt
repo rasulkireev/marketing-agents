@@ -10,12 +10,18 @@ Your task is to generate a blog post and return it in the following JSON format.
 }
 
 Context for content generation:
-- Platform: {{ suggestion.project.name }} ({{ suggestion.project.type }})
+- Project URL: {{ suggestion.project.url }}
+- Project Name: {{ suggestion.project.name }}
+- Project Type: {{ suggestion.project.type }}
+- Project Summary: {{ suggestion.project.summary }}
 - Key features: {{ suggestion.project.key_features }}
 - Pain points addressed: {{ suggestion.project.pain_points }}
 - Target audience: {{ suggestion.project.target_audience_summary }}
 - Usage patterns: {{ suggestion.project.product_usage }}
 - Blog theme: {{ suggestion.project.blog_theme }}
+- Language: {{ suggestion.project.language }}
+- Founders: {{ suggestion.project.founders }}
+- Links: {{ suggestion.project.links }}
 
 For the given title '{{ suggestion.title }}', please create:
 

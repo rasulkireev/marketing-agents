@@ -1,10 +1,4 @@
-import json
-
-import anthropic
-import requests
-from django.conf import settings
 from django.forms.utils import ErrorList
-from requests.exceptions import ConnectionError
 
 from core.models import Profile
 from seo_blog_bot.utils import get_seo_blog_bot_logger
@@ -46,59 +40,3 @@ def check_if_profile_has_pro_subscription(profile_id):
             logger.error("Profile does not exist", profile_id=profile_id)
 
     return has_pro_subscription
-
-
-def process_project_url(url: str) -> dict:
-    jina_url = f"https://r.jina.ai/{url}"
-    jina_headers = {"Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
-
-    try:
-        response = requests.get(jina_url, headers=jina_headers)
-    except ConnectionError as e:
-        logger.error("Failed to get info from Jina Reader AI.", error=str(e))
-        raise ValueError("Failed to get info from Jina Reader AI")
-
-    page_content = response.text
-
-    claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
-
-    prompt = f"""
-    Based on the following web page content, please extract information to populate a Project object. If any information is not available, leave it as an empty string.
-
-    Web page content:
-    {page_content}
-
-    Please provide the information in a JSON format with the following structure:
-    {{
-        "name": "Project name",
-        "type": "One of: SaaS, Hospitality, Job Board, Legal Services, Marketing, News and Magazine, Online Tools, Ecommerce, Educational, Entertainment, Financial Services, Health & Wellness, Personal Blog, Real Estate, Sports, Travel and Tourism",
-        "summary": "Brief summary of the website/project",
-        "blog_theme": "Main topics or theme of the blog/content",
-        "founders": "Names of founders if mentioned",
-        "key_features": "Key features or functionalities",
-        "target_audience_summary": "Description of target audience",
-        "pain_points": "Problems or challenges addressed",
-        "product_usage": "How the product/service is typically used"
-    }}
-
-    Return only the JSON object, nothing else. Ensure it's valid JSON format.
-    """
-
-    message = claude.messages.create(
-        model="claude-3-5-sonnet-latest",
-        max_tokens=1000,
-        temperature=0,
-        messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-    )
-    response = message.content[0].text.strip()
-
-    try:
-        return json.loads(response)
-    except json.JSONDecodeError as e:
-        logger.error(
-            "Error parsing JSON from Claude",
-            error=str(e),
-            prompt=prompt,
-            response=response,
-        )
-        raise ValueError("Failed to parse AI response")

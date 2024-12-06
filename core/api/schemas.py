@@ -33,3 +33,12 @@ class GeneratedContentOut(Schema):
     slug: str
     tags: str
     description: str
+
+
+class GenerateTitleFromIdeaIn(Schema):
+    project_id: int
+    user_prompt: str
+
+
+class GenerateTitleSuggestionOut(Schema):
+    suggestion: dict
