@@ -170,3 +170,8 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         # Ensure users can only see their own projects
         return Project.objects.filter(profile=self.request.user.profile)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["has_content_access"] = self.request.user.profile.has_active_subscription
+        return context

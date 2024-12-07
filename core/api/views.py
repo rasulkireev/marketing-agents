@@ -26,7 +26,7 @@ from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
 
-api = NinjaAPI(auth=MultipleAuthSchema(), csrf=True)  # Enable CSRF protection
+api = NinjaAPI(auth=MultipleAuthSchema(), csrf=True)
 
 
 @api.post("/scan", response=ProjectScanOut)
@@ -35,17 +35,21 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 
     # Check if project already exists for this user
     project = Project.objects.filter(profile=profile, url=data.url).first()
-
     if project:
         return {
+            "status": "success",
             "project_id": project.id,
             "has_details": bool(project.name),
             "has_suggestions": project.blog_post_title_suggestions.exists(),
         }
 
-    # Create new project
-    project = Project.objects.create(profile=profile, url=data.url)
+    if Project.objects.filter(url=data.url).exists():
+        return {
+            "status": "error",
+            "message": "Project already exists",
+        }
 
+    project = Project.objects.create(profile=profile, url=data.url)
     try:
         # Get page content from Jina
         jina_url = f"https://r.jina.ai/{data.url}"
@@ -106,6 +110,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         raise ValueError(f"Error processing URL: {str(e)}")
 
     return {
+        "status": "success",
         "project_id": project.id,
         "name": project.name,
         "type": project.get_type_display(),
@@ -118,6 +123,17 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggestionsIn):
     profile = request.auth
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
+
+    if (
+        profile.reached_title_generation_limit
+        # don't want to generate 15 new suggestions if user has a bunch already.
+        or profile.number_of_title_suggestions + 15 >= 20
+    ):
+        return {
+            "suggestions": [],
+            "status": "error",
+            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+        }
 
     try:
         prompt = render_to_string("generate_blog_titles.txt", {"project": project})
@@ -169,7 +185,10 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
             if suggestions:
                 BlogPostTitleSuggestion.objects.bulk_create(suggestions)
 
-        return {"suggestions": titles}
+        return {
+            "suggestions": titles,
+            "status": "success",
+        }
 
     except json.JSONDecodeError as e:
         logger.error(
@@ -187,7 +206,14 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
 
 @api.post("/generate-blog-content/{suggestion_id}", response=GeneratedContentOut)
 def generate_blog_content(request: HttpRequest, suggestion_id: int):
-    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=request.auth)
+    profile = request.auth
+    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+
+    if profile.reached_content_generation_limit:
+        return {
+            "status": "error",
+            "message": "Content generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+        }
 
     try:
         claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
@@ -273,6 +299,12 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleFromIdeaIn
     profile = request.auth
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
 
+    if profile.reached_title_generation_limit:
+        return {
+            "status": "error",
+            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+        }
+
     try:
         prompt = render_to_string(
             "generate_blog_title_based_on_user_prompt.txt", {"project": project, "user_prompt": data.user_prompt}
@@ -302,12 +334,13 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleFromIdeaIn
         )
 
         return {
+            "status": "success",
             "suggestion": {
                 "id": suggestion.id,
                 "title": suggestion.title,
                 "description": suggestion.description,
                 "category": suggestion.get_category_display(),
-            }
+            },
         }
 
     except Exception as e:
