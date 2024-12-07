@@ -1,4 +1,6 @@
 import { Controller } from "@hotwired/stimulus";
+import { showMessage } from "../utils/messages";
+
 
 export default class extends Controller {
   static values = {
@@ -39,7 +41,12 @@ export default class extends Controller {
       }
 
       this.suggestionsContainerTarget.classList.remove('hidden');
-      const { suggestions } = await response.json();
+      const { suggestions, status, message } = await response.json();
+
+      if (status === "error") {
+        console.log(message);
+        throw new Error(message || "Failed to generate suggestions");
+      }
 
       // Insert new suggestions
       suggestions.forEach(suggestion => {
@@ -52,14 +59,10 @@ export default class extends Controller {
       button.innerHTML = "Generate More";
 
     } catch (error) {
-      console.error("Error:", error);
-
-      // Restore button state
       button.disabled = false;
-      button.innerHTML = `Generate ${this.suggestionsListTarget.children.length ? 'More' : 'Post Suggestions'}`;
+      button.innerHTML = `Generate ${this.suggestionsListTarget.children.length ? 'More' : 'Post'} Suggestions`;
 
-      // Show error notification
-      alert("Failed to generate suggestions. Please try again.");
+      showMessage(error.message, 'error');
     }
   }
 

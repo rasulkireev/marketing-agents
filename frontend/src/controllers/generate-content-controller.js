@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
-
+import { showMessage } from "../utils/messages";
 export default class extends Controller {
   static values = {
     url: String,
@@ -51,6 +51,11 @@ export default class extends Controller {
 
       const data = await response.json();
 
+      // Check if the response indicates an error
+      if (data.status === "error") {
+        throw new Error(data.message || "Generation failed");
+      }
+
       // Update status icon to checkmark with dropdown button
       this.statusTarget.innerHTML = `
         <div class="flex gap-x-2 items-center">
@@ -91,18 +96,16 @@ export default class extends Controller {
       this.contentTarget.appendChild(contentContainer);
 
     } catch (error) {
-      console.error("Error:", error);
-      // Show error state and restore button
-      this.statusTarget.innerHTML = `
-        <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-      `;
+      showMessage(error.message || "Failed to generate content. Please try again later.", 'error');
+      // reset the button
       this.buttonContainerTarget.innerHTML = `
         <button
           data-action="generate-content#generate"
           class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
-          Generate Content
+          Generate
         </button>
       `;
+      this.statusTarget.innerHTML = "";
     }
   }
 

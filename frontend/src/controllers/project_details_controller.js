@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { showMessage } from "../utils/messages";
 
 export default class extends Controller {
   static values = {
@@ -38,18 +39,7 @@ export default class extends Controller {
       }, 3000);
 
     } catch (error) {
-      console.error("Error updating project details:", error);
-
-      // Show error message
-      const errorMessage = document.createElement("div");
-      errorMessage.className = "mt-2 text-sm text-red-600";
-      errorMessage.textContent = "Failed to update project details";
-      form.appendChild(errorMessage);
-
-      // Remove error message after 3 seconds
-      setTimeout(() => {
-        errorMessage.remove();
-      }, 3000);
+      showMessage(error.message || "Failed to update project details", 'error');
     }
   }
 }

@@ -5,11 +5,14 @@ class ProjectScanIn(Schema):
     url: str
 
 
+# TODO: what is the best practice on handling optional fields?
 class ProjectScanOut(Schema):
-    project_id: int
+    status: str
+    message: str = ""
+    project_id: int = 0
     name: str = ""
     type: str = ""
-    url: str
+    url: str = ""
     summary: str = ""
 
 
@@ -24,15 +27,18 @@ class TitleSuggestionOut(Schema):
 
 
 class GenerateTitleSuggestionsOut(Schema):
-    suggestions: list[TitleSuggestionOut]
+    suggestions: list[TitleSuggestionOut] = []
+    status: str
+    message: str = ""
 
 
 class GeneratedContentOut(Schema):
     status: str
-    content: str
-    slug: str
-    tags: str
-    description: str
+    message: str = ""
+    content: str = ""
+    slug: str = ""
+    tags: str = ""
+    description: str = ""
 
 
 class GenerateTitleFromIdeaIn(Schema):
@@ -41,4 +47,6 @@ class GenerateTitleFromIdeaIn(Schema):
 
 
 class GenerateTitleSuggestionOut(Schema):
-    suggestion: dict
+    status: str
+    message: str = ""
+    suggestion: dict = {}

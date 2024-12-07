@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { showMessage } from "../utils/messages";
 
 export default class extends Controller {
   static targets = [
@@ -42,9 +43,11 @@ export default class extends Controller {
       }
 
       const scanData = await response.json();
-      console.log('Scan response:', scanData);
 
-      // Update UI for project details
+      if (scanData.status === 'error') {
+        throw new Error(scanData.message);
+      }
+
       this.detailsSpinnerTarget.classList.add('hidden');
       this.detailsCheckTarget.classList.remove('hidden');
 
@@ -91,18 +94,7 @@ export default class extends Controller {
       this.resultsButtonTarget.classList.remove('hidden');
 
     } catch (error) {
-      console.error('Error:', error);
-      this.progressTarget.classList.add('hidden');
-
-      if (!this.hasErrorTarget) {
-        const errorDiv = document.createElement('div');
-        errorDiv.setAttribute('data-scan-progress-target', 'error');
-        errorDiv.className = 'mt-2 text-sm text-red-600';
-        this.element.appendChild(errorDiv);
-      }
-
-      this.errorTarget.classList.remove('hidden');
-      this.errorTarget.textContent = error.message;
+      showMessage(error.message || "Failed to scan URL", 'error');
     }
   }
 

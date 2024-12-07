@@ -48,6 +48,32 @@ class Profile(BaseModel):
         latest_transition = self.state_transitions.latest("created_at")
         return latest_transition.to_state
 
+    @property
+    def has_active_subscription(self):
+        return self.current_state in [ProfileStates.SUBSCRIBED, ProfileStates.CANCELLED] or self.user.is_superuser
+
+    @property
+    def number_of_active_projects(self):
+        return self.projects.count()
+
+    @property
+    def number_of_generated_blog_posts(self):
+        projects = self.projects.all()
+        return sum(project.generated_blog_posts.count() for project in projects)
+
+    @property
+    def number_of_title_suggestions(self):
+        projects = self.projects.all()
+        return sum(project.blog_post_title_suggestions.count() for project in projects)
+
+    @property
+    def reached_content_generation_limit(self):
+        return self.number_of_generated_blog_posts >= 5 and not self.has_active_subscription
+
+    @property
+    def reached_title_generation_limit(self):
+        return self.number_of_title_suggestions >= 20 and not self.has_active_subscription
+
 
 class ProfileStates(models.TextChoices):
     STRANGER = "stranger"
