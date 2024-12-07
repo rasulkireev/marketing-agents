@@ -5,6 +5,7 @@ class ProjectScanIn(Schema):
     url: str
 
 
+# TODO: what is the best practice on handling optional fields?
 class ProjectScanOut(Schema):
     status: str
     message: str = ""
