@@ -122,12 +122,15 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 @api.post("/generate-title-suggestions", response=GenerateTitleSuggestionsOut)
 def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggestionsIn):
     profile = request.auth
+
+    logger.info("[Generate Title Suggestions] API Called", project_id=data.project_id, profile_id=profile.id)
+
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
 
     if (
-        profile.reached_title_generation_limit
         # don't want to generate 15 new suggestions if user has a bunch already.
-        or profile.number_of_title_suggestions + 15 >= 20
+        profile.number_of_title_suggestions + 15 >= 20
+        and not profile.has_active_subscription
     ):
         return {
             "suggestions": [],
@@ -326,11 +329,15 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleFromIdeaIn
             response = response.replace("```", "")
         response = response.strip()
 
-        data = json.loads(response)
+        claude_data = json.loads(response)
 
         # Create the suggestion in the database
         suggestion = BlogPostTitleSuggestion.objects.create(
-            project=project, title=data["title"], description=data["description"], category=data["category"]
+            project=project,
+            title=claude_data["title"],
+            description=claude_data["description"],
+            category=claude_data["category"],
+            prompt=data.user_prompt,
         )
 
         return {

@@ -20,8 +20,15 @@ Context for content generation:
 - Usage patterns: {{ suggestion.project.product_usage }}
 - Blog theme: {{ suggestion.project.blog_theme }}
 - Language: {{ suggestion.project.language }}
+{% if suggestion.project.founders %}
 - Founders: {{ suggestion.project.founders }}
+{% endif %}
+{% if suggestion.project.links %}
 - Links: {{ suggestion.project.links }}
+{% endif %}
+{% if suggestion.prompt %}
+- User Prompt: {{ suggestion.prompt }}
+{% endif %}
 
 For the given title '{{ suggestion.title }}', please create:
 

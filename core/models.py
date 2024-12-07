@@ -193,6 +193,7 @@ class BlogPostTitleSuggestion(BaseModel):
     )
     title = models.CharField(max_length=255)
     description = models.TextField()
+    prompt = models.TextField(blank=True)
 
     class Category(models.TextChoices):
         GENERAL_AUDIENCE = "General Audience", "General Audience"
