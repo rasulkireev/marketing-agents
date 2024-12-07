@@ -40,7 +40,6 @@ export default class extends Controller {
         throw new Error(error.message || "Failed to generate suggestions");
       }
 
-      this.suggestionsContainerTarget.classList.remove('hidden');
       const { suggestions, status, message } = await response.json();
 
       if (status === "error") {
@@ -48,7 +47,7 @@ export default class extends Controller {
         throw new Error(message || "Failed to generate suggestions");
       }
 
-      // Insert new suggestions
+      this.suggestionsContainerTarget.classList.remove('hidden');
       suggestions.forEach(suggestion => {
         const suggestionHtml = this.createSuggestionHTML(suggestion);
         this.suggestionsListTarget.insertAdjacentHTML('beforeend', suggestionHtml);

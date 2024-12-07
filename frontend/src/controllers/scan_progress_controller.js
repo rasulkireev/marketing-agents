@@ -7,95 +7,137 @@ export default class extends Controller {
     "error",
     "detailsSpinner",
     "detailsCheck",
+    "detailsCross",
     "suggestionsSpinner",
     "suggestionsCheck",
+    "suggestionsCross",
     "resultsButton",
     "projectsList"
   ];
 
   async handleSubmit(event) {
     event.preventDefault();
+    this.initializeUI();
 
-    // Reset UI state
+    const formData = new FormData(event.target);
+    const url = formData.get('url');
+
+    try {
+      // Perform scan first
+      const scanData = await this.performScan(url);
+
+      // Add project to list and update results button immediately after successful scan
+      this.addProjectToList(scanData);
+
+      try {
+        // Then generate suggestions
+        await this.generateSuggestions(scanData.project_id);
+        this.updateResultsButton(scanData.project_id);
+      } catch (suggestionsError) {
+        this.handleSuggestionsError(suggestionsError);
+      }
+    } catch (scanError) {
+      this.handleScanError(scanError);
+    }
+  }
+
+  initializeUI() {
     if (this.hasErrorTarget) {
       this.errorTarget.classList.add('hidden');
     }
     this.progressTarget.classList.remove('hidden');
+  }
 
-    const form = event.target;
-    const formData = new FormData(form);
+  async performScan(url) {
+    const scanResponse = await fetch('/api/scan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': this.getCSRFToken(),
+      },
+      body: JSON.stringify({ url })
+    });
 
-    try {
-      // Initial scan
-      const response = await fetch('/api/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': this.getCSRFToken(),
-        },
-        body: JSON.stringify({
-          url: formData.get('url')
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to scan URL');
-      }
-
-      const scanData = await response.json();
-
-      if (scanData.status === 'error') {
-        throw new Error(scanData.message);
-      }
-
-      this.detailsSpinnerTarget.classList.add('hidden');
-      this.detailsCheckTarget.classList.remove('hidden');
-
-      // Start suggestions spinner animation
-      this.suggestionsSpinnerTarget.classList.add('animate-spin', 'border-t-pink-600');
-
-      // Generate title suggestions
-      const suggestionsResponse = await fetch('/api/generate-title-suggestions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': this.getCSRFToken(),
-        },
-        body: JSON.stringify({
-          project_id: scanData.project_id
-        })
-      });
-
-      if (!suggestionsResponse.ok) {
-        throw new Error('Failed to generate title suggestions');
-      }
-
-      // Update UI for suggestions
-      this.suggestionsSpinnerTarget.classList.add('hidden');
-      this.suggestionsCheckTarget.classList.remove('hidden');
-
-      // Add new project to the list with animation after both API calls succeed
-      const projectElement = this.createProjectElement(scanData);
-      if (this.hasProjectsListTarget) {
-        this.projectsListTarget.insertBefore(projectElement, this.projectsListTarget.firstChild);
-      } else {
-        this.projectsListTarget.appendChild(projectElement);
-      }
-      const emptyState = document.querySelector('[data-empty-state]');
-      if (emptyState) {
-        emptyState.remove();
-      }
-      setTimeout(() => {
-        projectElement.classList.remove('translate-x-full', 'opacity-0');
-      }, 100);
-
-      // Show results button
-      this.resultsButtonTarget.href = `/project/${scanData.project_id}/`;
-      this.resultsButtonTarget.classList.remove('hidden');
-
-    } catch (error) {
-      showMessage(error.message || "Failed to scan URL", 'error');
+    if (!scanResponse.ok) {
+      throw new Error('Failed to scan URL');
     }
+
+    const scanData = await scanResponse.json();
+    if (scanData.status === 'error') {
+      throw new Error(scanData.message);
+    }
+
+    // Update UI after successful scan
+    this.detailsSpinnerTarget.classList.add('hidden');
+    this.detailsCheckTarget.classList.remove('hidden');
+
+    return scanData;
+  }
+
+  async generateSuggestions(projectId) {
+    // Start suggestions spinner
+    this.suggestionsSpinnerTarget.classList.add('animate-spin', 'border-t-pink-600');
+
+    const suggestionsResponse = await fetch('/api/generate-title-suggestions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': this.getCSRFToken(),
+      },
+      body: JSON.stringify({ project_id: projectId })
+    });
+
+    if (!suggestionsResponse.ok) {
+      throw new Error('Failed to generate title suggestions');
+    }
+
+    const suggestionsData = await suggestionsResponse.json();
+    if (suggestionsData.status === "error") {
+      throw new Error(suggestionsData.message);
+    }
+
+    // Update UI for successful suggestions
+    this.suggestionsSpinnerTarget.classList.add('hidden');
+    this.suggestionsCheckTarget.classList.remove('hidden');
+
+    return suggestionsData;
+  }
+
+  handleScanError(error) {
+    this.detailsSpinnerTarget.classList.add('hidden');
+    this.detailsCheckTarget.classList.add('hidden');
+    this.detailsCrossTarget.classList.remove('hidden');
+    showMessage(error.message || "Failed to scan URL", 'error');
+  }
+
+  handleSuggestionsError(error) {
+    this.suggestionsCheckTarget.classList.add('hidden');
+    this.suggestionsSpinnerTarget.classList.add('hidden');
+    this.suggestionsCrossTarget.classList.remove('hidden');
+    showMessage(error.message || "Failed to generate suggestions", 'error');
+  }
+
+  addProjectToList(scanData) {
+    const projectElement = this.createProjectElement(scanData);
+    if (this.hasProjectsListTarget) {
+      this.projectsListTarget.insertBefore(projectElement, this.projectsListTarget.firstChild);
+    } else {
+      this.projectsListTarget.appendChild(projectElement);
+    }
+
+    const emptyState = document.querySelector('[data-empty-state]');
+    if (emptyState) {
+      emptyState.remove();
+    }
+
+    setTimeout(() => {
+      projectElement.classList.remove('translate-x-full', 'opacity-0');
+    }, 100);
+  }
+
+  updateResultsButton(projectId) {
+    this.resultsButtonTarget.href = `/project/${projectId}/`;
+    this.resultsButtonTarget.classList.remove('hidden');
   }
 
   getCSRFToken() {
