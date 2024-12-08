@@ -30,6 +30,9 @@ class Profile(BaseModel):
         help_text="The user's Stripe Customer object, if it exists",
     )
 
+    def __str__(self):
+        return f"{self.user.username}"
+
     def track_state_change(self, to_state, metadata=None):
         from_state = self.current_state
 
@@ -202,6 +205,9 @@ class BlogPostTitleSuggestion(BaseModel):
 
     category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
 
+    def __str__(self):
+        return f"{self.project.name}: {self.title}"
+
 
 class GeneratedBlogPost(BaseModel):
     project = models.ForeignKey(
@@ -216,3 +222,6 @@ class GeneratedBlogPost(BaseModel):
     content = models.TextField()
     icon = models.ImageField(upload_to="blog_post_icons/", blank=True)
     image = models.ImageField(upload_to="blog_post_images/", blank=True)
+
+    def __str__(self):
+        return f"{self.project.name}: {self.title.title}"
