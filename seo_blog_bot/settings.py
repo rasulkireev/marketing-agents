@@ -219,10 +219,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 ANYMAIL = {
     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-    "MAILGUN_SENDER_DOMAIN": "mg.seo_blog_bot.app",
+    "MAILGUN_SENDER_DOMAIN": "mg.seoblogbot.com",
 }
-DEFAULT_FROM_EMAIL = "Rasul from SEO Blog Bot <hello@seo_blog_bot.app>"
-SERVER_EMAIL = "SEO Blog Bot Errors <error@seo_blog_bot.app>"
+DEFAULT_FROM_EMAIL = "Rasul from SEO Blog Bot <rasul@seoblogbot.com>"
+SERVER_EMAIL = "SEO Blog Bot Errors <error@seoblogbot.com>"
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
