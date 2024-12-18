@@ -12,7 +12,7 @@ Generate blog post titles for the following project:
 - Language: {{ project.language }}
 - Links: {{ project.links }}
 
-Generate exactly 15 blog post titles (5 for each category) and format them as a JSON array with the following structure:
+Generate exactly 6 blog post titles (2 for each category) and format them as a JSON array with the following structure:
 {
     "titles": [
         {
