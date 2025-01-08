@@ -31,6 +31,8 @@ api = NinjaAPI(auth=MultipleAuthSchema(), csrf=True)
 
 @api.post("/scan", response=ProjectScanOut)
 def scan_project(request: HttpRequest, data: ProjectScanIn):
+    logger.info("[Scan Project] API Called")
+
     profile = request.auth
 
     # Check if project already exists for this user

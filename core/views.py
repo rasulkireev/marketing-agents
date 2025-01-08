@@ -125,7 +125,7 @@ def create_checkout_session(request, pk, plan):
                 "quantity": 1,
             }
         ],
-        mode="subscription" if plan != "one-time" else "payment",
+        mode="subscription" if plan != "one-time-cheap" else "payment",
         success_url=success_url,
         cancel_url=cancel_url,
         customer_update={

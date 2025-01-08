@@ -13,6 +13,9 @@ class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     key = models.CharField(max_length=10, unique=True, default=generate_random_key)
 
+    anthropic_api_key = models.CharField(max_length=255, blank=True)
+    replicate_api_key = models.CharField(max_length=255, blank=True)
+
     subscription = models.ForeignKey(
         "djstripe.Subscription",
         null=True,

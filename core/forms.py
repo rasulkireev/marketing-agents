@@ -18,13 +18,15 @@ class CustomLoginForm(LoginForm):
 
 
 class ProfileUpdateForm(forms.ModelForm):
-    first_name = forms.CharField(max_length=30)
-    last_name = forms.CharField(max_length=30)
-    email = forms.EmailField()
+    first_name = forms.CharField(max_length=30, required=False)
+    last_name = forms.CharField(max_length=30, required=False)
+    email = forms.EmailField(required=False)
+    anthropic_api_key = forms.CharField(max_length=255, required=False, widget=forms.PasswordInput(render_value=True))
+    replicate_api_key = forms.CharField(max_length=255, required=False, widget=forms.PasswordInput(render_value=True))
 
     class Meta:
         model = Profile
-        fields = []
+        fields = ["anthropic_api_key", "replicate_api_key"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
