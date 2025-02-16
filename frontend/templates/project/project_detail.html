@@ -8,13 +8,66 @@
 
 {% block content %}
 <div class="py-24 bg-white sm:py-32">
+
   <div class="px-6 mx-auto max-w-7xl lg:px-8">
+
     <!-- Project Header -->
-    <div class="mx-auto max-w-4xl sm:text-center">
-      <h2 class="text-base font-semibold leading-7 text-pink-600">Project Analysis</h2>
-      <div class="flex gap-3 justify-center items-center">
-        <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">{{ project.name }}</p>
-        <span class="px-3 py-1 mt-2 text-sm font-medium text-pink-600 bg-pink-50 rounded-full">{{ project.get_type_display }}</span>
+    <div class="mx-auto max-w-4xl">
+      <!-- Decorative Background Element -->
+      <div class="relative">
+        <div class="flex absolute inset-0 justify-center">
+          <div class="w-[500px] h-[150px] bg-gradient-to-r from-pink-50 via-pink-100/50 to-pink-50 blur-3xl opacity-50 rounded-full"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="relative py-8 sm:text-center">
+          <!-- Subtitle -->
+          <div class="flex gap-2 justify-center items-center mb-4">
+            <span class="hidden w-8 h-px bg-pink-300 sm:block"></span>
+            <h2 class="text-base font-semibold tracking-wide leading-7 text-pink-600 uppercase">
+              Project Analysis
+            </h2>
+            <span class="hidden w-8 h-px bg-pink-300 sm:block"></span>
+          </div>
+
+          <!-- Title and Badge -->
+          <div class="flex flex-col gap-3 justify-center items-center sm:flex-row">
+            <h1 class="text-4xl font-extrabold tracking-tight text-transparent text-gray-900 bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 sm:text-5xl">
+              {{ project.name }}
+            </h1>
+
+            <!-- Type Badge -->
+            <div class="flex items-center">
+              <span class="inline-flex gap-1.5 items-center px-4 py-1.5 text-sm font-medium text-pink-700 bg-pink-50 rounded-full border border-pink-100">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 8 8">
+                  <circle cx="4" cy="4" r="3"/>
+                </svg>
+                {{ project.get_type_display }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Optional Description -->
+          <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+            Analyze and optimize your project's content strategy
+          </p>
+        </div>
+      </div>
+
+      <!-- Optional Metadata -->
+      <div class="flex gap-8 justify-center mt-6 text-sm text-center text-gray-600">
+        <div class="flex gap-2 items-center">
+          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>Last updated: Today</span>
+        </div>
+        <div class="flex gap-2 items-center">
+          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Active Project</span>
+        </div>
       </div>
     </div>
 
@@ -24,140 +77,286 @@
       data-controller="title-suggestions"
       data-title-suggestions-project-id-value="{{ project.id }}"
     >
+
       <!-- Project Details Form -->
-      <div class="p-6 bg-gray-50 rounded-lg border border-gray-200" data-controller="collapse">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-2xl font-bold tracking-tight text-gray-900">Project Details</h3>
-          <button
-            data-action="collapse#toggle"
-            class="p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
-            aria-expanded="true"
-          >
-            <svg
-              data-collapse-target="chevron"
-              class="w-5 h-5 transition-transform duration-200"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+      <div class="bg-white rounded-2xl border shadow-sm border-gray-200/80" data-controller="collapse">
+        <!-- Header Section -->
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex justify-between items-center">
+            <div class="flex gap-3 items-center">
+              <!-- Decorative Icon -->
+              <div class="flex-shrink-0 p-2 bg-pink-50 rounded-lg">
+                <svg class="w-6 h-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 class="text-2xl font-bold tracking-tight text-gray-900">Project Details</h3>
+                <p class="mt-1 text-sm text-gray-500">Configure your project settings and preferences</p>
+              </div>
+            </div>
+
+            <!-- Toggle Button -->
+            <button
+              data-action="collapse#toggle"
+              class="p-2 rounded-lg transition-colors duration-200 group hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+              aria-expanded="true"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+              <svg
+                data-collapse-target="chevron"
+                class="w-5 h-5 text-gray-400 transition-transform duration-200 group-hover:text-gray-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <div data-collapse-target="content">
+
+        <!-- Content Section -->
+        <div data-collapse-target="content" class="p-6">
+
+          <div class="overflow-hidden relative p-6 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm">
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 rounded-full bg-blue-100/40"></div>
+            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 w-24 h-24 rounded-full bg-indigo-100/40"></div>
+
+            <div class="flex relative gap-4">
+              <!-- Icon Container -->
+              <div class="flex-shrink-0">
+                <div class="flex justify-center items-center w-10 h-10 bg-blue-100 rounded-full">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Content Container -->
+              <div class="flex-1">
+                <!-- Header -->
+                <h4 class="mb-2 text-lg font-semibold text-blue-900">
+                  Pre-filled Project Details
+                </h4>
+
+                <!-- Main Message -->
+                <p class="text-sm leading-relaxed text-blue-800">
+                  We've pre-filled these details based on our analysis of your website. This should be good as is, but to improve content accuracy and relevancy:
+                </p>
+
+                <!-- Steps List -->
+                <ul class="mt-4 space-y-3">
+                  <li class="flex gap-2 items-start">
+                    <span class="flex flex-shrink-0 justify-center items-center mt-0.5 w-5 h-5 bg-blue-100 rounded-full">
+                      <span class="text-xs font-semibold text-blue-600">1</span>
+                    </span>
+                    <span class="text-sm text-blue-700">Review each field and update any information that needs correction</span>
+                  </li>
+                  <li class="flex gap-2 items-start">
+                    <span class="flex flex-shrink-0 justify-center items-center mt-0.5 w-5 h-5 bg-blue-100 rounded-full">
+                      <span class="text-xs font-semibold text-blue-600">2</span>
+                    </span>
+                    <span class="text-sm text-blue-700">Add missing details that could help better understand your project</span>
+                  </li>
+                  <li class="flex gap-2 items-start">
+                    <span class="flex flex-shrink-0 justify-center items-center mt-0.5 w-5 h-5 bg-blue-100 rounded-full">
+                      <span class="text-xs font-semibold text-blue-600">3</span>
+                    </span>
+                    <span class="text-sm text-blue-700">Click "Save Changes" after making any modifications</span>
+                  </li>
+                </ul>
+
+                <!-- Footer Note -->
+                <div class="p-3 mt-4 rounded-lg border bg-blue-100/50 border-blue-200/50">
+                  <p class="text-sm leading-relaxed text-blue-700">
+                    <span class="font-semibold">💡 Pro tip:</span>
+                    The more accurate and detailed this information is, the better the quality of generated content will be.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <form
             data-controller="project-details"
             data-project-details-project-id-value="{{ project.id }}"
             data-action="project-details#save"
+            class="bg-white rounded-xl shadow-sm"
           >
             {% csrf_token %}
-            <div class="space-y-6">
-              <div>
-                <label for="summary" class="block text-sm font-semibold text-gray-600">Summary</label>
-                <textarea
-                  id="summary"
-                  name="summary"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="4"
-                >{{ project.summary }}</textarea>
+            <div class="p-8 space-y-8">
+
+              <!-- Project Overview Section -->
+              <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-gray-900">Project Overview</h3>
+                <div class="grid gap-6">
+                  <div class="space-y-2">
+                    <label for="summary" class="block text-sm font-medium text-gray-700">
+                      Summary
+                      <span class="ml-1 text-xs text-gray-500">(Brief description of your project)</span>
+                    </label>
+                    <textarea
+                      id="summary"
+                      name="summary"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="Describe your project in a few sentences..."
+                    >{{ project.summary }}</textarea>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label for="key_features" class="block text-sm font-medium text-gray-700">
+                      Key Features
+                      <span class="ml-1 text-xs text-gray-500">(Main functionalities and benefits)</span>
+                    </label>
+                    <textarea
+                      id="key_features"
+                      name="key_features"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="List your project's key features..."
+                    >{{ project.key_features }}</textarea>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label for="key_features" class="block text-sm font-semibold text-gray-600">Key Features</label>
-                <textarea
-                  id="key_features"
-                  name="key_features"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="4"
-                >{{ project.key_features }}</textarea>
+              <!-- Target Audience Section -->
+              <div class="pt-6 space-y-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Audience & Usage</h3>
+                <div class="grid gap-6">
+                  <div class="space-y-2">
+                    <label for="target_audience" class="block text-sm font-medium text-gray-700">
+                      Target Audience
+                      <span class="ml-1 text-xs text-gray-500">(Who is this for?)</span>
+                    </label>
+                    <textarea
+                      id="target_audience"
+                      name="target_audience_summary"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="3"
+                      placeholder="Describe your target audience..."
+                    >{{ project.target_audience_summary }}</textarea>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label for="pain_points" class="block text-sm font-medium text-gray-700">
+                      Pain Points Addressed
+                      <span class="ml-1 text-xs text-gray-500">(Problems solved)</span>
+                    </label>
+                    <textarea
+                      id="pain_points"
+                      name="pain_points"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="What problems does your project solve?"
+                    >{{ project.pain_points }}</textarea>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label for="product_usage" class="block text-sm font-medium text-gray-700">
+                      Product Usage
+                      <span class="ml-1 text-xs text-gray-500">(How is it used?)</span>
+                    </label>
+                    <textarea
+                      id="product_usage"
+                      name="product_usage"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="Explain how your product is used..."
+                    >{{ project.product_usage }}</textarea>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label for="target_audience" class="block text-sm font-semibold text-gray-600">Target Audience</label>
-                <textarea
-                  id="target_audience"
-                  name="target_audience_summary"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="3"
-                >{{ project.target_audience_summary }}</textarea>
+              <!-- Additional Information Section -->
+              <div class="pt-6 space-y-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Additional Information</h3>
+                <div class="grid gap-6">
+                  <div class="space-y-2">
+                    <label for="links" class="block text-sm font-medium text-gray-700">
+                      Links
+                      <span class="ml-1 text-xs text-gray-500">(Related resources)</span>
+                    </label>
+                    <textarea
+                      id="links"
+                      name="links"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="3"
+                      placeholder="Add relevant links..."
+                    >{{ project.links }}</textarea>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label for="blog_theme" class="block text-sm font-medium text-gray-700">
+                      Blog Theme
+                      <span class="ml-1 text-xs text-gray-500">(Content direction)</span>
+                    </label>
+                    <textarea
+                      id="blog_theme"
+                      name="blog_theme"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="3"
+                      placeholder="Define your blog's theme..."
+                    >{{ project.blog_theme }}</textarea>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="space-y-2">
+                      <label for="founders" class="block text-sm font-medium text-gray-700">
+                        Founders
+                        <span class="ml-1 text-xs text-gray-500">(Team members)</span>
+                      </label>
+                      <textarea
+                        id="founders"
+                        name="founders"
+                        data-project-details-target="input"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                        rows="2"
+                        placeholder="List project founders..."
+                      >{{ project.founders }}</textarea>
+                    </div>
+                    <div class="space-y-2">
+                      <label for="language" class="block text-sm font-medium text-gray-700">
+                        Language
+                        <span class="ml-1 text-xs text-gray-500">(Content language)</span>
+                      </label>
+                      <select
+                        id="language"
+                        name="language"
+                        data-project-details-target="input"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      >
+                        {% for value, label in project.Language.choices %}
+                          <option value="{{ value }}" {% if project.language == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label for="pain_points" class="block text-sm font-semibold text-gray-600">Pain Points Addressed</label>
-                <textarea
-                  id="pain_points"
-                  name="pain_points"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="4"
-                >{{ project.pain_points }}</textarea>
-              </div>
+            </div>
 
-              <div>
-                <label for="product_usage" class="block text-sm font-semibold text-gray-600">Product Usage</label>
-                <textarea
-                  id="product_usage"
-                  name="product_usage"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="4"
-                >{{ project.product_usage }}</textarea>
-              </div>
-
-              <div>
-                <label for="links" class="block text-sm font-semibold text-gray-600">Links</label>
-                <textarea
-                  id="links"
-                  name="links"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="4"
-                >{{ project.links }}</textarea>
-              </div>
-
-              <div>
-                <label for="blog_theme" class="block text-sm font-semibold text-gray-600">Blog Theme</label>
-                <textarea
-                  id="blog_theme"
-                  name="blog_theme"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="3"
-                >{{ project.blog_theme }}</textarea>
-              </div>
-
-              <div>
-                <label for="founders" class="block text-sm font-semibold text-gray-600">Founders</label>
-                <textarea
-                  id="founders"
-                  name="founders"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                  rows="2"
-                >{{ project.founders }}</textarea>
-              </div>
-
-              <div>
-                <label for="language" class="block text-sm font-semibold text-gray-600">Language</label>
-                <select
-                  id="language"
-                  name="language"
-                  data-project-details-target="input"
-                  class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                >
-                  {% for value, label in project.Language.choices %}
-                    <option value="{{ value }}" {% if project.language == value %}selected{% endif %}>{{ label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
+            <!-- Form Footer with Save Button -->
+            <div class="px-8 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
               <div class="flex justify-end">
                 <button
                   type="submit"
-                  class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                  class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm transition-colors duration-200 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
                 >
+                  <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
                   Save Changes
                 </button>
               </div>
@@ -168,22 +367,148 @@
 
       <!-- Blog Post Suggestions -->
       <div
-        class="mt-16 {% if not project.blog_post_title_suggestions.exists %}hidden{% endif %}"
+        class="mt-16"
         data-title-suggestions-target="suggestionsContainer"
       >
+        <div
+          data-controller="content-idea"
+          data-content-idea-project-id-value="{{ project.id }}"
+          class="mt-16 mb-8"
+        >
+          <div class="p-6 bg-gradient-to-r from-pink-50 to-white rounded-lg border border-pink-100">
+            <div class="mb-4 text-center">
+              <h3 class="text-xl font-semibold text-gray-900">Need inspiration for your next blog post?</h3>
+              <p class="mt-2 text-gray-600">Share your content ideas and let AI help you create engaging blog posts</p>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                data-action="content-idea#toggleForm"
+                class="inline-flex relative gap-x-2 items-center px-6 py-3 text-base font-semibold text-white bg-pink-600 rounded-lg group hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Suggest Your Content Idea
+                <span class="absolute -top-2 -right-2 px-2 py-1 text-xs font-medium text-pink-600 bg-white rounded-full border border-pink-100">Pro Tip!</span>
+              </button>
+            </div>
+
+            <!-- Content Idea Form (Hidden by default) -->
+            <div data-content-idea-target="form" class="hidden mt-6">
+              <div class="bg-white rounded-lg border border-gray-200">
+                <textarea
+                  data-content-idea-target="input"
+                  rows="3"
+                  class="block p-4 w-full text-gray-900 rounded-lg border-0 focus:ring-0 focus:ring-white"
+                  placeholder="Describe your content idea... (e.g., 'I want to write about how our product helps remote teams collaborate better')"
+                ></textarea>
+                <div class="flex justify-end p-3 rounded-b-lg">
+                  <button
+                    data-action="content-idea#generate"
+                    class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
+                  >
+                    <svg class="mr-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Suggestions
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-center mt-6">
+            {% if project.blog_post_title_suggestions.exists %}
+              <button
+                data-action="title-suggestions#generate"
+                class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Generate More Suggestions
+              </button>
+            {% else %}
+              <button
+                data-action="title-suggestions#generate"
+                class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Generate Post Suggestions
+              </button>
+            {% endif %}
+          </div>
+        </div>
+
         <h3 class="text-2xl font-bold tracking-tight text-gray-900">Suggested Blog Posts</h3>
+
+        <div class="flex gap-x-4 mt-4 border-b border-gray-200">
+          <button
+            data-action="title-suggestions#switchTab"
+            data-tab="SHARING"
+            class="px-4 py-2 text-sm font-medium text-pink-600 border-b-2 border-pink-600 focus:outline-none"
+            aria-current="page"
+          >
+            For Sharing
+          </button>
+          <button
+            data-action="title-suggestions#switchTab"
+            data-tab="SEO"
+            class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none"
+          >
+            For SEO
+          </button>
+        </div>
 
         <div class="mt-6 space-y-8" data-title-suggestions-target="suggestionsList">
           {% for suggestion in project.blog_post_title_suggestions.all %}
-            <div class="pl-4 border-l-4 border-pink-600"
-                 data-controller="generate-content"
-                 data-generate-content-suggestion-id-value="{{ suggestion.id }}">
+          <div
+            class="pl-4 border-l-4 border-pink-600"
+            data-controller="generate-content"
+            data-generate-content-suggestion-id-value="{{ suggestion.id }}"
+            data-suggestion-type="{{ suggestion.content_type }}"
+          >
               <!-- Header section with toggle -->
               <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <h4 class="text-lg font-semibold text-gray-900">{{ suggestion.title }}</h4>
-                  <p class="mt-2 text-gray-600">{{ suggestion.description }}</p>
-                  <span class="mt-1 text-sm text-gray-500">Category: {{ suggestion.get_category_display }}</span>
+                <div class="flex-1 p-6 bg-white rounded-lg shadow-sm">
+                  <!-- Title -->
+                  <h4 class="text-xl font-bold tracking-tight text-gray-900">
+                    {{ suggestion.title }}
+                  </h4>
+
+                  <!-- Main Description -->
+                  <p class="mt-3 leading-relaxed text-gray-700">
+                    {{ suggestion.description }}
+                  </p>
+
+                  <!-- Category Badge -->
+                  <div class="mt-4">
+                    <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+                      Category: {{ suggestion.category }}
+                    </span>
+                  </div>
+
+                  <!-- Keywords Section -->
+                  {% if suggestion.target_keywords %}
+                    <div class="mt-4">
+                      <div class="flex flex-wrap gap-2">
+                        {% for keyword in suggestion.target_keywords %}
+                          <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full transition-colors duration-200 hover:bg-gray-200">
+                            {{ keyword }}
+                          </span>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% endif %}
+
+                  <!-- Meta Description Section -->
+                  {% if suggestion.suggested_meta_description %}
+                    <div class="p-4 mt-4 bg-gray-50 rounded-md">
+                      <span class="block mb-2 text-sm font-semibold text-gray-700">
+                        Meta Description
+                      </span>
+                      <p class="text-sm leading-relaxed text-gray-600">
+                        {{ suggestion.suggested_meta_description }}
+                      </p>
+                    </div>
+                  {% endif %}
                 </div>
 
                 <div class="flex gap-x-3 items-center">
@@ -311,63 +636,9 @@
         </div>
       </div>
 
-      <div
-        data-controller="content-idea"
-        data-content-idea-project-id-value="{{ project.id }}"
-      >
-        <div class="flex gap-4 justify-center items-center my-6">
-          <div class="relative group">
-            <button
-              data-action="content-idea#toggleForm"
-              class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Suggest Content Idea
-            </button>
-          </div>
-
-          {% if project.blog_post_title_suggestions.exists %}
-            <div class="relative group">
-              <button
-                data-action="title-suggestions#generate"
-                class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Generate More Suggestions
-              </button>
-            </div>
-          {% else %}
-            <button
-              data-action="title-suggestions#generate"
-              class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
-            >
-              Generate Post Suggestions
-            </button>
-          {% endif %}
-        </div>
-
-        <!-- Content Idea Form (Hidden by default) -->
-        <div data-content-idea-target="form" class="hidden mt-4">
-          <div>
-            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <textarea
-                data-content-idea-target="input"
-                rows="3"
-                class="block p-2.5 w-full text-gray-900 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500"
-                placeholder="Describe your content idea..."
-              ></textarea>
-              <div class="flex justify-end mt-3">
-                <button
-                  data-action="content-idea#generate"
-                  class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                >
-                  Generate
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
+
   </div>
+
 </div>
 {% endblock content %}

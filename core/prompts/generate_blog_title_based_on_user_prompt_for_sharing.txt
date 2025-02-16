@@ -17,7 +17,9 @@ Generate a single blog post title and format it as a JSON object with the follow
 {
     "category": "General Audience",
     "title": "Example Title 1",
-    "description": "This title works because..."
+    "description": "This title works because...",
+    "target_keywords": ["Keyword 1", "Keyword 2"],
+    "suggested_meta_description": "160-character meta description for the blog post",
 }
 
 Ensure the title:

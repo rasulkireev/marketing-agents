@@ -12,23 +12,31 @@ Generate blog post titles for the following project:
 - Language: {{ project.language }}
 - Links: {{ project.links }}
 
-Generate exactly 6 blog post titles (2 for each category) and format them as a JSON array with the following structure:
+Generate {{ num_titles|default:3 }} sharing worthy blog post titles
+(roughly an even amount between the following categories: "General Audience", "Niche Audience", "Industry/Company")
+and format them as a JSON array with the following structure:
 {
     "titles": [
         {
             "category": "General Audience",
             "title": "Example Title 1",
-            "description": "This title works because..."
+            "description": "This title works because...",
+            "target_keywords": ["Keyword 1", "Keyword 2"],
+            "suggested_meta_description": "160-character meta description for the blog post"
         },
         {
             "category": "Niche Audience",
             "title": "Example Title 2",
-            "description": "This title works because..."
+            "description": "This title works because...",
+            "target_keywords": ["Keyword 1", "Keyword 2"],
+            "suggested_meta_description": "160-character meta description for the blog post"
         },
         {
             "category": "Industry/Company",
             "title": "Example Title 3",
-            "description": "This title works because..."
+            "description": "This title works because...",
+            "target_keywords": ["Keyword 1", "Keyword 2"],
+            "suggested_meta_description": "160-character meta description for the blog post"
         }
     ]
 }

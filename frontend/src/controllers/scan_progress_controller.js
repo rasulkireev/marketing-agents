@@ -30,8 +30,17 @@ export default class extends Controller {
       this.addProjectToList(scanData);
 
       try {
-        // Then generate suggestions
-        await this.generateSuggestions(scanData.project_id);
+        // Start suggestions spinner
+        this.suggestionsSpinnerTarget.classList.add('animate-spin', 'border-t-pink-600');
+
+        // Generate both types of suggestions
+        await this.generateSuggestions(scanData.project_id, "SHARING");
+        await this.generateSuggestions(scanData.project_id, "SEO");
+
+        // Show check mark only after both suggestions are complete
+        this.suggestionsSpinnerTarget.classList.add('hidden');
+        this.suggestionsCheckTarget.classList.remove('hidden');
+
         this.updateResultsButton(scanData.project_id);
       } catch (suggestionsError) {
         this.handleSuggestionsError(suggestionsError);
@@ -74,17 +83,17 @@ export default class extends Controller {
     return scanData;
   }
 
-  async generateSuggestions(projectId) {
-    // Start suggestions spinner
-    this.suggestionsSpinnerTarget.classList.add('animate-spin', 'border-t-pink-600');
-
+  async generateSuggestions(projectId, contentType="SHARING") {
     const suggestionsResponse = await fetch('/api/generate-title-suggestions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': this.getCSRFToken(),
       },
-      body: JSON.stringify({ project_id: projectId })
+      body: JSON.stringify({
+        project_id: projectId,
+        content_type: contentType
+      })
     });
 
     if (!suggestionsResponse.ok) {
@@ -95,10 +104,6 @@ export default class extends Controller {
     if (suggestionsData.status === "error") {
       throw new Error(suggestionsData.message);
     }
-
-    // Update UI for successful suggestions
-    this.suggestionsSpinnerTarget.classList.add('hidden');
-    this.suggestionsCheckTarget.classList.remove('hidden');
 
     return suggestionsData;
   }

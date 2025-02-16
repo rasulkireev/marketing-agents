@@ -11,11 +11,18 @@ export default class extends Controller {
     this.formTarget.classList.toggle("hidden");
   }
 
+  getCurrentTab() {
+    // Find the active tab button
+    const activeTab = document.querySelector('[data-action="title-suggestions#switchTab"].text-pink-600');
+    return activeTab ? activeTab.dataset.tab : "SHARING"; // Default to SHARING if no tab is active
+  }
+
   async generate() {
     const idea = this.inputTarget.value.trim();
     if (!idea) return;
 
     const button = this.element.querySelector('[data-action="content-idea#generate"]');
+    const contentType = this.getCurrentTab();
 
     try {
       // Show loading state
@@ -35,7 +42,8 @@ export default class extends Controller {
         },
         body: JSON.stringify({
           project_id: this.projectIdValue,
-          user_prompt: idea
+          user_prompt: idea,
+          content_type: contentType
         })
       });
 
@@ -51,7 +59,7 @@ export default class extends Controller {
 
       // Add the new suggestion to the list
       const suggestionsList = document.querySelector("[data-title-suggestions-target='suggestionsList']");
-      const suggestionHtml = this.createSuggestionHTML(data.suggestion);
+      const suggestionHtml = this.createSuggestionHTML(data.suggestion, contentType);
       suggestionsList.insertAdjacentHTML("beforeend", suggestionHtml);
 
       // Clear the input and hide the form
@@ -71,16 +79,54 @@ export default class extends Controller {
     }
   }
 
-  createSuggestionHTML(suggestion) {
+  createSuggestionHTML(suggestion, contentType) {
     return `
-      <div class="pl-4 border-l-4 border-pink-600 animate-enter"
+      <div class="pl-4 border-l-4 border-pink-600"
            data-controller="generate-content"
-           data-generate-content-suggestion-id-value="${suggestion.id}">
+           data-generate-content-suggestion-id-value="${suggestion.id}"
+           data-suggestion-type="${contentType}">
+        <!-- Header section with toggle -->
         <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <h4 class="text-lg font-semibold text-gray-900">${suggestion.title}</h4>
-            <p class="mt-2 text-gray-600">${suggestion.description}</p>
-            <span class="mt-1 text-sm text-gray-500">Category: ${suggestion.category}</span>
+          <div class="flex-1 p-6 bg-white rounded-lg shadow-sm">
+            <!-- Title -->
+            <h4 class="text-xl font-bold tracking-tight text-gray-900">
+              ${suggestion.title}
+            </h4>
+
+            <!-- Main Description -->
+            <p class="mt-3 leading-relaxed text-gray-700">
+              ${suggestion.description}
+            </p>
+
+            <!-- Category Badge -->
+            <div class="mt-4">
+              <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+                Category: ${suggestion.category}
+              </span>
+            </div>
+
+            <!-- Keywords Section -->
+            ${suggestion.target_keywords ? `
+              <div class="flex flex-wrap gap-2 mt-4">
+                ${suggestion.target_keywords.map(keyword => `
+                  <span class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
+                    ${keyword}
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Meta Description Section -->
+            ${suggestion.suggested_meta_description ? `
+              <div class="p-4 mt-4 bg-gray-50 rounded-md">
+                <span class="block mb-2 text-sm font-semibold text-gray-700">
+                  Meta Description
+                </span>
+                <p class="text-sm leading-relaxed text-gray-600">
+                  ${suggestion.suggested_meta_description}
+                </p>
+              </div>
+            ` : ''}
           </div>
 
           <div class="flex gap-x-3 items-center">
@@ -95,10 +141,12 @@ export default class extends Controller {
           </div>
         </div>
 
+        <!-- Dropdown content -->
         <div data-generate-content-target="dropdown" class="hidden mt-4">
           <div data-generate-content-target="content"></div>
         </div>
       </div>
     `;
   }
+
 }
