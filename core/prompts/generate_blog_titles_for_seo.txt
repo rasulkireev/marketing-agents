@@ -11,7 +11,7 @@ Generate SEO-optimized blog post titles for the following project:
 - Product Usage: {{ project.product_usage }}
 - Language: {{ project.language }}
 - Links: {{ project.links }}
-- Number of Titles: {{ num_titles|default:6 }}
+- Number of Titles: {{ num_titles|default:3 }}
 
 
 Generate SEO-optimized blog post titles and format them as a JSON array with the following structure:
@@ -19,10 +19,9 @@ Generate SEO-optimized blog post titles and format them as a JSON array with the
     "titles": [
         {
             "title": "Example Title 1",
-            "search_intent": "informational/commercial/navigational/transactional",
+            "category": "",
             "target_keywords": ["Keyword 1", "Keyword 2"],
-            "seo_score": 85,
-            "reasoning": "This title works because...",
+            "description": "This title works because...",
             "suggested_meta_description": "160-character meta description for the blog post"
         }
     ]

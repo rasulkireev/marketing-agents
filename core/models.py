@@ -1,4 +1,5 @@
 import json
+import re
 from json.decoder import JSONDecodeError
 
 import anthropic
@@ -324,19 +325,27 @@ class Project(BaseModel):
             logger.error("Error analyzing content", error=str(e), project_name=self.name, project_url=self.url)
             raise ValueError(f"Error analyzing content: {str(e)}")
 
-    def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=6):
+    def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=None):
         """
         Generates blog post title suggestions using Claude AI.
+        If user_prompt is provided, generates a single title based on the prompt.
         Returns a tuple of (titles, status, message).
         """
         try:
-            template_name = (
-                "generate_blog_titles.txt"
-                if content_type == ContentType.SHARING
-                else "generate_blog_titles_for_seo.txt"
-            )
-
-            context = {"project": self, "num_titles": num_titles}
+            if user_prompt:
+                template_name = (
+                    "generate_blog_title_based_on_user_prompt_for_sharing.txt"
+                    if content_type == ContentType.SHARING
+                    else "generate_blog_title_based_on_user_prompt_for_seo.txt"
+                )
+                context = {"project": self, "user_prompt": user_prompt}
+            else:
+                template_name = (
+                    "generate_blog_titles_for_sharing.txt"
+                    if content_type == ContentType.SHARING
+                    else "generate_blog_titles_for_seo.txt"
+                )
+                context = {"project": self, "num_titles": num_titles}
 
             prompt = render_to_string(template_name, context)
 
@@ -358,54 +367,43 @@ class Project(BaseModel):
             response = response.strip()
 
             data = json.loads(response)
-            titles = data.get("titles", [])
+
+            # Handle single title case
+            if user_prompt:
+                titles = [data]  # Wrap single title data in list for consistent processing
+            else:
+                titles = data.get("titles", [])
 
             with transaction.atomic():
                 suggestions = []
 
-                if content_type == ContentType.SHARING:
-                    for title_data in titles:
-                        try:
-                            suggestions.append(
-                                BlogPostTitleSuggestion(
-                                    project=self,
-                                    title=title_data["title"],
-                                    description=title_data["description"],
-                                    category=title_data["category"],
-                                    content_type=ContentType.SHARING,
-                                    prompt=prompt,
-                                )
-                            )
-                        except KeyError as e:
-                            logger.error("Missing required field in title data", error=str(e), title_data=title_data)
-                            continue
-                else:  # SEO titles
-                    for title_data in titles:
-                        try:
-                            suggestions.append(
-                                BlogPostTitleSuggestion(
-                                    project=self,
-                                    title=title_data["title"],
-                                    description=title_data["reasoning"],
-                                    category=Category.GENERAL_AUDIENCE,
-                                    content_type=ContentType.SEO,
-                                    search_intent=title_data["search_intent"],
-                                    target_keywords=title_data["target_keywords"],
-                                    seo_score=title_data["seo_score"],
-                                    suggested_meta_description=title_data["suggested_meta_description"],
-                                    prompt=prompt,
-                                )
-                            )
-                        except KeyError as e:
-                            logger.error(
-                                "Missing required field in SEO title data", error=str(e), title_data=title_data
-                            )
-                            continue
+                for title_data in titles:
+                    try:
+                        suggestion = BlogPostTitleSuggestion(
+                            project=self,
+                            title=title_data["title"],
+                            description=title_data.get("description"),
+                            category=title_data["category"],
+                            content_type=content_type,
+                            target_keywords=title_data.get("target_keywords", []),
+                            suggested_meta_description=title_data.get("suggested_meta_description", ""),
+                            prompt=user_prompt if user_prompt else prompt,
+                        )
+                        suggestions.append(suggestion)
+                    except KeyError as e:
+                        logger.error("Missing required field in title data", error=str(e), title_data=title_data)
+                        continue
 
                 if suggestions:
-                    BlogPostTitleSuggestion.objects.bulk_create(suggestions)
+                    created_suggestions = BlogPostTitleSuggestion.objects.bulk_create(suggestions)
 
-            return titles, "success", "Successfully generated title suggestions"
+                    # For single title generation, return the first suggestion
+                    if user_prompt:
+                        return created_suggestions[0], "success", "Successfully generated title suggestion"
+
+                    return titles, "success", "Successfully generated title suggestions"
+
+            return [], "error", "No valid suggestions could be created"
 
         except json.JSONDecodeError as e:
             logger.error(
@@ -422,14 +420,11 @@ class BlogPostTitleSuggestion(BaseModel):
         Project, null=True, blank=True, on_delete=models.CASCADE, related_name="blog_post_title_suggestions"
     )
     title = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
+    category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
     description = models.TextField()
     prompt = models.TextField(blank=True)
-    category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
-    content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
-
-    search_intent = models.CharField(max_length=50, blank=True)
     target_keywords = models.JSONField(default=list, blank=True, null=True)
-    seo_score = models.IntegerField(default=0)
     suggested_meta_description = models.TextField(blank=True)
 
     def __str__(self):
@@ -452,3 +447,82 @@ class GeneratedBlogPost(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
+
+    def generate_content(self, content_type=ContentType.SHARING):
+        """
+        Generates blog post content using Claude AI.
+        Returns a tuple of (status, message).
+        """
+        try:
+            template_name = (
+                "generate_blog_content_for_sharing.txt"
+                if content_type == ContentType.SHARING
+                else "generate_blog_content_for_seo.txt"
+            )
+
+            context = {"suggestion": self.title}
+            prompt = render_to_string(template_name, context)
+
+            claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
+            message = claude.messages.create(
+                model="claude-3-5-sonnet-latest",
+                max_tokens=8000,
+                temperature=0.7,
+                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            )
+
+            # Clean and parse the response
+            response_text = self._clean_response_text(message.content[0].text)
+            response_json = self._parse_response_json(response_text)
+            self._validate_response_json(response_json)
+
+            # Update the blog post with generated content
+            self.description = response_json["description"]
+            self.slug = response_json["slug"]
+            self.tags = response_json["tags"]
+            self.content = response_json["content"]
+            self.save()
+
+            return "success", "Successfully generated blog post"
+
+        except json.JSONDecodeError as e:
+            logger.error(
+                "Error parsing JSON from Claude",
+                error=str(e),
+                prompt=prompt,
+                response=response_text,
+            )
+            return "error", f"Error parsing response from AI: {str(e)}"
+        except Exception as e:
+            logger.error(
+                "Failed to generate blog content",
+                error=str(e),
+                title=self.title.title,
+                project_id=self.project.id,
+            )
+            return "error", f"Failed to generate content: {str(e)}"
+
+    def _clean_response_text(self, response_text):
+        """Clean the response text from Claude."""
+        response_text = response_text.strip()
+        return "".join(char for char in response_text if ord(char) >= 32 or char in "\n\r\t")
+
+    def _parse_response_json(self, response_text):
+        """Parse the JSON response from Claude."""
+        json_match = re.search(r"\{[\s\S]*\}", response_text)
+        if json_match:
+            response_text = json_match.group(0)
+
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            response_text = response_text.replace("\n", "\\n").replace("\r", "\\r")
+            return json.loads(response_text)
+
+    def _validate_response_json(self, response_json):
+        """Validate the required fields in the response JSON."""
+        required_fields = ["description", "slug", "tags", "content"]
+        missing_fields = [field for field in required_fields if field not in response_json]
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+        return response_json

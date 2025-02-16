@@ -21,18 +21,16 @@ class ProjectScanOut(Schema):
 class GenerateTitleSuggestionsIn(Schema):
     project_id: int
     content_type: str = ContentType.SHARING
-    num_titles: int = 6
+    user_prompt: str = ""
+    num_titles: int = 3
 
 
 class TitleSuggestionOut(Schema):
     title: str
-    category: str = ""  # For general titles
-    description: str = ""  # For general titles
-    search_intent: str = ""  # For SEO titles
-    target_keywords: list[str] = []  # For SEO titles
-    seo_score: int = 0  # For SEO titles
-    reasoning: str = ""  # For SEO titles
-    suggested_meta_description: str = ""  # For SEO titles
+    category: str = ""
+    description: str = ""
+    target_keywords: list[str] = []
+    suggested_meta_description: str = ""
 
 
 class GenerateTitleSuggestionsOut(Schema):
@@ -48,11 +46,6 @@ class GeneratedContentOut(Schema):
     slug: str = ""
     tags: str = ""
     description: str = ""
-
-
-class GenerateTitleFromIdeaIn(Schema):
-    project_id: int
-    user_prompt: str
 
 
 class GenerateTitleSuggestionOut(Schema):

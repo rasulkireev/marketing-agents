@@ -9,7 +9,7 @@ Your task is to generate a blog post and return it in the following JSON format.
     "content": "The full blog post content in Markdown"
 }
 
-Context for content generation:
+Project Context for content generation:
 - Project URL: {{ suggestion.project.url }}
 - Project Name: {{ suggestion.project.name }}
 - Project Type: {{ suggestion.project.type }}
@@ -26,11 +26,26 @@ Context for content generation:
 {% if suggestion.project.links %}
 - Links: {{ suggestion.project.links }}
 {% endif %}
+
+Suggestion Context for content generation:
+{% if suggestion.title %}
+- Suggested Title: {{ suggestion.title }}
+{% endif %}
 {% if suggestion.prompt %}
 - User Prompt: {{ suggestion.prompt }}
 {% endif %}
+- Category: {{ suggestion.category }}
+{% if suggestion.description %}
+- Description: {{ suggestion.description }}
+{% endif %}
+{% if suggestion.target_keywords %}
+- Target Keywords: {{ suggestion.target_keywords }}
+{% endif %}
+{% if suggestion.suggested_meta_description %}
+- Suggested Meta Description: {{ suggestion.suggested_meta_description }}
+{% endif %}
 
-For the given title '{{ suggestion.title }}', please create:
+For the given title suggestion, please create:
 
 1. Description:
 - Write a compelling 150-160 character meta description

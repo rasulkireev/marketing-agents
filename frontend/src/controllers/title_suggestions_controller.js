@@ -10,12 +10,42 @@ export default class extends Controller {
   static targets = ["suggestionsList", "suggestionsContainer"];
 
   connect() {
-    this.currentTabValue = "SHARING";
+    // Get the last selected tab from localStorage, default to "SHARING" if none exists
+    this.currentTabValue = localStorage.getItem('selectedTab') || "SHARING";
+
+    // Update the tab UI to reflect the stored tab
+    const tabs = this.element.querySelectorAll("[data-action='title-suggestions#switchTab']");
+    tabs.forEach(t => {
+      if (t.dataset.tab === this.currentTabValue) {
+        t.classList.add("text-pink-600", "border-b-2", "border-pink-600");
+        t.classList.remove("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
+      } else {
+        t.classList.remove("text-pink-600", "border-b-2", "border-pink-600");
+        t.classList.add("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
+      }
+    });
+
+    // Filter suggestions based on the stored tab
+    this.filterSuggestions();
+  }
+
+  filterSuggestions() {
+    const suggestions = this.suggestionsListTarget.querySelectorAll("[data-suggestion-type]");
+    suggestions.forEach(suggestion => {
+      if (suggestion.dataset.suggestionType === this.currentTabValue) {
+        suggestion.classList.remove("hidden");
+      } else {
+        suggestion.classList.add("hidden");
+      }
+    });
   }
 
   async switchTab(event) {
     const tab = event.currentTarget.dataset.tab;
     this.currentTabValue = tab;
+
+    // Store the selected tab in localStorage
+    localStorage.setItem('selectedTab', tab);
 
     // Update tab styles
     const tabs = this.element.querySelectorAll("[data-action='title-suggestions#switchTab']");
@@ -29,15 +59,7 @@ export default class extends Controller {
       }
     });
 
-    // Filter suggestions based on type
-    const suggestions = this.suggestionsListTarget.querySelectorAll("[data-suggestion-type]");
-    suggestions.forEach(suggestion => {
-      if (suggestion.dataset.suggestionType === tab) {
-        suggestion.classList.remove("hidden");
-      } else {
-        suggestion.classList.add("hidden");
-      }
-    });
+    this.filterSuggestions();
   }
 
   async generate(event) {
@@ -98,46 +120,49 @@ export default class extends Controller {
   }
 
   createSuggestionHTML(suggestion) {
-    const isSEO = this.currentTabValue === "SEO";
-
-    let detailsHTML = isSEO ? `
-      <div class="mt-2 space-y-2">
-        <div class="flex gap-x-2 items-center">
-          <span class="text-sm font-medium text-gray-500">Search Intent:</span>
-          <span class="px-2 py-0.5 text-xs text-pink-600 bg-pink-50 rounded-full">${suggestion.search_intent}</span>
-        </div>
-        <div class="flex gap-x-2 items-center">
-          <span class="text-sm font-medium text-gray-500">SEO Score:</span>
-          <span class="px-2 py-0.5 text-xs text-pink-600 bg-pink-50 rounded-full">${suggestion.seo_score}%</span>
-        </div>
-        ${suggestion.target_keywords ? `
-          <div class="flex flex-wrap gap-2">
-            ${suggestion.target_keywords.map(keyword =>
-              `<span class="px-2 py-0.5 text-xs text-gray-600 bg-gray-100 rounded-full">${keyword}</span>`
-            ).join('')}
-          </div>
-        ` : ''}
-        ${suggestion.suggested_meta_description ? `
-          <div class="mt-2">
-            <span class="text-sm font-medium text-gray-500">Meta Description:</span>
-            <p class="mt-1 text-sm text-gray-600">${suggestion.suggested_meta_description}</p>
-          </div>
-        ` : ''}
-      </div>
-    ` : `
-      <span class="mt-1 text-sm text-gray-500">Category: ${suggestion.category}</span>
-    `;
-
     return `
-      <div class="pl-4 border-l-4 border-pink-600 animate-enter"
+      <div class="pl-4 border-l-4 border-pink-600"
            data-controller="generate-content"
            data-generate-content-suggestion-id-value="${suggestion.id}"
            data-suggestion-type="${this.currentTabValue}">
+        <!-- Header section with toggle -->
         <div class="flex justify-between items-start">
-          <div class="flex-1">
-            <h4 class="text-lg font-semibold text-gray-900">${suggestion.title}</h4>
-            <p class="mt-2 text-gray-600">${suggestion.description}</p>
-            ${detailsHTML}
+          <div class="flex-1 p-6 bg-white rounded-lg shadow-sm">
+
+            <h4 class="text-xl font-bold tracking-tight text-gray-900">
+              ${suggestion.title}
+            </h4>
+
+            <p class="mt-3 leading-relaxed text-gray-700">
+              ${suggestion.description}
+            </p>
+
+            <div class="mt-4">
+              <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+                Category: ${suggestion.category}
+              </span>
+            </div>
+
+            ${suggestion.target_keywords ? `
+              <div class="flex flex-wrap gap-2 mt-4">
+                ${suggestion.target_keywords.map(keyword => `
+                  <span class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
+                    ${keyword}
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            ${suggestion.suggested_meta_description ? `
+              <div class="p-4 mt-4 bg-gray-50 rounded-md">
+                <span class="block mb-2 text-sm font-semibold text-gray-700">
+                  Meta Description
+                </span>
+                <p class="text-sm leading-relaxed text-gray-600">
+                  ${suggestion.suggested_meta_description}
+                </p>
+              </div>
+            ` : ''}
           </div>
 
           <div class="flex gap-x-3 items-center">
@@ -152,6 +177,7 @@ export default class extends Controller {
           </div>
         </div>
 
+        <!-- Dropdown content -->
         <div data-generate-content-target="dropdown" class="hidden mt-4">
           <div data-generate-content-target="content"></div>
         </div>

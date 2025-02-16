@@ -1,17 +1,10 @@
-import json
-import re
-
-import anthropic
-from django.conf import settings
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from django.template.loader import render_to_string
 from ninja import NinjaAPI
 
 from core.api.auth import MultipleAuthSchema
 from core.api.schemas import (
     GeneratedContentOut,
-    GenerateTitleFromIdeaIn,
     GenerateTitleSuggestionOut,
     GenerateTitleSuggestionsIn,
     GenerateTitleSuggestionsOut,
@@ -101,6 +94,51 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
     return {"suggestions": suggestions, "status": status, "message": message or ""}
 
 
+@api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut)
+def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestionsIn):
+    profile = request.auth
+    project = get_object_or_404(Project, id=data.project_id, profile=profile)
+
+    if profile.reached_title_generation_limit:
+        return {
+            "status": "error",
+            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+        }
+
+    try:
+        # Convert string content_type to enum
+        try:
+            content_type = ContentType[data.content_type]
+        except KeyError:
+            return {"status": "error", "message": f"Invalid content type: {data.content_type}"}
+
+        suggestion, status, message = project.generate_title_suggestions(
+            content_type=content_type, user_prompt=data.user_prompt  # Pass the converted content_type
+        )
+
+        if status == "success":
+            return {
+                "status": "success",
+                "suggestion": {
+                    "id": suggestion.id,
+                    "title": suggestion.title,
+                    "description": suggestion.description,
+                    "category": suggestion.category,
+                    "target_keywords": suggestion.target_keywords,
+                    "suggested_meta_description": suggestion.suggested_meta_description,
+                    "content_type": suggestion.content_type,
+                },
+            }
+        else:
+            return {"status": "error", "message": message}
+
+    except Exception as e:
+        logger.error(
+            "Failed to generate title from idea", error=str(e), project_id=project.id, user_prompt=data.user_prompt
+        )
+        raise ValueError(f"Failed to generate title: {str(e)}")
+
+
 @api.post("/generate-blog-content/{suggestion_id}", response=GeneratedContentOut)
 def generate_blog_content(request: HttpRequest, suggestion_id: int):
     profile = request.auth
@@ -112,62 +150,29 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
             "message": "Content generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
         }
 
-    try:
-        claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
-        prompt = render_to_string("generate_blog_content.txt", {"suggestion": suggestion})
-        message = claude.messages.create(
-            model="claude-3-5-sonnet-latest",
-            max_tokens=8000,
-            temperature=0.7,
-            messages=[{"role": "user", "content": prompt}],
-        )
+    # Create a new blog post instance
+    blog_post = GeneratedBlogPost.objects.create(
+        project=suggestion.project,
+        title=suggestion,
+    )
 
-        # Clean and parse the response
-        response_text = message.content[0].text.strip()
-        response_text = "".join(char for char in response_text if ord(char) >= 32 or char in "\n\r\t")
+    # Generate the content using the same content type as the suggestion
+    status, message = blog_post.generate_content(content_type=suggestion.content_type)
 
-        # Extract JSON content
-        json_match = re.search(r"\{[\s\S]*\}", response_text)
-        if json_match:
-            response_text = json_match.group(0)
-
-        # Parse the cleaned JSON
-        try:
-            response_json = json.loads(response_text)
-        except json.JSONDecodeError:
-            response_text = response_text.replace("\n", "\\n").replace("\r", "\\r")
-            response_json = json.loads(response_text)
-
-        required_fields = ["description", "slug", "tags", "content"]
-        missing_fields = [field for field in required_fields if field not in response_json]
-        if missing_fields:
-            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
-
-        generated_post = GeneratedBlogPost.objects.create(
-            project=suggestion.project,
-            title=suggestion,
-            slug=response_json["slug"],
-            description=response_json["description"],
-            tags=response_json["tags"],
-            content=response_json["content"],
-        )
-
+    if status == "error":
+        blog_post.delete()  # Clean up if generation failed
         return {
-            "status": "success",
-            "content": generated_post.content,
-            "slug": generated_post.slug,
-            "tags": generated_post.tags,
-            "description": generated_post.description,
+            "status": status,
+            "message": message,
         }
 
-    except Exception as e:
-        logger.error(
-            "Failed to generate blog content",
-            error=str(e),
-            title=suggestion.title,
-            project_id=suggestion.project.id,
-        )
-        raise ValueError(f"Failed to generate content: {str(e)}")
+    return {
+        "status": status,
+        "content": blog_post.content,
+        "slug": blog_post.slug,
+        "tags": blog_post.tags,
+        "description": blog_post.description,
+    }
 
 
 @api.post("/projects/{project_id}/update", response={200: dict})
@@ -189,63 +194,3 @@ def update_project(request: HttpRequest, project_id: int):
     project.save()
 
     return {"status": "success"}
-
-
-@api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut)
-def generate_title_from_idea(request: HttpRequest, data: GenerateTitleFromIdeaIn):
-    profile = request.auth
-    project = get_object_or_404(Project, id=data.project_id, profile=profile)
-
-    if profile.reached_title_generation_limit:
-        return {
-            "status": "error",
-            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
-        }
-
-    try:
-        prompt = render_to_string(
-            "generate_blog_title_based_on_user_prompt.txt", {"project": project, "user_prompt": data.user_prompt}
-        )
-
-        claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
-        message = claude.messages.create(
-            model="claude-3-5-sonnet-latest",
-            max_tokens=1500,
-            temperature=0.7,
-            messages=[{"role": "user", "content": prompt}],
-        )
-        response = message.content[0].text.strip()
-
-        # Clean and parse the response
-        if response.startswith("```json"):
-            response = response.replace("```json", "")
-        if response.endswith("```"):
-            response = response.replace("```", "")
-        response = response.strip()
-
-        claude_data = json.loads(response)
-
-        # Create the suggestion in the database
-        suggestion = BlogPostTitleSuggestion.objects.create(
-            project=project,
-            title=claude_data["title"],
-            description=claude_data["description"],
-            category=claude_data["category"],
-            prompt=data.user_prompt,
-        )
-
-        return {
-            "status": "success",
-            "suggestion": {
-                "id": suggestion.id,
-                "title": suggestion.title,
-                "description": suggestion.description,
-                "category": suggestion.get_category_display(),
-            },
-        }
-
-    except Exception as e:
-        logger.error(
-            "Failed to generate title from idea", error=str(e), project_id=project.id, user_prompt=data.user_prompt
-        )
-        raise ValueError(f"Failed to generate title: {str(e)}")
