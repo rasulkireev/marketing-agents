@@ -1,5 +1,7 @@
 from ninja import Schema
 
+from core.choices import ContentType
+
 
 class ProjectScanIn(Schema):
     url: str
@@ -18,12 +20,19 @@ class ProjectScanOut(Schema):
 
 class GenerateTitleSuggestionsIn(Schema):
     project_id: int
+    content_type: str = ContentType.SHARING
+    num_titles: int = 6
 
 
 class TitleSuggestionOut(Schema):
-    category: str
     title: str
-    description: str
+    category: str = ""  # For general titles
+    description: str = ""  # For general titles
+    search_intent: str = ""  # For SEO titles
+    target_keywords: list[str] = []  # For SEO titles
+    seo_score: int = 0  # For SEO titles
+    reasoning: str = ""  # For SEO titles
+    suggested_meta_description: str = ""  # For SEO titles
 
 
 class GenerateTitleSuggestionsOut(Schema):

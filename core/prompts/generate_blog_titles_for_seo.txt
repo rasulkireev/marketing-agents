@@ -1,0 +1,47 @@
+Generate SEO-optimized blog post titles for the following project:
+- Project URL: {{ project.url }}
+- Project Name: {{ project.name }}
+- Project Type: {{ project.type }}
+- Project Summary: {{ project.summary }}
+- Blog Theme: {{ project.blog_theme }}
+- Founders: {{ project.founders }}
+- Key Features: {{ project.key_features }}
+- Target Audience: {{ project.target_audience_summary }}
+- Pain Points: {{ project.pain_points }}
+- Product Usage: {{ project.product_usage }}
+- Language: {{ project.language }}
+- Links: {{ project.links }}
+- Number of Titles: {{ num_titles|default:6 }}
+
+
+Generate SEO-optimized blog post titles and format them as a JSON array with the following structure:
+{
+    "titles": [
+        {
+            "title": "Example Title 1",
+            "search_intent": "informational/commercial/navigational/transactional",
+            "target_keywords": ["Keyword 1", "Keyword 2"],
+            "seo_score": 85,
+            "reasoning": "This title works because...",
+            "suggested_meta_description": "160-character meta description for the blog post"
+        }
+    ]
+}
+
+Ensure each title:
+1. Contains primary keyword near the beginning
+2. Is between 50-60 characters long
+3. Uses proven CTR-boosting patterns (how-to, numbers, questions, etc.)
+4. Addresses specific search intent
+5. Includes power words that enhance click-through rates
+6. Maintains natural readability while being SEO-friendly
+7. Avoids keyword stuffing
+8. Uses modifiers like "best", "guide", "tips", where appropriate
+
+The seo_score should be calculated based on:
+- Keyword placement (30%)
+- Title length optimization (20%)
+- Click-through potential (25%)
+- Search intent match (25%)
+
+Return only valid JSON, no additional text or explanations outside the JSON structure.

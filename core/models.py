@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 
 from core.base_models import BaseModel
+from core.choices import Category, ContentType
 from core.model_utils import generate_random_key
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -323,13 +324,21 @@ class Project(BaseModel):
             logger.error("Error analyzing content", error=str(e), project_name=self.name, project_url=self.url)
             raise ValueError(f"Error analyzing content: {str(e)}")
 
-    def generate_title_suggestions(self):
+    def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=6):
         """
         Generates blog post title suggestions using Claude AI.
         Returns a tuple of (titles, status, message).
         """
         try:
-            prompt = render_to_string("generate_blog_titles.txt", {"project": self})
+            template_name = (
+                "generate_blog_titles.txt"
+                if content_type == ContentType.SHARING
+                else "generate_blog_titles_for_seo.txt"
+            )
+
+            context = {"project": self, "num_titles": num_titles}
+
+            prompt = render_to_string(template_name, context)
 
             claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
             message = claude.messages.create(
@@ -352,29 +361,46 @@ class Project(BaseModel):
             titles = data.get("titles", [])
 
             with transaction.atomic():
-                category_mapping = {
-                    "General Audience": BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE,
-                    "Niche Audience": BlogPostTitleSuggestion.Category.NICH_AUDIENCE,
-                    "Industry/Company": BlogPostTitleSuggestion.Category.INDUSTRY_COMPANY,
-                }
-
                 suggestions = []
-                for title_data in titles:
-                    try:
-                        category = category_mapping.get(
-                            title_data["category"], BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE
-                        )
-                        suggestions.append(
-                            BlogPostTitleSuggestion(
-                                project=self,
-                                title=title_data["title"],
-                                description=title_data["description"],
-                                category=category,
+
+                if content_type == ContentType.SHARING:
+                    for title_data in titles:
+                        try:
+                            suggestions.append(
+                                BlogPostTitleSuggestion(
+                                    project=self,
+                                    title=title_data["title"],
+                                    description=title_data["description"],
+                                    category=title_data["category"],
+                                    content_type=ContentType.SHARING,
+                                    prompt=prompt,
+                                )
                             )
-                        )
-                    except KeyError as e:
-                        logger.error("Missing required field in title data", error=str(e), title_data=title_data)
-                        continue
+                        except KeyError as e:
+                            logger.error("Missing required field in title data", error=str(e), title_data=title_data)
+                            continue
+                else:  # SEO titles
+                    for title_data in titles:
+                        try:
+                            suggestions.append(
+                                BlogPostTitleSuggestion(
+                                    project=self,
+                                    title=title_data["title"],
+                                    description=title_data["reasoning"],
+                                    category=Category.GENERAL_AUDIENCE,
+                                    content_type=ContentType.SEO,
+                                    search_intent=title_data["search_intent"],
+                                    target_keywords=title_data["target_keywords"],
+                                    seo_score=title_data["seo_score"],
+                                    suggested_meta_description=title_data["suggested_meta_description"],
+                                    prompt=prompt,
+                                )
+                            )
+                        except KeyError as e:
+                            logger.error(
+                                "Missing required field in SEO title data", error=str(e), title_data=title_data
+                            )
+                            continue
 
                 if suggestions:
                     BlogPostTitleSuggestion.objects.bulk_create(suggestions)
@@ -390,10 +416,6 @@ class Project(BaseModel):
             )
             return [], "error", f"Error parsing response from AI: {str(e)}"
 
-        except Exception as e:
-            logger.error("Error generating title suggestions", error=str(e), project_id=self.id)
-            return [], "error", f"Error generating title suggestions: {str(e)}"
-
 
 class BlogPostTitleSuggestion(BaseModel):
     project = models.ForeignKey(
@@ -402,19 +424,13 @@ class BlogPostTitleSuggestion(BaseModel):
     title = models.CharField(max_length=255)
     description = models.TextField()
     prompt = models.TextField(blank=True)
-
-    class Category(models.TextChoices):
-        GENERAL_AUDIENCE = "General Audience", "General Audience"
-        NICH_AUDIENCE = "Niche Audience", "Niche Audience"
-        INDUSTRY_COMPANY = "Industry/Company", "Industry/Company"
-
     category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
-
-    class ContentType(models.TextChoices):
-        SHARING = "SHARING", "Sharing"
-        SEO = "SEO", "SEO"
-
     content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
+
+    search_intent = models.CharField(max_length=50, blank=True)
+    target_keywords = models.JSONField(default=list, blank=True, null=True)
+    seo_score = models.IntegerField(default=0)
+    suggested_meta_description = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"

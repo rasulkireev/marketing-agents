@@ -18,6 +18,7 @@ from core.api.schemas import (
     ProjectScanIn,
     ProjectScanOut,
 )
+from core.choices import ContentType
 from core.models import BlogPostTitleSuggestion, GeneratedBlogPost, Project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -71,19 +72,31 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 @api.post("/generate-title-suggestions", response=GenerateTitleSuggestionsOut)
 def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggestionsIn):
     profile = request.auth
-    logger.info("[Generate Title Suggestions] API Called", project_id=data.project_id, profile_id=profile.id)
+    logger.info(
+        "[Generate Title Suggestions] API Called",
+        project_id=data.project_id,
+        profile_id=profile.id,
+        content_type=data.content_type,
+        number_of_titles=data.num_titles,
+    )
 
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
 
-    if profile.number_of_title_suggestions + 15 >= 20 and not profile.has_active_subscription:
+    try:
+        content_type = ContentType[data.content_type]
+    except KeyError:
+        return {"suggestions": [], "status": "error", "message": f"Invalid content type: {data.content_type}"}
+
+    if profile.number_of_title_suggestions + data.num_titles >= 20 and not profile.has_active_subscription:
         return {
             "suggestions": [],
             "status": "error",
             "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
         }
 
-    # Generate suggestions
-    suggestions, status, message = project.generate_title_suggestions()
+    suggestions, status, message = project.generate_title_suggestions(
+        content_type=content_type, num_titles=data.num_titles
+    )
 
     return {"suggestions": suggestions, "status": status, "message": message or ""}
 
