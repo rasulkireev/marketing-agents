@@ -171,7 +171,90 @@
         class="mt-16 {% if not project.blog_post_title_suggestions.exists %}hidden{% endif %}"
         data-title-suggestions-target="suggestionsContainer"
       >
+        <div
+          data-controller="content-idea"
+          data-content-idea-project-id-value="{{ project.id }}"
+          class="mt-16 mb-8"
+        >
+          <div class="p-6 bg-gradient-to-r from-pink-50 to-white rounded-lg border border-pink-100">
+            <div class="mb-4 text-center">
+              <h3 class="text-xl font-semibold text-gray-900">Need inspiration for your next blog post?</h3>
+              <p class="mt-2 text-gray-600">Share your content ideas and let AI help you create engaging blog posts</p>
+            </div>
+
+            <div class="flex justify-center">
+              <button
+                data-action="content-idea#toggleForm"
+                class="inline-flex relative gap-x-2 items-center px-6 py-3 text-base font-semibold text-white bg-pink-600 rounded-lg group hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+              >
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Suggest Your Content Idea
+                <span class="absolute -top-2 -right-2 px-2 py-1 text-xs font-medium text-pink-600 bg-white rounded-full border border-pink-100">Pro Tip!</span>
+              </button>
+            </div>
+
+            <!-- Content Idea Form (Hidden by default) -->
+            <div data-content-idea-target="form" class="hidden mt-6">
+              <div class="bg-white rounded-lg border border-gray-200">
+                <textarea
+                  data-content-idea-target="input"
+                  rows="3"
+                  class="block p-4 w-full text-gray-900 rounded-lg border-0 focus:ring-0 focus:ring-white"
+                  placeholder="Describe your content idea... (e.g., 'I want to write about how our product helps remote teams collaborate better')"
+                ></textarea>
+                <div class="flex justify-end p-3 rounded-b-lg">
+                  <button
+                    data-action="content-idea#generate"
+                    class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
+                  >
+                    <svg class="mr-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Suggestions
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-center mt-6">
+            {% if project.blog_post_title_suggestions.exists %}
+              <button
+                data-action="title-suggestions#generate"
+                class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Generate More Suggestions
+              </button>
+            {% else %}
+              <button
+                data-action="title-suggestions#generate"
+                class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                Generate Post Suggestions
+              </button>
+            {% endif %}
+          </div>
+        </div>
+
         <h3 class="text-2xl font-bold tracking-tight text-gray-900">Suggested Blog Posts</h3>
+
+        <div class="flex gap-x-4 mt-4 border-b border-gray-200">
+          <button
+            class="px-4 py-2 text-sm font-medium text-pink-600 border-b-2 border-pink-600 focus:outline-none"
+            aria-current="page"
+          >
+            For Sharing
+          </button>
+          <button
+            class="px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed focus:outline-none"
+            disabled
+          >
+            For SEO
+            <span class="px-2 py-0.5 ml-2 text-xs bg-gray-100 rounded-full">Coming Soon</span>
+          </button>
+        </div>
 
         <div class="mt-6 space-y-8" data-title-suggestions-target="suggestionsList">
           {% for suggestion in project.blog_post_title_suggestions.all %}
@@ -310,63 +393,6 @@
           {% endfor %}
         </div>
       </div>
-
-      <div
-        data-controller="content-idea"
-        data-content-idea-project-id-value="{{ project.id }}"
-      >
-        <div class="flex gap-4 justify-center items-center my-6">
-          <div class="relative group">
-            <button
-              data-action="content-idea#toggleForm"
-              class="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Suggest Content Idea
-            </button>
-          </div>
-
-          {% if project.blog_post_title_suggestions.exists %}
-            <div class="relative group">
-              <button
-                data-action="title-suggestions#generate"
-                class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Generate More Suggestions
-              </button>
-            </div>
-          {% else %}
-            <button
-              data-action="title-suggestions#generate"
-              class="px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
-            >
-              Generate Post Suggestions
-            </button>
-          {% endif %}
-        </div>
-
-        <!-- Content Idea Form (Hidden by default) -->
-        <div data-content-idea-target="form" class="hidden mt-4">
-          <div>
-            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <textarea
-                data-content-idea-target="input"
-                rows="3"
-                class="block p-2.5 w-full text-gray-900 rounded-lg border border-gray-300 focus:ring-pink-500 focus:border-pink-500"
-                placeholder="Describe your content idea..."
-              ></textarea>
-              <div class="flex justify-end mt-3">
-                <button
-                  data-action="content-idea#generate"
-                  class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                >
-                  Generate
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>

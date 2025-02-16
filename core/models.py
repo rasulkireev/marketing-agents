@@ -1,5 +1,12 @@
+import json
+from json.decoder import JSONDecodeError
+
+import anthropic
+import requests
+from django.conf import settings
 from django.contrib.auth.models import User
-from django.db import models
+from django.db import models, transaction
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 from core.base_models import BaseModel
@@ -176,6 +183,13 @@ class Project(BaseModel):
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=Type.choices, default=Type.SAAS)
     summary = models.TextField(blank=True)
+
+    # Content from Jina Reader
+    title = models.CharField(max_length=500, blank=True, default="")
+    description = models.TextField(blank=True, default="")
+    markdown_content = models.TextField(blank=True, default="")
+    html_content = models.TextField(blank=True, default="")
+
     blog_theme = models.TextField(blank=True)
     founders = models.TextField(blank=True)
     key_features = models.TextField(blank=True)
@@ -188,6 +202,197 @@ class Project(BaseModel):
 
     def __str__(self):
         return self.name
+
+    def get_page_content(self):
+        """
+        Fetch page content using Jina Reader API and update the project.
+        Returns the content if successful, raises ValueError otherwise.
+        """
+        try:
+            # First get the HTML content
+            try:
+                html_response = requests.get(self.url, timeout=30)
+                html_response.raise_for_status()
+                html_content = html_response.text
+            except requests.exceptions.RequestException as e:
+                logger.error("Error fetching HTML content", error=str(e), project_name=self.name, project_url=self.url)
+                html_content = ""
+
+            # Then get Jina Reader content
+            jina_url = f"https://r.jina.ai/{self.url}"
+            headers = {"Accept": "application/json", "Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
+
+            response = requests.get(jina_url, headers=headers, timeout=30)
+            response.raise_for_status()
+
+            data = response.json().get("data", {})
+
+            # Update the model fields
+            self.title = data.get("title", "")[:500]  # Respect max_length
+            self.description = data.get("description", "")
+            self.markdown_content = data.get("content", "")
+            self.html_content = html_content
+
+            self.save(
+                update_fields=[
+                    "title",
+                    "description",
+                    "markdown_content",
+                    "html_content",
+                ]
+            )
+
+            logger.info("Successfully fetched content", project_name=self.name, project_url=self.url)
+
+            return self.markdown_content
+
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "Error fetching content from Jina Reader", error=str(e), project_name=self.name, project_url=self.url
+            )
+            raise ValueError(f"Error fetching content: {str(e)}")
+
+    def analyze_content(self):
+        """
+        Analyze the page content using Claude and update project details.
+        Should be called after get_page_content().
+        """
+        try:
+            claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
+
+            prompt = render_to_string(
+                "process_project_url.txt",
+                {
+                    "page_content": self.markdown_content,
+                    "title": self.title,
+                    "description": self.description,
+                },
+            )
+
+            message = claude.messages.create(
+                model="claude-3-5-sonnet-latest",
+                max_tokens=1000,
+                temperature=0,
+                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            )
+            response = message.content[0].text.strip()
+
+            try:
+                info = json.loads(response)
+            except JSONDecodeError as e:
+                logger.error(
+                    "Error parsing JSON from Claude",
+                    error=str(e),
+                    prompt=prompt,
+                    response=response,
+                )
+                raise ValueError("Failed to parse AI response")
+
+            type_mapping = {choice[1]: choice[0] for choice in self.Type.choices}
+            project_type = type_mapping.get(info.get("type", ""), self.Type.SAAS)
+
+            self.name = info.get("name", "")
+            self.type = project_type
+            self.summary = info.get("summary", "")
+            self.blog_theme = info.get("blog_theme", "")
+            self.founders = info.get("founders", "")
+            self.key_features = info.get("key_features", "")
+            self.links = info.get("links", "")
+            self.target_audience_summary = info.get("target_audience_summary", "")
+            self.pain_points = info.get("pain_points", "")
+            self.product_usage = info.get("product_usage", "")
+
+            self.save(
+                update_fields=[
+                    "name",
+                    "type",
+                    "summary",
+                    "blog_theme",
+                    "founders",
+                    "key_features",
+                    "links",
+                    "target_audience_summary",
+                    "pain_points",
+                    "product_usage",
+                ]
+            )
+
+            logger.info("Successfully analyzed content", project_name=self.name, project_url=self.url)
+
+        except Exception as e:
+            logger.error("Error analyzing content", error=str(e), project_name=self.name, project_url=self.url)
+            raise ValueError(f"Error analyzing content: {str(e)}")
+
+    def generate_title_suggestions(self):
+        """
+        Generates blog post title suggestions using Claude AI.
+        Returns a tuple of (titles, status, message).
+        """
+        try:
+            prompt = render_to_string("generate_blog_titles.txt", {"project": self})
+
+            claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
+            message = claude.messages.create(
+                model="claude-3-5-sonnet-latest",
+                max_tokens=1500,
+                temperature=0.7,
+                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            )
+            response = message.content[0].text.strip()
+
+            # Clean up the response
+            response = response.replace("\n", " ").replace("\r", "")
+            if response.startswith("```json"):
+                response = response.replace("```json", "")
+            if response.endswith("```"):
+                response = response.replace("```", "")
+            response = response.strip()
+
+            data = json.loads(response)
+            titles = data.get("titles", [])
+
+            with transaction.atomic():
+                category_mapping = {
+                    "General Audience": BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE,
+                    "Niche Audience": BlogPostTitleSuggestion.Category.NICH_AUDIENCE,
+                    "Industry/Company": BlogPostTitleSuggestion.Category.INDUSTRY_COMPANY,
+                }
+
+                suggestions = []
+                for title_data in titles:
+                    try:
+                        category = category_mapping.get(
+                            title_data["category"], BlogPostTitleSuggestion.Category.GENERAL_AUDIENCE
+                        )
+                        suggestions.append(
+                            BlogPostTitleSuggestion(
+                                project=self,
+                                title=title_data["title"],
+                                description=title_data["description"],
+                                category=category,
+                            )
+                        )
+                    except KeyError as e:
+                        logger.error("Missing required field in title data", error=str(e), title_data=title_data)
+                        continue
+
+                if suggestions:
+                    BlogPostTitleSuggestion.objects.bulk_create(suggestions)
+
+            return titles, "success", "Successfully generated title suggestions"
+
+        except json.JSONDecodeError as e:
+            logger.error(
+                "Error parsing JSON from Claude",
+                error=str(e),
+                prompt=prompt,
+                response=response,
+            )
+            return [], "error", f"Error parsing response from AI: {str(e)}"
+
+        except Exception as e:
+            logger.error("Error generating title suggestions", error=str(e), project_id=self.id)
+            return [], "error", f"Error generating title suggestions: {str(e)}"
 
 
 class BlogPostTitleSuggestion(BaseModel):
@@ -204,6 +409,12 @@ class BlogPostTitleSuggestion(BaseModel):
         INDUSTRY_COMPANY = "Industry/Company", "Industry/Company"
 
     category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
+
+    class ContentType(models.TextChoices):
+        SHARING = "SHARING", "Sharing"
+        SEO = "SEO", "SEO"
+
+    content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
