@@ -498,7 +498,7 @@ class GeneratedBlogPost(BaseModel):
                 "Failed to generate blog content",
                 error=str(e),
                 title=self.title.title,
-                project_id=self.project.id,
+                project_id=self.project_id,
             )
             return "error", f"Failed to generate content: {str(e)}"
 
