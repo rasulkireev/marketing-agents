@@ -13,6 +13,7 @@ export PROJECT_NAME=seo_blog_bot
 
 export OTEL_EXPORTER_OTLP_ENDPOINT=https://signoz-otel-collector-proxy.cr.lvtd.dev
 export OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+export OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
 
 
 export DJANGO_SETTINGS_MODULE="seo_blog_bot.settings"
