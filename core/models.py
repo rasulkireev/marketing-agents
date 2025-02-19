@@ -397,11 +397,24 @@ class Project(BaseModel):
                 if suggestions:
                     created_suggestions = BlogPostTitleSuggestion.objects.bulk_create(suggestions)
 
+                    # Create a list of dictionaries with IDs included
+                    suggestion_data = [
+                        {
+                            "id": suggestion.id,
+                            "title": suggestion.title,
+                            "description": suggestion.description,
+                            "category": suggestion.category,
+                            "target_keywords": suggestion.target_keywords,
+                            "suggested_meta_description": suggestion.suggested_meta_description,
+                        }
+                        for suggestion in created_suggestions
+                    ]
+
                     # For single title generation, return the first suggestion
                     if user_prompt:
                         return created_suggestions[0], "success", "Successfully generated title suggestion"
 
-                    return titles, "success", "Successfully generated title suggestions"
+                    return suggestion_data, "success", "Successfully generated title suggestions"
 
             return [], "error", "No valid suggestions could be created"
 

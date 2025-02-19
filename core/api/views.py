@@ -113,7 +113,7 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
             return {"status": "error", "message": f"Invalid content type: {data.content_type}"}
 
         suggestion, status, message = project.generate_title_suggestions(
-            content_type=content_type, user_prompt=data.user_prompt  # Pass the converted content_type
+            content_type=content_type, num_titles=1, user_prompt=data.user_prompt  # Pass the converted content_type
         )
 
         if status == "success":

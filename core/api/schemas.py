@@ -26,11 +26,18 @@ class GenerateTitleSuggestionsIn(Schema):
 
 
 class TitleSuggestionOut(Schema):
+    id: int
     title: str
     category: str = ""
     description: str = ""
     target_keywords: list[str] = []
     suggested_meta_description: str = ""
+
+
+class GenerateTitleSuggestionOut(Schema):
+    status: str
+    message: str = ""
+    suggestion: TitleSuggestionOut = {}
 
 
 class GenerateTitleSuggestionsOut(Schema):
@@ -46,9 +53,3 @@ class GeneratedContentOut(Schema):
     slug: str = ""
     tags: str = ""
     description: str = ""
-
-
-class GenerateTitleSuggestionOut(Schema):
-    status: str
-    message: str = ""
-    suggestion: dict = {}
