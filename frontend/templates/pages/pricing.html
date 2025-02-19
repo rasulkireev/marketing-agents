@@ -64,25 +64,51 @@
         </div>
 
         <!-- Early Bird Plan -->
-        <div class="p-10 rounded-lg border border-gray-100 shadow-lg">
+        <div class="relative p-10 rounded-lg border border-gray-100 shadow-lg">
+          <div class="absolute inset-0 bg-gradient-to-b to-transparent rounded-lg from-pink-50/50"></div>
+
           <div class="relative">
             <h3 id="tier-early-bird" class="text-base font-semibold leading-7 text-gray-900">Early Bird PRO</h3>
             <div class="absolute top-0 -right-4 px-3 py-1 text-xs font-medium text-white bg-pink-600 rounded-full">Limited Time</div>
           </div>
+
+          <div class="flex justify-center items-center mt-4">
+            <div class="px-4 py-2 text-center bg-pink-50 rounded-lg border border-pink-200">
+              <span class="font-semibold text-pink-700">Only 20 spots left!</span>
+              <p class="mt-1 text-xs text-pink-600">Get lifetime access before prices go up</p>
+            </div>
+          </div>
+
           <p class="flex gap-x-1 items-baseline mt-6">
             <span class="text-5xl font-bold tracking-tight text-gray-900">$5</span>
             <span class="text-sm font-semibold leading-6 text-gray-600">/forever</span>
           </p>
+
+          <p class="mt-2 text-xs italic text-gray-500">Regular price will be $10/month</p>
+
           {% if user.is_authenticated %}
-          {% if has_pro_subscription %}
+            {% if has_pro_subscription %}
               <a href="#" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
             {% else %}
-              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time-cheap' %}" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
+              <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time-cheap' %}" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+                Secure your spot now
+              </a>
             {% endif %}
           {% else %}
-            <a href="{% url 'account_signup' %}" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
+            <a href="{% url 'account_signup' %}" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+              Secure your spot now
+            </a>
           {% endif %}
-          <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+
+          <p class="flex gap-1 justify-center items-center mt-2 text-xs text-center text-gray-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Limited time offer - Don't miss out!
+          </p>
+
+           <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
+
             <li class="flex gap-x-3">
               <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
@@ -103,6 +129,7 @@
                 Suggest blog post idea
               </span>
             </li>
+
           </ul>
         </div>
 
