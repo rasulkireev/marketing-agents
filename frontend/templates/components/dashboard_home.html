@@ -1,0 +1,104 @@
+{% load widget_tweaks %}
+
+<div data-controller="scan-progress">
+  <div class="mx-auto max-w-md text-center">
+    <h2 class="mb-2 text-2xl font-bold text-gray-900 animate-fade-in">Ready to create content? ✨</h2>
+    <p class="mb-6 text-base text-gray-600 animate-fade-in-delay">
+      Enter your project's homepage URL below. We'll analyze it to generate relevant blog post ideas for your audience. 🚀
+    </p>
+  </div>
+  <form data-action="submit->scan-progress#handleSubmit" class="mx-auto max-w-md animate-slide-up">
+    {% csrf_token %}
+    <div class="flex gap-x-4">
+      {% render_field form.url class="flex-auto px-3.5 py-2.5 min-w-0 text-gray-900 rounded-lg border-0 ring-2 ring-inset ring-pink-200 shadow-md transition-all duration-300 ease-in-out placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-500 hover:ring-pink-300 sm:text-sm sm:leading-6" placeholder="Enter your website URL" %}
+      <button type="submit" class="flex-none px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:from-pink-600 hover:to-purple-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+        <span>Scan</span>
+        <span class="ml-1">🔍</span>
+      </button>
+    </div>
+
+    <!-- Progress Indicators -->
+    <div data-scan-progress-target="progress" class="hidden mt-8">
+      <div class="space-y-6">
+        <!-- Project Details -->
+        <div class="flex gap-x-4 items-center p-4 rounded-lg border border-pink-100 shadow-sm backdrop-blur-sm transition-all duration-300 bg-white/50">
+          <div data-scan-progress-target="detailsSpinner" class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-pink-600"></div>
+          <div data-scan-progress-target="detailsCheck" class="hidden text-green-500">
+            <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div data-scan-progress-target="detailsCross" class="hidden text-red-500">
+            <svg class="w-5 h-5 size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </div>
+          <span class="font-medium text-gray-700">Analyzing website content... 🔎</span>
+        </div>
+
+        <!-- Blog Suggestions -->
+        <div class="flex gap-x-4 items-center p-4 rounded-lg border border-pink-100 shadow-sm backdrop-blur-sm transition-all duration-300 bg-white/50">
+          <div data-scan-progress-target="suggestionsSpinner" class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+          <div data-scan-progress-target="suggestionsCheck" class="hidden text-green-500">
+            <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div data-scan-progress-target="suggestionsCross" class="hidden text-red-500">
+            <svg class="w-5 h-5 size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+          </div>
+          <span class="font-medium text-gray-700">Generating blog post suggestions... ✍️</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Button -->
+    <a href="#" data-scan-progress-target="resultsButton" class="inline-flex hidden justify-center px-6 py-3 mt-8 w-full text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg border border-transparent shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+      Show Results ✨
+    </a>
+  </form>
+
+  <div class="px-6 mx-auto mt-12 max-w-7xl lg:px-8">
+    <div class="mx-auto max-w-2xl">
+      <h2 class="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">Your Projects ⭐</h2>
+
+      <div class="mt-8 space-y-6" data-scan-progress-target="projectsList">
+        {% if projects %}
+          {% for project in projects %}
+            <div class="flex gap-x-6 justify-between items-center p-6 rounded-xl border border-pink-100 shadow-md backdrop-blur-sm transition-all duration-300 transform bg-white/90 hover:shadow-lg hover:border-pink-200 hover:-translate-y-1">
+              <div class="min-w-0">
+                <div class="flex gap-x-3 items-start">
+                  <h3 class="font-semibold leading-6 text-gray-900">
+                    {% if project.name %}
+                      {{ project.name }}
+                    {% else %}
+                      {{ project.url }}
+                    {% endif %}
+                  </h3>
+                  <p class="px-1.5 py-0.5 mt-0.5 text-xs font-medium text-gray-600 whitespace-nowrap bg-gray-50 rounded-md ring-1 ring-inset ring-gray-500/10">
+                    {{ project.get_type_display }}
+                  </p>
+                </div>
+                {% if project.summary %}
+                  <p class="mt-1 text-sm leading-5 text-gray-500 truncate">{{ project.summary }}</p>
+                {% endif %}
+              </div>
+              <div class="flex flex-none gap-x-4 items-center">
+                <a href="{% url 'project_detail' project.id %}"
+                   class="px-4 py-2 text-sm font-semibold text-gray-900 bg-white rounded-lg ring-2 ring-pink-200 shadow-sm transition-all duration-300 hover:bg-pink-50 hover:ring-pink-300">
+                  View details →
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div data-empty-state class="p-8 text-center rounded-xl border border-pink-100 shadow-md backdrop-blur-sm bg-white/90">
+            <p class="text-sm text-gray-500">No projects yet. Add your first project above! 🎯</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
