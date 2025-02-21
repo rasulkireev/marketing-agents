@@ -1,12 +1,9 @@
-import json
-import re
+import os
 
-import anthropic
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models, transaction
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from pydantic_ai import Agent
@@ -14,7 +11,7 @@ from pydantic_ai import Agent
 from core.base_models import BaseModel
 from core.choices import Category, ContentType
 from core.model_utils import generate_random_key, run_agent_synchronously
-from core.schemas import ProjectAnalysis, TitleSuggestions
+from core.schemas import BlogPostContent, ProjectAnalysis, TitleSuggestions
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -458,6 +455,91 @@ class BlogPostTitleSuggestion(BaseModel):
     def __str__(self):
         return f"{self.project.name}: {self.title}"
 
+    @property
+    def title_suggestion_string(self):
+        return f"""
+            - Primary Keyword/Title: {self.title}
+            - Category: {self.category}
+            - Description: {self.description}
+            - Target Keywords: {self.target_keywords}
+            - Suggested Meta Description: {self.suggested_meta_description}
+        """
+
+    def save_article(self, result):
+        return GeneratedBlogPost.objects.create(
+            project=self.project,
+            title=self,
+            description=result.data.description,
+            slug=result.data.slug,
+            tags=result.data.tags,
+            content=result.data.content,
+        )
+
+    def generate_seo_article(self):
+        template_path = os.path.join(os.path.dirname(__file__), "prompts", "generate_blog_content_for_seo.txt")
+        with open(template_path) as f:
+            seo_description = f.read()
+
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=BlogPostContent,
+            system_prompt=(
+                f"""
+                You are an experienced SEO content strategist.
+                You specialize in creating search-engine optimized content that ranks well
+                and provide value to our target audience.
+                Your task is to generate an SEO-optimized blog post. Given the title and description
+                of the desired post. Here are some specific pointer:
+                {seo_description}
+            """
+            ),
+        )
+
+        result = run_agent_synchronously(
+            agent,
+            f"""
+                {self.project.project_details_string}
+                {self.title_suggestion_string}
+            """,
+        )
+
+        return self.save_article(result)
+
+    def generate_sharing_article(self):
+        template_path = os.path.join(os.path.dirname(__file__), "prompts", "generate_blog_content_for_seo.txt")
+        with open(template_path) as f:
+            sharing_description = f.read()
+
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=BlogPostContent,
+            system_prompt=(
+                f"""
+              You are an experienced online writer.
+              You understand both the art of capturing attention and
+              the specific needs of our target audience.
+              Your task is to generate a blog post.
+              Here are some specific pointers:
+              {sharing_description}
+            """
+            ),
+        )
+
+        result = run_agent_synchronously(
+            agent,
+            f"""
+                {self.project.project_details_string}
+                {self.title_suggestion_string}
+            """,
+        )
+
+        return self.save_article(result)
+
+    def generate_content(self, content_type=ContentType.SHARING):
+        if content_type == ContentType.SEO:
+            return self.generate_seo_article()
+        return self.generate_sharing_article()
+
 
 class GeneratedBlogPost(BaseModel):
     project = models.ForeignKey(
@@ -475,82 +557,3 @@ class GeneratedBlogPost(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
-
-    def generate_content(self, content_type=ContentType.SHARING):
-        """
-        Generates blog post content using Claude AI.
-        Returns a tuple of (status, message).
-        """
-        try:
-            template_name = (
-                "generate_blog_content_for_sharing.txt"
-                if content_type == ContentType.SHARING
-                else "generate_blog_content_for_seo.txt"
-            )
-
-            context = {"suggestion": self.title}
-            prompt = render_to_string(template_name, context)
-
-            claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
-            message = claude.messages.create(
-                model="claude-3-5-sonnet-latest",
-                max_tokens=8000,
-                temperature=0.7,
-                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-            )
-
-            # Clean and parse the response
-            response_text = self._clean_response_text(message.content[0].text)
-            response_json = self._parse_response_json(response_text)
-            self._validate_response_json(response_json)
-
-            # Update the blog post with generated content
-            self.description = response_json["description"]
-            self.slug = response_json["slug"]
-            self.tags = response_json["tags"]
-            self.content = response_json["content"]
-            self.save()
-
-            return "success", "Successfully generated blog post"
-
-        except json.JSONDecodeError as e:
-            logger.error(
-                "Error parsing JSON from Claude",
-                error=str(e),
-                prompt=prompt,
-                response=response_text,
-            )
-            return "error", f"Error parsing response from AI: {str(e)}"
-        except Exception as e:
-            logger.error(
-                "Failed to generate blog content",
-                error=str(e),
-                title=self.title.title,
-                project_id=self.project_id,
-            )
-            return "error", f"Failed to generate content: {str(e)}"
-
-    def _clean_response_text(self, response_text):
-        """Clean the response text from Claude."""
-        response_text = response_text.strip()
-        return "".join(char for char in response_text if ord(char) >= 32 or char in "\n\r\t")
-
-    def _parse_response_json(self, response_text):
-        """Parse the JSON response from Claude."""
-        json_match = re.search(r"\{[\s\S]*\}", response_text)
-        if json_match:
-            response_text = json_match.group(0)
-
-        try:
-            return json.loads(response_text)
-        except json.JSONDecodeError:
-            response_text = response_text.replace("\n", "\\n").replace("\r", "\\r")
-            return json.loads(response_text)
-
-    def _validate_response_json(self, response_json):
-        """Validate the required fields in the response JSON."""
-        required_fields = ["description", "slug", "tags", "content"]
-        missing_fields = [field for field in required_fields if field not in response_json]
-        if missing_fields:
-            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
-        return response_json

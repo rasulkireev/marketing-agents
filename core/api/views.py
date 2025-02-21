@@ -13,7 +13,7 @@ from core.api.schemas import (
     UpdateTitleScoreIn,
 )
 from core.choices import ContentType
-from core.models import BlogPostTitleSuggestion, GeneratedBlogPost, Project
+from core.models import BlogPostTitleSuggestion, Project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -171,29 +171,30 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
             "message": "Content generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
         }
 
-    # Create a new blog post instance
-    blog_post = GeneratedBlogPost.objects.create(
-        project=suggestion.project,
-        title=suggestion,
-    )
+    try:
+        blog_post = suggestion.generate_content(content_type=suggestion.content_type)
 
-    # Generate the content using the same content type as the suggestion
-    status, message = blog_post.generate_content(content_type=suggestion.content_type)
+        if not blog_post or not blog_post.content:
+            return {"status": "error", "message": "Failed to generate content. Please try again."}
 
-    if status == "error":
-        blog_post.delete()  # Clean up if generation failed
         return {
-            "status": status,
-            "message": message,
+            "status": "success",
+            "content": blog_post.content,
+            "slug": blog_post.slug,
+            "tags": blog_post.tags,
+            "description": blog_post.description,
         }
 
-    return {
-        "status": status,
-        "content": blog_post.content,
-        "slug": blog_post.slug,
-        "tags": blog_post.tags,
-        "description": blog_post.description,
-    }
+    except ValueError as e:
+        logger.error(
+            "Failed to generate blog content", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id
+        )
+        return {"status": "error", "message": str(e)}
+    except Exception as e:
+        logger.error(
+            "Unexpected error generating blog content", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id
+        )
+        return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
 
 
 @api.post("/projects/{project_id}/update", response={200: dict})

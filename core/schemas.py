@@ -111,7 +111,7 @@ class TitleSuggestion(BaseModel):
     )
     category: str = Field(
         description="""
-        Primary content category or topic area that the blog post belongs to
+          Primary content category or topic area that the blog post belongs to
     """
     )
     target_keywords: list[str] = Field(
@@ -121,7 +121,8 @@ class TitleSuggestion(BaseModel):
     )
     description: str = Field(
         description="""
-        Brief overview of the blog post's main topic, angle, and key points to be covered
+        Brief overview of the blog post's main topic, angle, and key points to be covered.
+        Comma separated list of keywords.
     """
     )
     suggested_meta_description: str = Field(
@@ -136,4 +137,56 @@ class TitleSuggestions(BaseModel):
         description="""
         Collection of generated title suggestions with their associated metadata and SEO information
     """
+    )
+
+
+class BlogPostContent(BaseModel):
+    description: str = Field(
+        description="""Meta description (150-160 characters) that should:
+        - Include primary keyword naturally (if SEO type)
+        - Focus on value proposition and user intent
+        - Be compelling and drive click-through
+        - Maintain single line, no line breaks
+        """
+    )
+    slug: str = Field(
+        description="""URL-friendly format that should:
+        - Include primary keyword if possible (if SEO type)
+        - Use lowercase letters, numbers, and hyphens only
+        - Be concise and readable
+        - Remove special characters and spaces
+        """
+    )
+    tags: str = Field(
+        description="""5-8 keywords formatted as: "Tag 1, Tag 2, Tag 3, Tag 4, Tag 5" that:
+        - Include primary and secondary keywords (if SEO type)
+        - Mix short and long-tail terms
+        - Focus on {{ suggestion.project.type }} industry
+        - Balance general and specific terms
+        """
+    )
+    content: str = Field(
+        description="""Full blog post in Markdown format that includes:
+
+        1. Structure:
+        - Strong H1 heading (with primary keyword for SEO type)
+        - Clear H2 and H3 subheadings
+        - Compelling introduction (keyword in first 100 words for SEO)
+
+        2. Content Quality:
+        - Include relevant statistics and data
+        - Link to authoritative sources
+        - Address user intent comprehensively
+
+        3. Readability:
+        - Short paragraphs (2-3 sentences)
+        - Strategic use of bullet points and lists
+        - Table of contents for longer posts
+        - Natural language flow
+
+        4. Engagement:
+        - Clear calls-to-action
+        - Address audience pain points
+        - Reference key features where relevant
+        """
     )
