@@ -151,7 +151,7 @@ export default class extends Controller {
 
   createProjectElement(data) {
     const element = document.createElement('div');
-    element.className = 'flex justify-between items-center p-5 bg-white rounded-lg border shadow-sm opacity-0 transition-all duration-500 ease-out transform translate-x-full';
+    element.className = 'flex gap-x-6 justify-between items-center p-6 rounded-xl border border-pink-100 shadow-md backdrop-blur-sm transition-all duration-300 transform bg-white/90 hover:shadow-lg hover:border-pink-200 hover:-translate-y-1';
     element.innerHTML = `
       <div class="min-w-0">
         <div class="flex gap-x-3 items-start">
@@ -166,8 +166,8 @@ export default class extends Controller {
       </div>
       <div class="flex flex-none gap-x-4 items-center">
         <a href="/project/${data.project_id}/"
-           class="px-2.5 py-1.5 text-sm font-semibold text-gray-900 bg-white rounded-md ring-1 ring-inset ring-gray-300 shadow-sm hover:bg-gray-50">
-          View details
+           class="px-4 py-2 text-sm font-semibold text-gray-900 bg-white rounded-lg ring-2 ring-pink-200 shadow-sm transition-all duration-300 hover:bg-pink-50 hover:ring-pink-300">
+          View details →
         </a>
       </div>
     `;
