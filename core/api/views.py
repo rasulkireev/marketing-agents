@@ -108,11 +108,9 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
             "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
         }
 
-    suggestions, status, message = project.generate_title_suggestions(
-        content_type=content_type, num_titles=data.num_titles
-    )
+    suggestions = project.generate_title_suggestions(content_type=content_type, num_titles=data.num_titles)
 
-    return {"suggestions": suggestions, "status": status, "message": message or ""}
+    return {"suggestions": suggestions, "status": "success", "message": ""}
 
 
 @api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut)
@@ -127,31 +125,32 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
         }
 
     try:
-        # Convert string content_type to enum
         try:
             content_type = ContentType[data.content_type]
         except KeyError:
             return {"status": "error", "message": f"Invalid content type: {data.content_type}"}
 
-        suggestion, status, message = project.generate_title_suggestions(
-            content_type=content_type, num_titles=1, user_prompt=data.user_prompt  # Pass the converted content_type
+        suggestions = project.generate_title_suggestions(
+            content_type=content_type, num_titles=1, user_prompt=data.user_prompt
         )
 
-        if status == "success":
-            return {
-                "status": "success",
-                "suggestion": {
-                    "id": suggestion.id,
-                    "title": suggestion.title,
-                    "description": suggestion.description,
-                    "category": suggestion.category,
-                    "target_keywords": suggestion.target_keywords,
-                    "suggested_meta_description": suggestion.suggested_meta_description,
-                    "content_type": suggestion.content_type,
-                },
-            }
-        else:
-            return {"status": "error", "message": message}
+        if not suggestions:
+            return {"status": "error", "message": "No suggestions were generated"}
+
+        suggestion = suggestions[0]
+
+        return {
+            "status": "success",
+            "suggestion": {
+                "id": suggestion.id,
+                "title": suggestion.title,
+                "description": suggestion.description,
+                "category": suggestion.category,
+                "target_keywords": suggestion.target_keywords,
+                "suggested_meta_description": suggestion.suggested_meta_description,
+                "content_type": suggestion.content_type,
+            },
+        }
 
     except Exception as e:
         logger.error(

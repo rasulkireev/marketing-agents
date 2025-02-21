@@ -13,8 +13,8 @@ from pydantic_ai import Agent
 
 from core.base_models import BaseModel
 from core.choices import Category, ContentType
-from core.model_utils import generate_random_key
-from core.schemas import ProjectAnalysis
+from core.model_utils import generate_random_key, run_agent_synchronously
+from core.schemas import ProjectAnalysis, TitleSuggestions
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -210,6 +210,23 @@ class Project(BaseModel):
     def __str__(self):
         return self.name
 
+    @property
+    def project_details_string(self):
+        return f"""
+            - Project URL: {self.url}
+            - Project Name: {self.name}
+            - Project Type: {self.type}
+            - Project Summary: {self.summary}
+            - Blog Theme: {self.blog_theme}
+            - Founders: {self.founders}
+            - Key Features: {self.key_features}
+            - Target Audience: {self.target_audience_summary}
+            - Pain Points: {self.pain_points}
+            - Product Usage: {self.product_usage}
+            - Language: {self.language}
+            - Links: {self.links}
+        """
+
     def get_page_content(self):
         """
         Fetch page content using Jina Reader API and update the project.
@@ -283,147 +300,112 @@ class Project(BaseModel):
             ),
         )
 
-        import asyncio
+        result = run_agent_synchronously(
+            agent,
+            f"""
+              Web page content:
+              Title: {self.title}
+              Description: {self.description}
+              Content: {self.markdown_content}
+            """,
+        )
 
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        self.name = result.data.name
+        self.type = result.data.type
+        self.summary = result.data.summary
+        self.blog_theme = result.data.blog_theme
+        self.founders = result.data.founders
+        self.key_features = result.data.key_features
+        self.target_audience_summary = result.data.target_audience_summary
+        self.pain_points = result.data.pain_points
+        self.product_usage = result.data.product_usage
+        self.links = result.data.links
+        self.save()
 
-        try:
-            result = loop.run_until_complete(
-                agent.run(
-                    f"""
-                Web page content:
-                Title: {self.title}
-                Description: {self.description}
-                Content: {self.markdown_content}
-            """
+        logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
+
+        return True
+
+    def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
+        """Generate title suggestions based on content type."""
+        if content_type == ContentType.SEO:
+            return self.generate_seo_title_suggestions(num_titles, user_prompt)
+        return self.generate_sharing_title_suggestions(num_titles, user_prompt)
+
+    def create_blog_post_title_suggestions(self, titles, content_type: ContentType):
+        with transaction.atomic():
+            suggestions = []
+            for title in titles:
+                suggestion = BlogPostTitleSuggestion(
+                    project=self,
+                    title=title.title,
+                    description=title.description,
+                    category=title.category,
+                    content_type=content_type,
+                    target_keywords=title.target_keywords,
+                    suggested_meta_description=title.suggested_meta_description,
                 )
-            )
+                suggestions.append(suggestion)
 
-            self.name = result.data.name
-            self.type = result.data.type
-            self.summary = result.data.summary
-            self.blog_theme = result.data.blog_theme
-            self.founders = result.data.founders
-            self.key_features = result.data.key_features
-            self.target_audience_summary = result.data.target_audience_summary
-            self.pain_points = result.data.pain_points
-            self.product_usage = result.data.product_usage
-            self.links = result.data.links
-            self.save()
+            return BlogPostTitleSuggestion.objects.bulk_create(suggestions)
 
-            logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
+    def generate_seo_title_suggestions(self, num_titles=3, user_prompt=None):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=TitleSuggestions,
+            system_prompt="""
+                You are an SEO expert. Based on the web page content provided,
+                generate SEO-optimized blog post titles that are likely to perform well in search engines.
+                Ensure each title:
+                1. Contains primary keyword near the beginning
+                2. Is between 50-60 characters long
+                3. Uses proven CTR-boosting patterns (how-to, numbers, questions, etc.)
+                4. Addresses specific search intent
+                5. Includes power words that enhance click-through rates
+                6. Maintains natural readability while being SEO-friendly
+                7. Avoids keyword stuffing
+                8. Uses modifiers like "best", "guide", "tips", where appropriate
+            """,
+        )
 
-            return True
+        result = run_agent_synchronously(
+            agent,
+            f"""
+                {self.project_details_string}
+                - Number of Titles: {num_titles}
+                {f"- User's specific request: {user_prompt}" if user_prompt else ""}
+            """,
+        )
 
-        except Exception as e:
-            logger.error("[Analyze Content] Failed to analyze content", error=str(e), project_url=self.url)
-            return False
+        return self.create_blog_post_title_suggestions(result.data.titles, ContentType.SEO)
 
-    def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=None):
-        """
-        Generates blog post title suggestions using Claude AI.
-        If user_prompt is provided, generates a single title based on the prompt.
-        Returns a tuple of (titles, status, message).
-        """
-        try:
-            if user_prompt:
-                template_name = (
-                    "generate_blog_title_based_on_user_prompt_for_sharing.txt"
-                    if content_type == ContentType.SHARING
-                    else "generate_blog_title_based_on_user_prompt_for_seo.txt"
-                )
-                context = {"project": self, "user_prompt": user_prompt}
-            else:
-                template_name = (
-                    "generate_blog_titles_for_sharing.txt"
-                    if content_type == ContentType.SHARING
-                    else "generate_blog_titles_for_seo.txt"
-                )
-                context = {"project": self, "num_titles": num_titles}
+    def generate_sharing_title_suggestions(self, num_titles=3, user_prompt=None):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=TitleSuggestions,
+            system_prompt="""
+                You are Nicholas Cole, an expert in writing content that catches people's attention.
+                Based on the web page content provided, generate blog post titles that are likely to
+                perform well in search engines. Ensure each title:
+                1. Is specific and clear about what the reader will learn
+                2. Includes numbers where appropriate
+                3. Creates curiosity without being clickbait
+                4. Promises value or solution to a problem
+                5. Is timeless rather than time-sensitive
+                6. Uses power words to enhance appeal
+            """,
+        )
 
-            prompt = render_to_string(template_name, context)
+        result = run_agent_synchronously(
+            agent,
+            f"""
+                {self.project_details_string}
+                - Number of Titles: {num_titles}
+                {f"- User's specific request: {user_prompt}" if user_prompt else ""}
+            """,
+        )
 
-            claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
-            message = claude.messages.create(
-                model="claude-3-5-sonnet-latest",
-                max_tokens=1500,
-                temperature=0.7,
-                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-            )
-            response = message.content[0].text.strip()
-
-            # Clean up the response
-            response = response.replace("\n", " ").replace("\r", "")
-            if response.startswith("```json"):
-                response = response.replace("```json", "")
-            if response.endswith("```"):
-                response = response.replace("```", "")
-            response = response.strip()
-
-            data = json.loads(response)
-
-            # Handle single title case
-            if user_prompt:
-                titles = [data]  # Wrap single title data in list for consistent processing
-            else:
-                titles = data.get("titles", [])
-
-            with transaction.atomic():
-                suggestions = []
-
-                for title_data in titles:
-                    try:
-                        suggestion = BlogPostTitleSuggestion(
-                            project=self,
-                            title=title_data["title"],
-                            description=title_data.get("description"),
-                            category=title_data["category"],
-                            content_type=content_type,
-                            target_keywords=title_data.get("target_keywords", []),
-                            suggested_meta_description=title_data.get("suggested_meta_description", ""),
-                            prompt=user_prompt if user_prompt else prompt,
-                        )
-                        suggestions.append(suggestion)
-                    except KeyError as e:
-                        logger.error("Missing required field in title data", error=str(e), title_data=title_data)
-                        continue
-
-                if suggestions:
-                    created_suggestions = BlogPostTitleSuggestion.objects.bulk_create(suggestions)
-
-                    # Create a list of dictionaries with IDs included
-                    suggestion_data = [
-                        {
-                            "id": suggestion.id,
-                            "title": suggestion.title,
-                            "description": suggestion.description,
-                            "category": suggestion.category,
-                            "target_keywords": suggestion.target_keywords,
-                            "suggested_meta_description": suggestion.suggested_meta_description,
-                        }
-                        for suggestion in created_suggestions
-                    ]
-
-                    # For single title generation, return the first suggestion
-                    if user_prompt:
-                        return created_suggestions[0], "success", "Successfully generated title suggestion"
-
-                    return suggestion_data, "success", "Successfully generated title suggestions"
-
-            return [], "error", "No valid suggestions could be created"
-
-        except json.JSONDecodeError as e:
-            logger.error(
-                "Error parsing JSON from Claude",
-                error=str(e),
-                prompt=prompt,
-                response=response,
-            )
-            return [], "error", f"Error parsing response from AI: {str(e)}"
+        return self.create_blog_post_title_suggestions(result.data.titles, ContentType.SHARING)
 
 
 class BlogPostTitleSuggestion(BaseModel):
