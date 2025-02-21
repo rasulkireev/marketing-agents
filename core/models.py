@@ -1,6 +1,5 @@
 import json
 import re
-from json.decoder import JSONDecodeError
 
 import anthropic
 import requests
@@ -9,10 +8,13 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
+from pydantic_ai import Agent
 
 from core.base_models import BaseModel
 from core.choices import Category, ContentType
 from core.model_utils import generate_random_key
+from core.schemas import ProjectAnalysis
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -187,11 +189,14 @@ class Project(BaseModel):
     summary = models.TextField(blank=True)
 
     # Content from Jina Reader
+    date_scraped = models.DateTimeField(null=True, blank=True)
     title = models.CharField(max_length=500, blank=True, default="")
     description = models.TextField(blank=True, default="")
     markdown_content = models.TextField(blank=True, default="")
     html_content = models.TextField(blank=True, default="")
 
+    # AI Content
+    date_analyzed = models.DateTimeField(null=True, blank=True)
     blog_theme = models.TextField(blank=True)
     founders = models.TextField(blank=True)
     key_features = models.TextField(blank=True)
@@ -211,26 +216,28 @@ class Project(BaseModel):
         Returns the content if successful, raises ValueError otherwise.
         """
         try:
-            # First get the HTML content
-            try:
-                html_response = requests.get(self.url, timeout=30)
-                html_response.raise_for_status()
-                html_content = html_response.text
-            except requests.exceptions.RequestException as e:
-                logger.error("Error fetching HTML content", error=str(e), project_name=self.name, project_url=self.url)
-                html_content = ""
+            html_response = requests.get(self.url, timeout=30)
+            html_response.raise_for_status()
+            html_content = html_response.text
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "[Get Page Content] Error fetching HTML content",
+                error=str(e),
+                project_name=self.name,
+                project_url=self.url,
+            )
+            html_content = ""
 
-            # Then get Jina Reader content
-            jina_url = f"https://r.jina.ai/{self.url}"
-            headers = {"Accept": "application/json", "Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
-
+        jina_url = f"https://r.jina.ai/{self.url}"
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
+        try:
             response = requests.get(jina_url, headers=headers, timeout=30)
             response.raise_for_status()
 
             data = response.json().get("data", {})
 
-            # Update the model fields
-            self.title = data.get("title", "")[:500]  # Respect max_length
+            self.date_scraped = timezone.now()
+            self.title = data.get("title", "")[:500]
             self.description = data.get("description", "")
             self.markdown_content = data.get("content", "")
             self.html_content = html_content
@@ -244,86 +251,77 @@ class Project(BaseModel):
                 ]
             )
 
-            logger.info("Successfully fetched content", project_name=self.name, project_url=self.url)
+            logger.info(
+                "[Page Content] Successfully fetched content",
+                project_name=self.name,
+                project_url=self.url,
+            )
 
-            return self.markdown_content
+            return True
 
         except requests.exceptions.RequestException as e:
             logger.error(
-                "Error fetching content from Jina Reader", error=str(e), project_name=self.name, project_url=self.url
+                "[Page Content] Error fetching content from Jina Reader",
+                error=str(e),
+                project_name=self.name,
+                project_url=self.url,
             )
-            raise ValueError(f"Error fetching content: {str(e)}")
+            return False
 
     def analyze_content(self):
         """
-        Analyze the page content using Claude and update project details.
+        Analyze the page content using Claude via PydanticAI and update project details.
         Should be called after get_page_content().
         """
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=ProjectAnalysis,
+            system_prompt=(
+                "You are an expert content analyzer. Based on the web page content provided, "
+                "extract and infer the requested information. Make reasonable inferences based "
+                "on available content, context, and industry knowledge."
+            ),
+        )
+
+        import asyncio
+
         try:
-            claude = anthropic.Client(api_key=settings.ANTHROPIC_API_KEY)
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
 
-            prompt = render_to_string(
-                "process_project_url.txt",
-                {
-                    "page_content": self.markdown_content,
-                    "title": self.title,
-                    "description": self.description,
-                },
-            )
-
-            message = claude.messages.create(
-                model="claude-3-5-sonnet-latest",
-                max_tokens=1000,
-                temperature=0,
-                messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-            )
-            response = message.content[0].text.strip()
-
-            try:
-                info = json.loads(response)
-            except JSONDecodeError as e:
-                logger.error(
-                    "Error parsing JSON from Claude",
-                    error=str(e),
-                    prompt=prompt,
-                    response=response,
+        try:
+            result = loop.run_until_complete(
+                agent.run(
+                    f"""
+                Web page content:
+                Title: {self.title}
+                Description: {self.description}
+                Content: {self.markdown_content}
+            """
                 )
-                raise ValueError("Failed to parse AI response")
-
-            type_mapping = {choice[1]: choice[0] for choice in self.Type.choices}
-            project_type = type_mapping.get(info.get("type", ""), self.Type.SAAS)
-
-            self.name = info.get("name", "")
-            self.type = project_type
-            self.summary = info.get("summary", "")
-            self.blog_theme = info.get("blog_theme", "")
-            self.founders = info.get("founders", "")
-            self.key_features = info.get("key_features", "")
-            self.links = info.get("links", "")
-            self.target_audience_summary = info.get("target_audience_summary", "")
-            self.pain_points = info.get("pain_points", "")
-            self.product_usage = info.get("product_usage", "")
-
-            self.save(
-                update_fields=[
-                    "name",
-                    "type",
-                    "summary",
-                    "blog_theme",
-                    "founders",
-                    "key_features",
-                    "links",
-                    "target_audience_summary",
-                    "pain_points",
-                    "product_usage",
-                ]
             )
 
-            logger.info("Successfully analyzed content", project_name=self.name, project_url=self.url)
+            self.name = result.data.name
+            self.type = result.data.type
+            self.summary = result.data.summary
+            self.blog_theme = result.data.blog_theme
+            self.founders = result.data.founders
+            self.key_features = result.data.key_features
+            self.target_audience_summary = result.data.target_audience_summary
+            self.pain_points = result.data.pain_points
+            self.product_usage = result.data.product_usage
+            self.links = result.data.links
+            self.save()
+
+            logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
+
+            return True
 
         except Exception as e:
-            logger.error("Error analyzing content", error=str(e), project_name=self.name, project_url=self.url)
-            raise ValueError(f"Error analyzing content: {str(e)}")
+            logger.error("[Analyze Content] Failed to analyze content", error=str(e), project_url=self.url)
+            return False
 
     def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=None):
         """

@@ -41,19 +41,40 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 
     try:
         project = Project.objects.create(profile=profile, url=data.url)
-        project.get_page_content()
-        project.analyze_content()
+        got_content = project.get_page_content()
+        analyzed_project = project.analyze_content()
 
-        return {
-            "status": "success",
-            "project_id": project.id,
-            "name": project.name,
-            "type": project.get_type_display(),
-            "url": project.url,
-            "summary": project.summary,
-        }
+        if got_content and analyzed_project:
+            return {
+                "status": "success",
+                "project_id": project.id,
+                "name": project.name,
+                "type": project.get_type_display(),
+                "url": project.url,
+                "summary": project.summary,
+            }
+        else:
+            logger.error(
+                "[Scan Project] Failed to scan project",
+                got_content=got_content,
+                analyzed_project=analyzed_project,
+                project_id=project.id if project else None,
+                url=data.url,
+            )
+            if project:
+                project.delete()
+            return {
+                "status": "error",
+                "message": f"Failed to {'get page content' if not got_content else 'analyze project'}.",
+            }
 
     except Exception as e:
+        logger.error(
+            "[Scan Project] Failed to scan project",
+            error=str(e),
+            project_id=project.id if project else None,
+            url=data.url,
+        )
         if project:
             project.delete()
         return {
