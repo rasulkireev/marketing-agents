@@ -213,6 +213,7 @@ class Project(BaseModel):
     @property
     def project_details_string(self):
         return f"""
+            - Today's Date: {timezone.now().strftime("%Y-%m-%d")}
             - Project URL: {self.url}
             - Project Name: {self.name}
             - Project Type: {self.type}
@@ -225,6 +226,27 @@ class Project(BaseModel):
             - Product Usage: {self.product_usage}
             - Language: {self.language}
             - Links: {self.links}
+        """
+
+    @property
+    def liked_title_suggestions(self):
+        return self.blog_post_title_suggestions.filter(user_score__gt=0).all()
+
+    @property
+    def disliked_title_suggestions(self):
+        return self.blog_post_title_suggestions.filter(user_score__lt=0).all()
+
+    @property
+    def get_liked_disliked_title_suggestions_string(self):
+        liked_titles = "\n".join(f"- {suggestion.title}" for suggestion in self.liked_title_suggestions)
+        disliked_titles = "\n".join(f"- {suggestion.title}" for suggestion in self.disliked_title_suggestions)
+
+        return f"""
+            Liked Title Suggestions:
+            {liked_titles}
+
+            Disliked Title Suggestions:
+            {disliked_titles}
         """
 
     def get_page_content(self):
@@ -374,6 +396,7 @@ class Project(BaseModel):
                 {self.project_details_string}
                 - Number of Titles: {num_titles}
                 {f"- User's specific request: {user_prompt}" if user_prompt else ""}
+                {self.get_liked_disliked_title_suggestions_string}
             """,
         )
 
@@ -402,6 +425,7 @@ class Project(BaseModel):
                 {self.project_details_string}
                 - Number of Titles: {num_titles}
                 {f"- User's specific request: {user_prompt}" if user_prompt else ""}
+                {self.get_liked_disliked_title_suggestions_string}
             """,
         )
 
@@ -419,6 +443,17 @@ class BlogPostTitleSuggestion(BaseModel):
     prompt = models.TextField(blank=True)
     target_keywords = models.JSONField(default=list, blank=True, null=True)
     suggested_meta_description = models.TextField(blank=True)
+
+    # User Interaction
+    user_score = models.SmallIntegerField(
+        default=0,
+        choices=[
+            (-1, "Didn't Like"),
+            (0, "Undecided"),
+            (1, "Liked"),
+        ],
+        help_text="User's rating of the title suggestion",
+    )
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"

@@ -11,12 +11,19 @@ export default class extends Controller {
 
   connect() {
     // Get the last selected tab from localStorage, default to "SHARING" if none exists
-    this.currentTabValue = localStorage.getItem('selectedTab') || "SHARING";
+    this.currentTabValue = localStorage.getItem("selectedTab") || "SHARING";
+    this.filterSuggestions();
+  }
 
-    // Update the tab UI to reflect the stored tab
+  switchTab(event) {
+    const selectedTab = event.currentTarget.dataset.tab;
+    this.currentTabValue = selectedTab;
+    localStorage.setItem("selectedTab", selectedTab);
+
+    // Update tab UI
     const tabs = this.element.querySelectorAll("[data-action='title-suggestions#switchTab']");
     tabs.forEach(t => {
-      if (t.dataset.tab === this.currentTabValue) {
+      if (t.dataset.tab === selectedTab) {
         t.classList.add("text-pink-600", "border-b-2", "border-pink-600");
         t.classList.remove("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
       } else {
@@ -25,41 +32,91 @@ export default class extends Controller {
       }
     });
 
-    // Filter suggestions based on the stored tab
     this.filterSuggestions();
   }
 
   filterSuggestions() {
     const suggestions = this.suggestionsListTarget.querySelectorAll("[data-suggestion-type]");
+
+    // Filter main suggestions
     suggestions.forEach(suggestion => {
-      if (suggestion.dataset.suggestionType === this.currentTabValue) {
-        suggestion.classList.remove("hidden");
-      } else {
-        suggestion.classList.add("hidden");
-      }
+      suggestion.classList.toggle("hidden", suggestion.dataset.suggestionType !== this.currentTabValue);
     });
   }
 
-  async switchTab(event) {
-    const tab = event.currentTarget.dataset.tab;
-    this.currentTabValue = tab;
+  createSuggestionHTML(suggestion, contentType) {
+    return `
+      <div
+        class="pl-4 border-l-4 border-pink-600"
+        data-controller="generate-content"
+        data-generate-content-suggestion-id-value="${suggestion.id}"
+        data-suggestion-type="${contentType}"
+      >
+        <div class="flex gap-x-4 justify-between items-start">
+          <div class="flex-1 p-6 bg-white rounded-lg shadow-sm">
+            <div class="space-y-4">
+              <h4 class="text-xl font-bold tracking-tight text-gray-900">
+                ${suggestion.title}
+              </h4>
 
-    // Store the selected tab in localStorage
-    localStorage.setItem('selectedTab', tab);
+              <div class="flex items-center space-x-2"
+                   data-title-score-suggestion-id-value="${suggestion.id}"
+                   data-current-score="0">
 
-    // Update tab styles
-    const tabs = this.element.querySelectorAll("[data-action='title-suggestions#switchTab']");
-    tabs.forEach(t => {
-      if (t.dataset.tab === tab) {
-        t.classList.add("text-pink-600", "border-b-2", "border-pink-600");
-        t.classList.remove("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
-      } else {
-        t.classList.remove("text-pink-600", "border-b-2", "border-pink-600");
-        t.classList.add("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
-      }
-    });
+                <button data-title-score-target="likeButton"
+                        data-action="title-score#updateScore"
+                        class="inline-flex gap-x-1 items-center px-2 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 like hover:bg-green-50">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                  </svg>
+                  <span>Like</span>
+                </button>
 
-    this.filterSuggestions();
+                <button data-title-score-target="dislikeButton"
+                        data-action="title-score#updateScore"
+                        class="inline-flex gap-x-1 items-center px-2 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 dislike hover:bg-red-50">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                  </svg>
+                  <span>Dislike</span>
+                </button>
+              </div>
+            </div>
+
+            <p class="mt-3 leading-relaxed text-gray-700">
+              ${suggestion.description}
+            </p>
+
+            <div class="mt-4">
+              <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
+                Category: ${suggestion.category}
+              </span>
+            </div>
+
+            ${suggestion.target_keywords ? `
+              <div class="mt-4">
+                <h5 class="text-sm font-medium text-gray-700">Target Keywords:</h5>
+                <div class="flex flex-wrap gap-2 mt-2">
+                  ${suggestion.target_keywords.split(",").map(keyword => `
+                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
+                      ${keyword.trim()}
+                    </span>
+                  `).join("")}
+                </div>
+              </div>
+            ` : ""}
+
+            <div data-generate-content-target="buttonContainer" class="mt-4">
+              <button
+                data-action="generate-content#generate"
+                class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
+                Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   async generate(event) {
@@ -103,7 +160,7 @@ export default class extends Controller {
 
       this.suggestionsContainerTarget.classList.remove('hidden');
       suggestions.forEach(suggestion => {
-        const suggestionHtml = this.createSuggestionHTML(suggestion);
+        const suggestionHtml = this.createSuggestionHTML(suggestion, this.currentTabValue);
         this.suggestionsListTarget.insertAdjacentHTML('beforeend', suggestionHtml);
       });
 
@@ -117,71 +174,5 @@ export default class extends Controller {
 
       showMessage(error.message, 'error');
     }
-  }
-
-  createSuggestionHTML(suggestion) {
-    return `
-      <div class="pl-4 border-l-4 border-pink-600"
-           data-controller="generate-content"
-           data-generate-content-suggestion-id-value="${suggestion.id}"
-           data-suggestion-type="${this.currentTabValue}">
-        <!-- Header section with toggle -->
-        <div class="flex justify-between items-start">
-          <div class="flex-1 p-6 bg-white rounded-lg shadow-sm">
-
-            <h4 class="text-xl font-bold tracking-tight text-gray-900">
-              ${suggestion.title}
-            </h4>
-
-            <p class="mt-3 leading-relaxed text-gray-700">
-              ${suggestion.description}
-            </p>
-
-            <div class="mt-4">
-              <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
-                Category: ${suggestion.category}
-              </span>
-            </div>
-
-            ${suggestion.target_keywords ? `
-              <div class="flex flex-wrap gap-2 mt-4">
-                ${suggestion.target_keywords.map(keyword => `
-                  <span class="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full">
-                    ${keyword}
-                  </span>
-                `).join('')}
-              </div>
-            ` : ''}
-
-            ${suggestion.suggested_meta_description ? `
-              <div class="p-4 mt-4 bg-gray-50 rounded-md">
-                <span class="block mb-2 text-sm font-semibold text-gray-700">
-                  Meta Description
-                </span>
-                <p class="text-sm leading-relaxed text-gray-600">
-                  ${suggestion.suggested_meta_description}
-                </p>
-              </div>
-            ` : ''}
-          </div>
-
-          <div class="flex gap-x-3 items-center">
-            <div data-generate-content-target="status"></div>
-            <div data-generate-content-target="buttonContainer">
-              <button
-                data-action="generate-content#generate"
-                class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
-                Generate
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dropdown content -->
-        <div data-generate-content-target="dropdown" class="hidden mt-4">
-          <div data-generate-content-target="content"></div>
-        </div>
-      </div>
-    `;
   }
 }

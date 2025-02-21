@@ -52,3 +52,7 @@ class GeneratedContentOut(Schema):
     slug: str = ""
     tags: str = ""
     description: str = ""
+
+
+class UpdateTitleScoreIn(Schema):
+    score: int

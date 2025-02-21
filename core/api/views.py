@@ -10,6 +10,7 @@ from core.api.schemas import (
     GenerateTitleSuggestionsOut,
     ProjectScanIn,
     ProjectScanOut,
+    UpdateTitleScoreIn,
 )
 from core.choices import ContentType
 from core.models import BlogPostTitleSuggestion, GeneratedBlogPost, Project
@@ -214,3 +215,24 @@ def update_project(request: HttpRequest, project_id: int):
     project.save()
 
     return {"status": "success"}
+
+
+@api.post("/update-title-score/{suggestion_id}", response={200: dict})
+def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTitleScoreIn):
+    profile = request.auth
+    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+
+    if data.score not in [-1, 0, 1]:
+        return {"status": "error", "message": "Invalid score value. Must be -1, 0, or 1"}
+
+    try:
+        suggestion.user_score = data.score
+        suggestion.save(update_fields=["user_score"])
+
+        logger.info("Title score updated", suggestion_id=suggestion_id, profile_id=profile.id, score=data.score)
+
+        return {"status": "success", "message": "Score updated successfully"}
+
+    except Exception as e:
+        logger.error("Failed to update title score", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id)
+        return {"status": "error", "message": f"Failed to update score: {str(e)}"}
