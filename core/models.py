@@ -496,19 +496,25 @@ class BlogPostTitleSuggestion(BaseModel):
         Your task is to generate an SEO-optimized blog post. Given the title and description
         of the desired post. Here are some specific pointer:
         {seo_description}"""
-
+        message = f"""
+            {self.project.project_details_string}
+            {self.title_suggestion_string}
+        """
         max_retries = 2
         retry_count = 0
         last_error = None
 
         while retry_count < max_retries:
             try:
+                logger.info(
+                    "[Generate SEO Article] running agent",
+                    system_prompt=system_prompt,
+                    message=message,
+                    suggestion_id=self.id,
+                )
                 result = run_agent_synchronously(
                     self.get_agent(model=model, system_prompt=system_prompt),
-                    f"""
-                        {self.project.project_details_string}
-                        {self.title_suggestion_string}
-                    """,
+                    message,
                 )
                 logger.info(
                     "[Generate SEO Article] got AI result",
@@ -560,15 +566,21 @@ class BlogPostTitleSuggestion(BaseModel):
               Your task is to generate a blog post.
               Here are some specific pointers:
               {sharing_description}"""
-
+        message = f"""
+            {self.project.project_details_string}
+            {self.title_suggestion_string}
+        """
         while retry_count < max_retries:
             try:
+                logger.info(
+                    "[Generate Sharing Article] running agent",
+                    system_prompt=system_prompt,
+                    message=message,
+                    suggestion_id=self.id,
+                )
                 result = run_agent_synchronously(
                     self.get_agent(model=model, system_prompt=system_prompt),
-                    f"""
-                        {self.project.project_details_string}
-                        {self.title_suggestion_string}
-                    """,
+                    message,
                 )
                 logger.info(
                     "[Generate Sharing Article] got AI result",
