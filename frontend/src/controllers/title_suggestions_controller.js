@@ -133,6 +133,8 @@ export default class extends Controller {
         </div>
       `;
 
+      showMessage("Triggered Content Generation, shouldn't take too long 😄", 'success');
+
       // Make API call
       const response = await fetch('/api/generate-title-suggestions', {
         method: 'POST',

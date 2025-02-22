@@ -1,4 +1,5 @@
 import os
+import time
 
 import requests
 from django.conf import settings
@@ -465,6 +466,14 @@ class BlogPostTitleSuggestion(BaseModel):
             - Suggested Meta Description: {self.suggested_meta_description}
         """
 
+    def get_agent(self, model="anthropic:claude-3-5-sonnet-latest", system_prompt="", retries=2):
+        return Agent(
+            model,
+            retries=retries,
+            result_type=BlogPostContent,
+            system_prompt=system_prompt,
+        )
+
     def save_article(self, result):
         return GeneratedBlogPost.objects.create(
             project=self.project,
@@ -480,60 +489,121 @@ class BlogPostTitleSuggestion(BaseModel):
         with open(template_path) as f:
             seo_description = f.read()
 
-        agent = Agent(
-            "google-gla:gemini-2.0-flash",
-            result_type=BlogPostContent,
-            system_prompt=(
-                f"""
-                You are an experienced SEO content strategist.
-                You specialize in creating search-engine optimized content that ranks well
-                and provide value to our target audience.
-                Your task is to generate an SEO-optimized blog post. Given the title and description
-                of the desired post. Here are some specific pointer:
-                {seo_description}
-            """
-            ),
-        )
+        model = "anthropic:claude-3-5-sonnet-latest"
+        system_prompt = f"""You are an experienced SEO content strategist.
+        You specialize in creating search-engine optimized content that ranks well
+        and provide value to our target audience.
+        Your task is to generate an SEO-optimized blog post. Given the title and description
+        of the desired post. Here are some specific pointer:
+        {seo_description}"""
 
-        result = run_agent_synchronously(
-            agent,
-            f"""
-                {self.project.project_details_string}
-                {self.title_suggestion_string}
-            """,
-        )
+        max_retries = 2
+        retry_count = 0
+        last_error = None
 
-        return self.save_article(result)
+        while retry_count < max_retries:
+            try:
+                result = run_agent_synchronously(
+                    self.get_agent(model=model, system_prompt=system_prompt),
+                    f"""
+                        {self.project.project_details_string}
+                        {self.title_suggestion_string}
+                    """,
+                )
+                logger.info(
+                    "[Generate SEO Article] got AI result",
+                    result=result,
+                    data=result.data,
+                    suggestion_id=self.id,
+                )
+                return self.save_article(result)
+            except Exception as e:
+                last_error = e
+                if "overloaded_error" in str(e) and retry_count < max_retries - 1:
+                    logger.warning(
+                        "Overloaded error encountered, retrying",
+                        error=str(e),
+                        suggestion_id=self.id,
+                        retry_count=retry_count + 1,
+                    )
+                    time.sleep(2)
+                    retry_count += 1
+                    continue
+                elif "Exceeded maximum retries" in str(e):
+                    logger.error(
+                        "Exceeded maximum retries, swtiching model",
+                        error=str(e),
+                        suggestion_id=self.id,
+                        retry_count=retry_count + 1,
+                    )
+                    time.sleep(2)
+                    retry_count += 1
+                    model = "google-gla:gemini-2.0-flash"
+                    continue
+                break
+
+        if last_error:
+            raise last_error
 
     def generate_sharing_article(self):
         template_path = os.path.join(os.path.dirname(__file__), "prompts", "generate_blog_content_for_seo.txt")
         with open(template_path) as f:
             sharing_description = f.read()
 
-        agent = Agent(
-            "google-gla:gemini-2.0-flash",
-            result_type=BlogPostContent,
-            system_prompt=(
-                f"""
-              You are an experienced online writer.
+        model = "anthropic:claude-3-5-sonnet-latest"
+        max_retries = 2
+        retry_count = 0
+        last_error = None
+        system_prompt = f"""You are an experienced online writer.
               You understand both the art of capturing attention and
               the specific needs of our target audience.
               Your task is to generate a blog post.
               Here are some specific pointers:
-              {sharing_description}
-            """
-            ),
-        )
+              {sharing_description}"""
 
-        result = run_agent_synchronously(
-            agent,
-            f"""
-                {self.project.project_details_string}
-                {self.title_suggestion_string}
-            """,
-        )
+        while retry_count < max_retries:
+            try:
+                result = run_agent_synchronously(
+                    self.get_agent(model=model, system_prompt=system_prompt),
+                    f"""
+                        {self.project.project_details_string}
+                        {self.title_suggestion_string}
+                    """,
+                )
+                logger.info(
+                    "[Generate Sharing Article] got AI result",
+                    result=result,
+                    data=result.data,
+                    suggestion_id=self.id,
+                )
+                return self.save_article(result)
+            except Exception as e:
+                last_error = e
+                if "overloaded_error" in str(e) and retry_count < max_retries - 1:
+                    logger.warning(
+                        "Overloaded error encountered, retrying",
+                        error=str(e),
+                        suggestion_id=self.id,
+                        retry_count=retry_count + 1,
+                    )
+                    time.sleep(2)
+                    retry_count += 1
+                    continue
+                elif "Exceeded maximum retries" in str(e):
+                    logger.error(
+                        "Exceeded maximum retries, swtiching model",
+                        error=str(e),
+                        suggestion_id=self.id,
+                        retry_count=retry_count + 1,
+                    )
+                    time.sleep(2)
+                    retry_count += 1
+                    model = "google-gla:gemini-2.0-flash"
+                    continue
+                break
 
-        return self.save_article(result)
+        if last_error:
+            raise last_error
 
     def generate_content(self, content_type=ContentType.SHARING):
         if content_type == ContentType.SEO:
