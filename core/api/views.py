@@ -10,9 +10,10 @@ from core.api.schemas import (
     GenerateTitleSuggestionsOut,
     ProjectScanIn,
     ProjectScanOut,
+    UpdateTitleScoreIn,
 )
 from core.choices import ContentType
-from core.models import BlogPostTitleSuggestion, GeneratedBlogPost, Project
+from core.models import BlogPostTitleSuggestion, Project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -41,19 +42,40 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 
     try:
         project = Project.objects.create(profile=profile, url=data.url)
-        project.get_page_content()
-        project.analyze_content()
+        got_content = project.get_page_content()
+        analyzed_project = project.analyze_content()
 
-        return {
-            "status": "success",
-            "project_id": project.id,
-            "name": project.name,
-            "type": project.get_type_display(),
-            "url": project.url,
-            "summary": project.summary,
-        }
+        if got_content and analyzed_project:
+            return {
+                "status": "success",
+                "project_id": project.id,
+                "name": project.name,
+                "type": project.get_type_display(),
+                "url": project.url,
+                "summary": project.summary,
+            }
+        else:
+            logger.error(
+                "[Scan Project] Failed to scan project",
+                got_content=got_content,
+                analyzed_project=analyzed_project,
+                project_id=project.id if project else None,
+                url=data.url,
+            )
+            if project:
+                project.delete()
+            return {
+                "status": "error",
+                "message": f"Failed to {'get page content' if not got_content else 'analyze project'}.",
+            }
 
     except Exception as e:
+        logger.error(
+            "[Scan Project] Failed to scan project",
+            error=str(e),
+            project_id=project.id if project else None,
+            url=data.url,
+        )
         if project:
             project.delete()
         return {
@@ -87,11 +109,9 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
             "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
         }
 
-    suggestions, status, message = project.generate_title_suggestions(
-        content_type=content_type, num_titles=data.num_titles
-    )
+    suggestions = project.generate_title_suggestions(content_type=content_type, num_titles=data.num_titles)
 
-    return {"suggestions": suggestions, "status": status, "message": message or ""}
+    return {"suggestions": suggestions, "status": "success", "message": ""}
 
 
 @api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut)
@@ -106,31 +126,32 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
         }
 
     try:
-        # Convert string content_type to enum
         try:
             content_type = ContentType[data.content_type]
         except KeyError:
             return {"status": "error", "message": f"Invalid content type: {data.content_type}"}
 
-        suggestion, status, message = project.generate_title_suggestions(
-            content_type=content_type, num_titles=1, user_prompt=data.user_prompt  # Pass the converted content_type
+        suggestions = project.generate_title_suggestions(
+            content_type=content_type, num_titles=1, user_prompt=data.user_prompt
         )
 
-        if status == "success":
-            return {
-                "status": "success",
-                "suggestion": {
-                    "id": suggestion.id,
-                    "title": suggestion.title,
-                    "description": suggestion.description,
-                    "category": suggestion.category,
-                    "target_keywords": suggestion.target_keywords,
-                    "suggested_meta_description": suggestion.suggested_meta_description,
-                    "content_type": suggestion.content_type,
-                },
-            }
-        else:
-            return {"status": "error", "message": message}
+        if not suggestions:
+            return {"status": "error", "message": "No suggestions were generated"}
+
+        suggestion = suggestions[0]
+
+        return {
+            "status": "success",
+            "suggestion": {
+                "id": suggestion.id,
+                "title": suggestion.title,
+                "description": suggestion.description,
+                "category": suggestion.category,
+                "target_keywords": suggestion.target_keywords,
+                "suggested_meta_description": suggestion.suggested_meta_description,
+                "content_type": suggestion.content_type,
+            },
+        }
 
     except Exception as e:
         logger.error(
@@ -150,29 +171,30 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
             "message": "Content generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
         }
 
-    # Create a new blog post instance
-    blog_post = GeneratedBlogPost.objects.create(
-        project=suggestion.project,
-        title=suggestion,
-    )
+    try:
+        blog_post = suggestion.generate_content(content_type=suggestion.content_type)
 
-    # Generate the content using the same content type as the suggestion
-    status, message = blog_post.generate_content(content_type=suggestion.content_type)
+        if not blog_post or not blog_post.content:
+            return {"status": "error", "message": "Failed to generate content. Please try again."}
 
-    if status == "error":
-        blog_post.delete()  # Clean up if generation failed
         return {
-            "status": status,
-            "message": message,
+            "status": "success",
+            "content": blog_post.content,
+            "slug": blog_post.slug,
+            "tags": blog_post.tags,
+            "description": blog_post.description,
         }
 
-    return {
-        "status": status,
-        "content": blog_post.content,
-        "slug": blog_post.slug,
-        "tags": blog_post.tags,
-        "description": blog_post.description,
-    }
+    except ValueError as e:
+        logger.error(
+            "Failed to generate blog content", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id
+        )
+        return {"status": "error", "message": str(e)}
+    except Exception as e:
+        logger.error(
+            "Unexpected error generating blog content", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id
+        )
+        return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
 
 
 @api.post("/projects/{project_id}/update", response={200: dict})
@@ -194,3 +216,24 @@ def update_project(request: HttpRequest, project_id: int):
     project.save()
 
     return {"status": "success"}
+
+
+@api.post("/update-title-score/{suggestion_id}", response={200: dict})
+def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTitleScoreIn):
+    profile = request.auth
+    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+
+    if data.score not in [-1, 0, 1]:
+        return {"status": "error", "message": "Invalid score value. Must be -1, 0, or 1"}
+
+    try:
+        suggestion.user_score = data.score
+        suggestion.save(update_fields=["user_score"])
+
+        logger.info("Title score updated", suggestion_id=suggestion_id, profile_id=profile.id, score=data.score)
+
+        return {"status": "success", "message": "Score updated successfully"}
+
+    except Exception as e:
+        logger.error("Failed to update title score", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id)
+        return {"status": "error", "message": f"Failed to update score: {str(e)}"}

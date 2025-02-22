@@ -41,8 +41,8 @@ django-anymail = {extras = ["mailgun"], version = "^12.0"}
 posthog = "^3.6.6"
 dj-stripe = "~2.8.4"
 stripe = "~4.0.0"
-anthropic = "^0.37.1"
 django-ninja = "^1.3.0"
+pydantic-ai = "^0.0.24"
 
 
 [tool.poetry.dev-dependencies]

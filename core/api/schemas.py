@@ -1,3 +1,5 @@
+from typing import Optional
+
 from ninja import Schema
 
 from core.choices import ContentType
@@ -7,7 +9,6 @@ class ProjectScanIn(Schema):
     url: str
 
 
-# TODO: what is the best practice on handling optional fields?
 class ProjectScanOut(Schema):
     status: str
     message: str = ""
@@ -47,9 +48,13 @@ class GenerateTitleSuggestionsOut(Schema):
 
 
 class GeneratedContentOut(Schema):
-    status: str
-    message: str = ""
-    content: str = ""
-    slug: str = ""
-    tags: str = ""
-    description: str = ""
+    status: str = "success"
+    message: Optional[str] = None
+    content: Optional[str] = None
+    slug: Optional[str] = None
+    tags: Optional[str] = None
+    description: Optional[str] = None
+
+
+class UpdateTitleScoreIn(Schema):
+    score: int
