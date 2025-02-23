@@ -1,5 +1,5 @@
 
-# SEO Blog Bot
+# Marketing Agents
 
 ## Getting Started
 

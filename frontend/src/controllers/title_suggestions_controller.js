@@ -12,6 +12,20 @@ export default class extends Controller {
   connect() {
     // Get the last selected tab from localStorage, default to "SHARING" if none exists
     this.currentTabValue = localStorage.getItem("selectedTab") || "SHARING";
+
+    // Update initial tab UI
+    const tabs = this.element.querySelectorAll("[data-action='title-suggestions#switchTab']");
+    tabs.forEach(t => {
+      if (t.dataset.tab === this.currentTabValue) {
+        t.classList.add("text-pink-600", "border-b-2", "border-pink-600");
+        t.classList.remove("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
+      } else {
+        t.classList.remove("text-pink-600", "border-b-2", "border-pink-600");
+        t.classList.add("text-gray-500", "hover:text-gray-700", "hover:border-gray-300");
+      }
+    });
+
+    // Filter suggestions based on initial tab
     this.filterSuggestions();
   }
 
@@ -38,9 +52,12 @@ export default class extends Controller {
   filterSuggestions() {
     const suggestions = this.suggestionsListTarget.querySelectorAll("[data-suggestion-type]");
 
-    // Filter main suggestions
     suggestions.forEach(suggestion => {
-      suggestion.classList.toggle("hidden", suggestion.dataset.suggestionType !== this.currentTabValue);
+      if (suggestion.dataset.suggestionType === this.currentTabValue) {
+        suggestion.classList.remove("hidden");
+      } else {
+        suggestion.classList.add("hidden");
+      }
     });
   }
 

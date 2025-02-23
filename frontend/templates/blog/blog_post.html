@@ -3,7 +3,7 @@
 {% load markdown_extras %}
 
 {% block meta %}
-<title>{{ blog_post.title }} | SEO Blog Bot Blog</title>
+<title>{{ blog_post.title }} | Marketing Agents Blog</title>
 <meta name="description" content="{{ blog_post.description }}" />
 <meta name="keywords" content="{{ blog_post.tags }}" />
 <meta name="robots" content="index, follow" />
@@ -13,7 +13,7 @@
 <meta property="og:title" content="{{ blog_post.title }}" />
 <meta property="og:url" content="https://{{ request.get_host }}{{ blog_post.get_absolute_url }}" />
 <meta property="og:description" content="{{ blog_post.description }}" />
-<meta property="og:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | SEO Blog Bot Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
+<meta property="og:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
 <meta property="og:locale" content="en_US" />
 
 <meta name="twitter:card" content="summary_large_image" />
@@ -21,7 +21,7 @@
 <meta name="twitter:site" content="@rasulkireev" />
 <meta name="twitter:title" content="{{ blog_post.title }}" />
 <meta name="twitter:description" content="{{ blog_post.description }}" />
-<meta name="twitter:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | SEO Blog Bot Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
+<meta name="twitter:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
 {% endblock meta %}
 
 {% block content %}
@@ -43,7 +43,7 @@
     "@type": "BlogPosting",
     "headline": "{{ blog_post.title }}",
     "description": "{{ blog_post.description }}",
-    "image": "https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | SEO Blog Bot Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}",
+    "image": "https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}",
     "url": "https://{{ request.get_host }}{{ blog_post.get_absolute_url }}",
     "datePublished": "{{ blog_post.created_at|date:'c' }}",
     "dateModified": "{{ blog_post.updated_at|date:'c' }}",
@@ -54,7 +54,7 @@
     },
     "publisher": {
       "@type": "Organization",
-      "name": "SEO Blog Bot",
+      "name": "Marketing Agents",
       "logo": {
         "@type": "ImageObject",
         "url": "https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}"

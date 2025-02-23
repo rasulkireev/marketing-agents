@@ -4,7 +4,13 @@ export default class extends Controller {
   static targets = ["content", "chevron"];
 
   connect() {
-    this.expanded = true;
+    this.expanded = false;
+    if (this.hasContentTarget) {
+      this.contentTarget.classList.add("hidden");
+    }
+    if (this.hasChevronTarget) {
+      this.chevronTarget.classList.add("rotate-180");
+    }
   }
 
   toggle() {

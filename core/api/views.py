@@ -18,7 +18,7 @@ from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
 
-api = NinjaAPI(auth=MultipleAuthSchema(), csrf=True)
+api = NinjaAPI(auth=MultipleAuthSchema(), csrf=True, version="1.0.0")
 
 
 @api.post("/scan", response=ProjectScanOut)
