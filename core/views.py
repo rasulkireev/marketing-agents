@@ -40,7 +40,17 @@ class HomeView(TemplateView):
 
         # Add projects to context for authenticated users
         if self.request.user.is_authenticated:
-            context["projects"] = Project.objects.filter(profile=self.request.user.profile).order_by("-created_at")
+            projects = Project.objects.filter(profile=self.request.user.profile).order_by("-created_at")
+
+            # Annotate projects with counts
+            projects_with_stats = []
+            for project in projects:
+                project_stats = {
+                    "project": project,
+                }
+                projects_with_stats.append(project_stats)
+
+            context["projects"] = projects_with_stats
 
         return context
 
@@ -175,3 +185,9 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["has_content_access"] = self.request.user.profile.has_active_subscription
         return context
+
+
+class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "blogging-agent/blog-post-title-suggestions.html"
+    context_object_name = "project"

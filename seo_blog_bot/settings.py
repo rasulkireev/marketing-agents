@@ -223,8 +223,8 @@ ANYMAIL = {
     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
     "MAILGUN_SENDER_DOMAIN": "mg.seoblogbot.com",
 }
-DEFAULT_FROM_EMAIL = "Rasul from SEO Blog Bot <rasul@seoblogbot.com>"
-SERVER_EMAIL = "SEO Blog Bot Errors <error@seoblogbot.com>"
+DEFAULT_FROM_EMAIL = "Rasul from Marketing Agents <rasul@seoblogbot.com>"
+SERVER_EMAIL = "Marketing Agents Errors <error@seoblogbot.com>"
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

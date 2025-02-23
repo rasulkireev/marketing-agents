@@ -13,6 +13,7 @@ urlpatterns = [
     # app
     path("api/", api.urls),
     path("project/<int:pk>/", views.ProjectDetailView.as_view(), name="project_detail"),
+    path("blogging-agent/<int:pk>/", views.BloggingAgentDetailView.as_view(), name="blogging_agent_detail"),
     # utils
     path("resend-confirmation/", views.resend_confirmation_email, name="resend_confirmation"),
     # payments
