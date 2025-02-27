@@ -44,7 +44,10 @@ class ProjectDetails(BaseModel):
                     return valid_type
 
             logger.warning("[Project Details Schema] Type is not a valid option", provided_type=v)
-            return ProjectType.Other
+            if len(v) > 50:
+                return v
+            else:
+                return ProjectType.OTHER
         return v
 
 
