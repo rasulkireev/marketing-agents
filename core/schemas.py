@@ -74,6 +74,14 @@ class TitleSuggestions(BaseModel):
     titles: list[TitleSuggestion] = Field(description="Collection of title suggestions with metadata")
 
 
+class BlogPostGenerationContext(BaseModel):
+    """Context for generating blog post content."""
+
+    project_details: ProjectDetails
+    title_suggestion: TitleSuggestion
+    content_type: str = Field(description="Type of content to generate (SEO or SHARING)")
+
+
 class BlogPostContent(BaseModel):
     description: str = Field(description="Meta description (150-160 characters) optimized for search engines")
     slug: str = Field(description="URL-friendly format using lowercase letters, numbers, and hyphens")
