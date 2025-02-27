@@ -10,9 +10,10 @@ from django.utils import timezone
 from pydantic_ai import Agent, RunContext
 
 from core.base_models import BaseModel
-from core.choices import Category, ContentType
+from core.choices import Category, ContentType, Language, ProjectStyle, ProjectType
 from core.model_utils import generate_random_key, run_agent_synchronously
-from core.schemas import BlogPostContent, ProjectAnalysis, TitleSuggestions, WebPageContent
+from core.prompts import TITLE_SUGGESTION_SYSTEM_PROMPTS
+from core.schemas import BlogPostContent, ProjectDetails, TitleSuggestionContext, TitleSuggestions, WebPageContent
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -123,67 +124,10 @@ class BlogPost(BaseModel):
 
 
 class Project(BaseModel):
-    class Type(models.TextChoices):
-        SAAS = "SaaS", "SaaS"
-        HOSPITALITY = "Hospitality", "Hospitality"
-        JOB_BOARD = "Job Board", "Job Board"
-        LEGAL_SERVICES = "Legal Services", "Legal Services"
-        MARKETING = "Marketing", "Marketing"
-        NEWS_AND_MAGAZINE = "News and Magazine", "News and Magazine"
-        ONLINE_TOOLS = "Online Tools, Utilities", "Online Tools, Utilities"
-        ECOMMERCE = "Ecommerce", "Ecommerce"
-        EDUCATIONAL = "Educational", "Educational"
-        ENTERTAINMENT = "Entertainment", "Entertainment"
-        FINANCIAL_SERVICES = "Financial Services", "Financial Services"
-        HEALTH_AND_WELLNESS = "Health & Wellness", "Health & Wellness"
-        PERSONAL_BLOG = "Personal Blog", "Personal Blog"
-        REAL_ESTATE = "Real Estate", "Real Estate"
-        SPORTS = "Sports", "Sports"
-        TRAVEL_AND_TOURISM = "Travel and Tourism", "Travel and Tourism"
-
-    class Style(models.TextChoices):
-        DIGITAL_ART = "Digital Art", "Digital Art"
-        PHOTOREALISTIC = "Photorealistic", "Photorealistic"
-        HYPER_REALISTIC = "Hyper-realistic", "Hyper-realistic"
-        OIL_PAINTING = "Oil Painting", "Oil Painting"
-        WATERCOLOR = "Watercolor", "Watercolor"
-        CARTOON = "Cartoon", "Cartoon"
-        ANIME = "Anime", "Anime"
-        THREE_D_RENDER = "3D Render", "3D Render"
-        SKETCH = "Sketch", "Sketch"
-        POP_ART = "Pop Art", "Pop Art"
-        MINIMALIST = "Minimalist", "Minimalist"
-        SURREALIST = "Surrealist", "Surrealist"
-        IMPRESSIONIST = "Impressionist", "Impressionist"
-        PIXEL_ART = "Pixel Art", "Pixel Art"
-        CONCEPT_ART = "Concept Art", "Concept Art"
-        ISOMETRIC = "Isometric", "Isometric"
-        LOW_POLY = "Low Poly", "Low Poly"
-        RETRO = "Retro", "Retro"
-        CYBERPUNK = "Cyberpunk", "Cyberpunk"
-        STEAMPUNK = "Steampunk", "Steampunk"
-
-    class Language(models.TextChoices):
-        ENGLISH = "English", "English"
-        SPANISH = "Spanish", "Spanish"
-        FRENCH = "French", "French"
-        GERMAN = "German", "German"
-        ITALIAN = "Italian", "Italian"
-        PORTUGUESE = "Portuguese", "Portuguese"
-        RUSSIAN = "Russian", "Russian"
-        JAPANESE = "Japanese", "Japanese"
-        CANTONESE = "Cantonese", "Cantonese"
-        MANDARIN = "Mandarin", "Mandarin"
-        ARABIC = "Arabic", "Arabic"
-        KOREAN = "Korean", "Korean"
-        HINDI = "Hindi", "Hindi"
-        UKRAINIAN = "Ukrainian", "Ukrainian"
-        # Add other languages as needed
-
     profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects")
     url = models.URLField(max_length=200, unique=True)
     name = models.CharField(max_length=255)
-    type = models.CharField(max_length=50, choices=Type.choices, default=Type.SAAS)
+    type = models.CharField(max_length=50, choices=ProjectType.choices, default=ProjectType.SAAS)
     summary = models.TextField(blank=True)
 
     # Content from Jina Reader
@@ -203,7 +147,7 @@ class Project(BaseModel):
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
-    style = models.CharField(max_length=50, choices=Style.choices, default=Style.DIGITAL_ART)
+    style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
         return self.name
@@ -225,6 +169,22 @@ class Project(BaseModel):
             - Language: {self.language}
             - Links: {self.links}
         """
+
+    @property
+    def project_details(self):
+        return ProjectDetails(
+            name=self.name,
+            type=self.type,
+            summary=self.summary,
+            blog_theme=self.blog_theme,
+            founders=self.founders,
+            key_features=self.key_features,
+            target_audience_summary=self.target_audience_summary,
+            pain_points=self.pain_points,
+            product_usage=self.product_usage,
+            links=self.links,
+            language=self.language,
+        )
 
     @property
     def liked_title_suggestions(self):
@@ -258,7 +218,7 @@ class Project(BaseModel):
             html_content = html_response.text
         except requests.exceptions.RequestException as e:
             logger.error(
-                "[Get Page Content] Error fetching HTML content",
+                "[Page Content] Error fetching HTML content",
                 error=str(e),
                 project_name=self.name,
                 project_url=self.url,
@@ -312,7 +272,7 @@ class Project(BaseModel):
         """
         agent = Agent(
             "google-gla:gemini-2.0-flash",
-            result_type=ProjectAnalysis,
+            result_type=ProjectDetails,
             deps_type=WebPageContent,
             system_prompt=(
                 "You are an expert content analyzer. Based on the web page content provided, "
@@ -331,11 +291,13 @@ class Project(BaseModel):
                 f"Content: {ctx.deps.markdown_content}"
             )
 
-        deps = WebPageContent(title=self.title, description=self.description, markdown_content=self.markdown_content)
-
         result = run_agent_synchronously(
-            agent, "Please analyze this web page content and extract the key information.", deps=deps
+            agent,
+            "Please analyze this web page content and extract the key information.",
+            deps=WebPageContent(title=self.title, description=self.description, markdown_content=self.markdown_content),
         )
+
+        logger.info("[Analyze Content] Agent ran successfully", data=result.data)
 
         self.name = result.data.name
         self.type = result.data.type
@@ -355,15 +317,119 @@ class Project(BaseModel):
         return True
 
     def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
-        """Generate title suggestions based on content type."""
-        if content_type == ContentType.SEO:
-            return self.generate_seo_title_suggestions(num_titles, user_prompt)
-        return self.generate_sharing_title_suggestions(num_titles, user_prompt)
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=TitleSuggestions,
+            deps_type=TitleSuggestionContext,
+            system_prompt=TITLE_SUGGESTION_SYSTEM_PROMPTS[content_type],
+            retries=2,
+        )
 
-    def create_blog_post_title_suggestions(self, titles, content_type: ContentType):
+        @agent.system_prompt
+        def add_todays_date() -> str:
+            return f"Today's Date: {timezone.now().strftime('%Y-%m-%d')}"
+
+        @agent.system_prompt
+        def add_project_details(ctx: RunContext[TitleSuggestionContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                Project Details:
+                - Project Name: {project.name}
+                - Project Type: {project.type}
+                - Project Summary: {project.summary}
+                - Blog Theme: {project.blog_theme}
+                - Founders: {project.founders}
+                - Key Features: {project.key_features}
+                - Target Audience: {project.target_audience_summary}
+                - Pain Points: {project.pain_points}
+                - Product Usage: {project.product_usage}
+            """
+
+        @agent.system_prompt
+        def add_language_specification(ctx: RunContext[TitleSuggestionContext]) -> str:
+            return f"""IMPORTANT: Generate only {ctx.deps.num_titles} titles."""
+
+        @agent.system_prompt
+        def add_number_of_titles_to_generate(ctx: RunContext[TitleSuggestionContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                IMPORTANT: Generate all titles in {project.language} language.
+                Make sure the titles are grammatically correct and culturally appropriate for {self.language}-speaking audiences.
+            """
+
+        @agent.system_prompt
+        def add_user_prompt(ctx: RunContext[TitleSuggestionContext]) -> str:
+            if not ctx.deps.user_prompt:
+                return ""
+
+            return f"""
+                IMPORTANT USER REQUEST: The user has specifically requested the following:
+                "{ctx.deps.user_prompt}"
+
+                This is a high-priority requirement. Make sure to incorporate this guidance
+                when generating titles while still maintaining SEO best practices and readability.
+            """
+
+        @agent.system_prompt
+        def add_feedback_history(ctx: RunContext[TitleSuggestionContext]) -> str:
+            # If there are no liked or disliked suggestions, don't add this section
+            if not ctx.deps.liked_suggestions and not ctx.deps.disliked_suggestions:
+                return ""
+
+            # Build the feedback sections only if they exist
+            feedback_sections = []
+
+            if ctx.deps.liked_suggestions:
+                liked = "\n".join(f"- {title}" for title in ctx.deps.liked_suggestions)
+                feedback_sections.append(
+                    f"""
+                    Liked Title Suggestions:
+                    {liked}
+                """
+                )
+
+            if ctx.deps.disliked_suggestions:
+                disliked = "\n".join(f"- {title}" for title in ctx.deps.disliked_suggestions)
+                feedback_sections.append(
+                    f"""
+                    Disliked Title Suggestions:
+                    {disliked}
+                """
+                )
+
+            # Add guidance only if we have any feedback
+            if feedback_sections:
+                feedback_sections.append(
+                    """
+                    Use this feedback to guide your title generation. Create titles similar to liked ones
+                    and avoid patterns seen in disliked ones.
+                """
+                )
+
+            return "\n".join(feedback_sections)
+
+        deps = TitleSuggestionContext(
+            project_details=self.project_details,
+            num_titles=num_titles,
+            user_prompt=user_prompt,
+            liked_suggestions=[suggestion.title for suggestion in self.liked_title_suggestions],
+            disliked_suggestions=[suggestion.title for suggestion in self.disliked_title_suggestions],
+        )
+
+        result = run_agent_synchronously(
+            agent, "Please generate SEO-optimized blog post title suggestions based on the project details.", deps=deps
+        )
+
+        logger.info(
+            "[Generate SEO Title Suggestions] Successfully generated titles",
+            project_name=self.name,
+            project_url=self.url,
+            num_titles=num_titles,
+        )
+
         with transaction.atomic():
             suggestions = []
-            for title in titles:
+            for title in result.data.titles:
                 suggestion = BlogPostTitleSuggestion(
                     project=self,
                     title=title.title,
@@ -376,66 +442,6 @@ class Project(BaseModel):
                 suggestions.append(suggestion)
 
             return BlogPostTitleSuggestion.objects.bulk_create(suggestions)
-
-    def generate_seo_title_suggestions(self, num_titles=3, user_prompt=None):
-        agent = Agent(
-            "google-gla:gemini-2.0-flash",
-            result_type=TitleSuggestions,
-            system_prompt="""
-                You are an SEO expert. Based on the web page content provided,
-                generate SEO-optimized blog post titles that are likely to perform well in search engines.
-                Ensure each title:
-                1. Contains primary keyword near the beginning
-                2. Is between 50-60 characters long
-                3. Uses proven CTR-boosting patterns (how-to, numbers, questions, etc.)
-                4. Addresses specific search intent
-                5. Includes power words that enhance click-through rates
-                6. Maintains natural readability while being SEO-friendly
-                7. Avoids keyword stuffing
-                8. Uses modifiers like "best", "guide", "tips", where appropriate
-            """,
-        )
-
-        result = run_agent_synchronously(
-            agent,
-            f"""
-                {self.project_details_string}
-                - Number of Titles: {num_titles}
-                {f"- User's specific request: {user_prompt}" if user_prompt else ""}
-                {self.get_liked_disliked_title_suggestions_string}
-            """,
-        )
-
-        return self.create_blog_post_title_suggestions(result.data.titles, ContentType.SEO)
-
-    def generate_sharing_title_suggestions(self, num_titles=3, user_prompt=None):
-        agent = Agent(
-            "google-gla:gemini-2.0-flash",
-            result_type=TitleSuggestions,
-            system_prompt="""
-                You are Nicholas Cole, an expert in writing content that catches people's attention.
-                Based on the web page content provided, generate blog post titles that are likely to
-                perform well in search engines. Ensure each title:
-                1. Is specific and clear about what the reader will learn
-                2. Includes numbers where appropriate
-                3. Creates curiosity without being clickbait
-                4. Promises value or solution to a problem
-                5. Is timeless rather than time-sensitive
-                6. Uses power words to enhance appeal
-            """,
-        )
-
-        result = run_agent_synchronously(
-            agent,
-            f"""
-                {self.project_details_string}
-                - Number of Titles: {num_titles}
-                {f"- User's specific request: {user_prompt}" if user_prompt else ""}
-                {self.get_liked_disliked_title_suggestions_string}
-            """,
-        )
-
-        return self.create_blog_post_title_suggestions(result.data.titles, ContentType.SHARING)
 
 
 class BlogPostTitleSuggestion(BaseModel):

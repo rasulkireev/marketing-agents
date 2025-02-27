@@ -72,11 +72,7 @@
     </div>
 
     <!-- Project Details -->
-    <div
-      class="mx-auto mt-10 max-w-4xl"
-      data-controller="title-suggestions"
-      data-title-suggestions-project-id-value="{{ project.id }}"
-    >
+    <div class="mx-auto mt-10 max-w-4xl">
 
       <!-- Project Details Form -->
       <div class="bg-white rounded-2xl border shadow-sm border-gray-200/80" data-controller="collapse">
@@ -184,7 +180,7 @@
             data-controller="project-details"
             data-project-details-project-id-value="{{ project.id }}"
             data-action="project-details#save"
-            class="bg-white rounded-xl shadow-sm"
+            class="rounded-xl"
           >
             {% csrf_token %}
             <div class="p-8 space-y-8">
@@ -336,7 +332,7 @@
                         data-project-details-target="input"
                         class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
                       >
-                        {% for value, label in project.Language.choices %}
+                        {% for value, label in languages %}
                           <option value="{{ value }}" {% if project.language == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                       </select>
@@ -348,7 +344,7 @@
             </div>
 
             <!-- Form Footer with Save Button -->
-            <div class="px-8 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
+            <div class="px-8 rounded-b-xl">
               <div class="flex justify-end">
                 <button
                   type="submit"

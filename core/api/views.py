@@ -73,6 +73,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         logger.error(
             "[Scan Project] Failed to scan project",
             error=str(e),
+            exc_info=True,
             project_id=project.id if project else None,
             url=data.url,
         )

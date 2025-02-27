@@ -62,6 +62,41 @@ export default class extends Controller {
   }
 
   createSuggestionHTML(suggestion, contentType) {
+    // Check if target_keywords is an array, a string, or null/undefined
+    let keywordsHTML = '';
+    if (suggestion.target_keywords) {
+      // If it's an array, use it directly
+      if (Array.isArray(suggestion.target_keywords)) {
+        keywordsHTML = `
+          <div class="mt-4">
+            <h5 class="text-sm font-medium text-gray-700">Target Keywords:</h5>
+            <div class="flex flex-wrap gap-2 mt-2">
+              ${suggestion.target_keywords.map(keyword => `
+                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
+                  ${keyword.trim()}
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+      // If it's a string, split it
+      else if (typeof suggestion.target_keywords === 'string') {
+        keywordsHTML = `
+          <div class="mt-4">
+            <h5 class="text-sm font-medium text-gray-700">Target Keywords:</h5>
+            <div class="flex flex-wrap gap-2 mt-2">
+              ${suggestion.target_keywords.split(",").map(keyword => `
+                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
+                  ${keyword.trim()}
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+    }
+
     return `
       <div
         class="pl-4 border-l-4 border-pink-600"
@@ -110,18 +145,7 @@ export default class extends Controller {
               </span>
             </div>
 
-            ${suggestion.target_keywords ? `
-              <div class="mt-4">
-                <h5 class="text-sm font-medium text-gray-700">Target Keywords:</h5>
-                <div class="flex flex-wrap gap-2 mt-2">
-                  ${suggestion.target_keywords.split(",").map(keyword => `
-                    <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
-                      ${keyword.trim()}
-                    </span>
-                  `).join("")}
-                </div>
-              </div>
-            ` : ""}
+            ${keywordsHTML}
 
             <div data-generate-content-target="buttonContainer" class="mt-4">
               <button
@@ -135,6 +159,7 @@ export default class extends Controller {
       </div>
     `;
   }
+
 
   async generate(event) {
     event.preventDefault();
@@ -150,7 +175,7 @@ export default class extends Controller {
         </div>
       `;
 
-      showMessage("Triggered Content Generation, shouldn't take too long 😄", 'success');
+      // showMessage("Triggered Content Generation, shouldn't take too long 😄", 'success');
 
       // Make API call
       const response = await fetch('/api/generate-title-suggestions', {

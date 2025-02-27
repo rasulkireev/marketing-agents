@@ -13,6 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 from djstripe import models as djstripe_models
 
+from core.choices import Language
 from core.forms import ProfileUpdateForm, ProjectScanForm
 from core.models import BlogPost, Profile, Project
 from core.utils import check_if_profile_has_pro_subscription
@@ -184,6 +185,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["has_content_access"] = self.request.user.profile.has_active_subscription
+        context["languages"] = Language.choices
         return context
 
 
