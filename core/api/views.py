@@ -73,6 +73,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         logger.error(
             "[Scan Project] Failed to scan project",
             error=str(e),
+            exc_info=True,
             project_id=project.id if project else None,
             url=data.url,
         )
@@ -192,7 +193,11 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
         return {"status": "error", "message": str(e)}
     except Exception as e:
         logger.error(
-            "Unexpected error generating blog content", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id
+            "Unexpected error generating blog content",
+            error=str(e),
+            exc_info=True,
+            suggestion_id=suggestion_id,
+            profile_id=profile.id,
         )
         return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
 

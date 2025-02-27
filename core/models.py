@@ -1,18 +1,24 @@
-import os
-import time
-
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext, capture_run_messages
 
 from core.base_models import BaseModel
-from core.choices import Category, ContentType
+from core.choices import Category, ContentType, Language, ProjectStyle, ProjectType
 from core.model_utils import generate_random_key, run_agent_synchronously
-from core.schemas import BlogPostContent, ProjectAnalysis, TitleSuggestions
+from core.prompts import GENERATE_CONTENT_SYSTEM_PROMPTS, TITLE_SUGGESTION_SYSTEM_PROMPTS
+from core.schemas import (
+    BlogPostContent,
+    BlogPostGenerationContext,
+    ProjectDetails,
+    TitleSuggestion,
+    TitleSuggestionContext,
+    TitleSuggestions,
+    WebPageContent,
+)
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -123,67 +129,10 @@ class BlogPost(BaseModel):
 
 
 class Project(BaseModel):
-    class Type(models.TextChoices):
-        SAAS = "SaaS", "SaaS"
-        HOSPITALITY = "Hospitality", "Hospitality"
-        JOB_BOARD = "Job Board", "Job Board"
-        LEGAL_SERVICES = "Legal Services", "Legal Services"
-        MARKETING = "Marketing", "Marketing"
-        NEWS_AND_MAGAZINE = "News and Magazine", "News and Magazine"
-        ONLINE_TOOLS = "Online Tools, Utilities", "Online Tools, Utilities"
-        ECOMMERCE = "Ecommerce", "Ecommerce"
-        EDUCATIONAL = "Educational", "Educational"
-        ENTERTAINMENT = "Entertainment", "Entertainment"
-        FINANCIAL_SERVICES = "Financial Services", "Financial Services"
-        HEALTH_AND_WELLNESS = "Health & Wellness", "Health & Wellness"
-        PERSONAL_BLOG = "Personal Blog", "Personal Blog"
-        REAL_ESTATE = "Real Estate", "Real Estate"
-        SPORTS = "Sports", "Sports"
-        TRAVEL_AND_TOURISM = "Travel and Tourism", "Travel and Tourism"
-
-    class Style(models.TextChoices):
-        DIGITAL_ART = "Digital Art", "Digital Art"
-        PHOTOREALISTIC = "Photorealistic", "Photorealistic"
-        HYPER_REALISTIC = "Hyper-realistic", "Hyper-realistic"
-        OIL_PAINTING = "Oil Painting", "Oil Painting"
-        WATERCOLOR = "Watercolor", "Watercolor"
-        CARTOON = "Cartoon", "Cartoon"
-        ANIME = "Anime", "Anime"
-        THREE_D_RENDER = "3D Render", "3D Render"
-        SKETCH = "Sketch", "Sketch"
-        POP_ART = "Pop Art", "Pop Art"
-        MINIMALIST = "Minimalist", "Minimalist"
-        SURREALIST = "Surrealist", "Surrealist"
-        IMPRESSIONIST = "Impressionist", "Impressionist"
-        PIXEL_ART = "Pixel Art", "Pixel Art"
-        CONCEPT_ART = "Concept Art", "Concept Art"
-        ISOMETRIC = "Isometric", "Isometric"
-        LOW_POLY = "Low Poly", "Low Poly"
-        RETRO = "Retro", "Retro"
-        CYBERPUNK = "Cyberpunk", "Cyberpunk"
-        STEAMPUNK = "Steampunk", "Steampunk"
-
-    class Language(models.TextChoices):
-        ENGLISH = "English", "English"
-        SPANISH = "Spanish", "Spanish"
-        FRENCH = "French", "French"
-        GERMAN = "German", "German"
-        ITALIAN = "Italian", "Italian"
-        PORTUGUESE = "Portuguese", "Portuguese"
-        RUSSIAN = "Russian", "Russian"
-        JAPANESE = "Japanese", "Japanese"
-        CANTONESE = "Cantonese", "Cantonese"
-        MANDARIN = "Mandarin", "Mandarin"
-        ARABIC = "Arabic", "Arabic"
-        KOREAN = "Korean", "Korean"
-        HINDI = "Hindi", "Hindi"
-        UKRAINIAN = "Ukrainian", "Ukrainian"
-        # Add other languages as needed
-
     profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects")
     url = models.URLField(max_length=200, unique=True)
     name = models.CharField(max_length=255)
-    type = models.CharField(max_length=50, choices=Type.choices, default=Type.SAAS)
+    type = models.CharField(max_length=50, choices=ProjectType.choices, default=ProjectType.SAAS)
     summary = models.TextField(blank=True)
 
     # Content from Jina Reader
@@ -203,7 +152,7 @@ class Project(BaseModel):
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
-    style = models.CharField(max_length=50, choices=Style.choices, default=Style.DIGITAL_ART)
+    style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
         return self.name
@@ -225,6 +174,22 @@ class Project(BaseModel):
             - Language: {self.language}
             - Links: {self.links}
         """
+
+    @property
+    def project_details(self):
+        return ProjectDetails(
+            name=self.name,
+            type=self.type,
+            summary=self.summary,
+            blog_theme=self.blog_theme,
+            founders=self.founders,
+            key_features=self.key_features,
+            target_audience_summary=self.target_audience_summary,
+            pain_points=self.pain_points,
+            product_usage=self.product_usage,
+            links=self.links,
+            language=self.language,
+        )
 
     @property
     def liked_title_suggestions(self):
@@ -258,7 +223,7 @@ class Project(BaseModel):
             html_content = html_response.text
         except requests.exceptions.RequestException as e:
             logger.error(
-                "[Get Page Content] Error fetching HTML content",
+                "[Page Content] Error fetching HTML content",
                 error=str(e),
                 project_name=self.name,
                 project_url=self.url,
@@ -312,23 +277,32 @@ class Project(BaseModel):
         """
         agent = Agent(
             "google-gla:gemini-2.0-flash",
-            result_type=ProjectAnalysis,
+            result_type=ProjectDetails,
+            deps_type=WebPageContent,
             system_prompt=(
                 "You are an expert content analyzer. Based on the web page content provided, "
                 "extract and infer the requested information. Make reasonable inferences based "
                 "on available content, context, and industry knowledge."
             ),
+            retries=2,
         )
+
+        @agent.system_prompt
+        def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
+            return (
+                "Web page content:"
+                f"Title: {ctx.deps.title}"
+                f"Description: {ctx.deps.description}"
+                f"Content: {ctx.deps.markdown_content}"
+            )
 
         result = run_agent_synchronously(
             agent,
-            f"""
-              Web page content:
-              Title: {self.title}
-              Description: {self.description}
-              Content: {self.markdown_content}
-            """,
+            "Please analyze this web page content and extract the key information.",
+            deps=WebPageContent(title=self.title, description=self.description, markdown_content=self.markdown_content),
         )
+
+        logger.info("[Analyze Content] Agent ran successfully", data=result.data)
 
         self.name = result.data.name
         self.type = result.data.type
@@ -340,6 +314,7 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
+        self.date_analyzed = timezone.now()
         self.save()
 
         logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
@@ -347,15 +322,119 @@ class Project(BaseModel):
         return True
 
     def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
-        """Generate title suggestions based on content type."""
-        if content_type == ContentType.SEO:
-            return self.generate_seo_title_suggestions(num_titles, user_prompt)
-        return self.generate_sharing_title_suggestions(num_titles, user_prompt)
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=TitleSuggestions,
+            deps_type=TitleSuggestionContext,
+            system_prompt=TITLE_SUGGESTION_SYSTEM_PROMPTS[content_type],
+            retries=2,
+        )
 
-    def create_blog_post_title_suggestions(self, titles, content_type: ContentType):
+        @agent.system_prompt
+        def add_todays_date() -> str:
+            return f"Today's Date: {timezone.now().strftime('%Y-%m-%d')}"
+
+        @agent.system_prompt
+        def add_project_details(ctx: RunContext[TitleSuggestionContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                Project Details:
+                - Project Name: {project.name}
+                - Project Type: {project.type}
+                - Project Summary: {project.summary}
+                - Blog Theme: {project.blog_theme}
+                - Founders: {project.founders}
+                - Key Features: {project.key_features}
+                - Target Audience: {project.target_audience_summary}
+                - Pain Points: {project.pain_points}
+                - Product Usage: {project.product_usage}
+            """
+
+        @agent.system_prompt
+        def add_language_specification(ctx: RunContext[TitleSuggestionContext]) -> str:
+            return f"""IMPORTANT: Generate only {ctx.deps.num_titles} titles."""
+
+        @agent.system_prompt
+        def add_number_of_titles_to_generate(ctx: RunContext[TitleSuggestionContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                IMPORTANT: Generate all titles in {project.language} language.
+                Make sure the titles are grammatically correct and culturally appropriate for {self.language}-speaking audiences.
+            """
+
+        @agent.system_prompt
+        def add_user_prompt(ctx: RunContext[TitleSuggestionContext]) -> str:
+            if not ctx.deps.user_prompt:
+                return ""
+
+            return f"""
+                IMPORTANT USER REQUEST: The user has specifically requested the following:
+                "{ctx.deps.user_prompt}"
+
+                This is a high-priority requirement. Make sure to incorporate this guidance
+                when generating titles while still maintaining SEO best practices and readability.
+            """
+
+        @agent.system_prompt
+        def add_feedback_history(ctx: RunContext[TitleSuggestionContext]) -> str:
+            # If there are no liked or disliked suggestions, don't add this section
+            if not ctx.deps.liked_suggestions and not ctx.deps.disliked_suggestions:
+                return ""
+
+            # Build the feedback sections only if they exist
+            feedback_sections = []
+
+            if ctx.deps.liked_suggestions:
+                liked = "\n".join(f"- {title}" for title in ctx.deps.liked_suggestions)
+                feedback_sections.append(
+                    f"""
+                    Liked Title Suggestions:
+                    {liked}
+                """
+                )
+
+            if ctx.deps.disliked_suggestions:
+                disliked = "\n".join(f"- {title}" for title in ctx.deps.disliked_suggestions)
+                feedback_sections.append(
+                    f"""
+                    Disliked Title Suggestions:
+                    {disliked}
+                """
+                )
+
+            # Add guidance only if we have any feedback
+            if feedback_sections:
+                feedback_sections.append(
+                    """
+                    Use this feedback to guide your title generation. Create titles similar to liked ones
+                    and avoid patterns seen in disliked ones.
+                """
+                )
+
+            return "\n".join(feedback_sections)
+
+        deps = TitleSuggestionContext(
+            project_details=self.project_details,
+            num_titles=num_titles,
+            user_prompt=user_prompt,
+            liked_suggestions=[suggestion.title for suggestion in self.liked_title_suggestions],
+            disliked_suggestions=[suggestion.title for suggestion in self.disliked_title_suggestions],
+        )
+
+        result = run_agent_synchronously(
+            agent, "Please generate blog post title suggestions based on the project details.", deps=deps
+        )
+
+        logger.info(
+            "[Generate SEO Title Suggestions] Successfully generated titles",
+            project_name=self.name,
+            project_url=self.url,
+            num_titles=num_titles,
+        )
+
         with transaction.atomic():
             suggestions = []
-            for title in titles:
+            for title in result.data.titles:
                 suggestion = BlogPostTitleSuggestion(
                     project=self,
                     title=title.title,
@@ -369,66 +448,6 @@ class Project(BaseModel):
 
             return BlogPostTitleSuggestion.objects.bulk_create(suggestions)
 
-    def generate_seo_title_suggestions(self, num_titles=3, user_prompt=None):
-        agent = Agent(
-            "google-gla:gemini-2.0-flash",
-            result_type=TitleSuggestions,
-            system_prompt="""
-                You are an SEO expert. Based on the web page content provided,
-                generate SEO-optimized blog post titles that are likely to perform well in search engines.
-                Ensure each title:
-                1. Contains primary keyword near the beginning
-                2. Is between 50-60 characters long
-                3. Uses proven CTR-boosting patterns (how-to, numbers, questions, etc.)
-                4. Addresses specific search intent
-                5. Includes power words that enhance click-through rates
-                6. Maintains natural readability while being SEO-friendly
-                7. Avoids keyword stuffing
-                8. Uses modifiers like "best", "guide", "tips", where appropriate
-            """,
-        )
-
-        result = run_agent_synchronously(
-            agent,
-            f"""
-                {self.project_details_string}
-                - Number of Titles: {num_titles}
-                {f"- User's specific request: {user_prompt}" if user_prompt else ""}
-                {self.get_liked_disliked_title_suggestions_string}
-            """,
-        )
-
-        return self.create_blog_post_title_suggestions(result.data.titles, ContentType.SEO)
-
-    def generate_sharing_title_suggestions(self, num_titles=3, user_prompt=None):
-        agent = Agent(
-            "google-gla:gemini-2.0-flash",
-            result_type=TitleSuggestions,
-            system_prompt="""
-                You are Nicholas Cole, an expert in writing content that catches people's attention.
-                Based on the web page content provided, generate blog post titles that are likely to
-                perform well in search engines. Ensure each title:
-                1. Is specific and clear about what the reader will learn
-                2. Includes numbers where appropriate
-                3. Creates curiosity without being clickbait
-                4. Promises value or solution to a problem
-                5. Is timeless rather than time-sensitive
-                6. Uses power words to enhance appeal
-            """,
-        )
-
-        result = run_agent_synchronously(
-            agent,
-            f"""
-                {self.project_details_string}
-                - Number of Titles: {num_titles}
-                {f"- User's specific request: {user_prompt}" if user_prompt else ""}
-                {self.get_liked_disliked_title_suggestions_string}
-            """,
-        )
-
-        return self.create_blog_post_title_suggestions(result.data.titles, ContentType.SHARING)
-
 
 class BlogPostTitleSuggestion(BaseModel):
     project = models.ForeignKey(
@@ -441,8 +460,6 @@ class BlogPostTitleSuggestion(BaseModel):
     prompt = models.TextField(blank=True)
     target_keywords = models.JSONField(default=list, blank=True, null=True)
     suggested_meta_description = models.TextField(blank=True)
-
-    # User Interaction
     user_score = models.SmallIntegerField(
         default=0,
         choices=[
@@ -457,24 +474,93 @@ class BlogPostTitleSuggestion(BaseModel):
         return f"{self.project.name}: {self.title}"
 
     @property
-    def title_suggestion_string(self):
-        return f"""
-            - Primary Keyword/Title: {self.title}
-            - Category: {self.category}
-            - Description: {self.description}
-            - Target Keywords: {self.target_keywords}
-            - Suggested Meta Description: {self.suggested_meta_description}
-        """
-
-    def get_agent(self, model="anthropic:claude-3-5-sonnet-latest", system_prompt="", retries=2):
-        return Agent(
-            model,
-            retries=retries,
-            result_type=BlogPostContent,
-            system_prompt=system_prompt,
+    def title_suggestion(self):
+        return TitleSuggestion(
+            title=self.title,
+            category=self.category,
+            target_keywords=self.target_keywords,
+            description=self.description,
+            suggested_meta_description=self.suggested_meta_description,
         )
 
-    def save_article(self, result):
+    def generate_content(self, content_type=ContentType.SHARING):
+        """
+        Generate blog post content based on the title suggestion and content type.
+
+        Args:
+            content_type: The type of content to generate (SEO or SHARING)
+
+        Returns:
+            The generated blog post
+        """
+        agent = Agent(
+            "anthropic:claude-3-7-sonnet-latest",
+            result_type=BlogPostContent,
+            deps_type=BlogPostGenerationContext,
+            system_prompt=GENERATE_CONTENT_SYSTEM_PROMPTS[content_type],
+            retries=2,
+            model_settings={"max_tokens": 8000, "temperature": 0.4},
+        )
+
+        @agent.system_prompt
+        def add_todays_date() -> str:
+            return f"Today's Date: {timezone.now().strftime('%Y-%m-%d')}"
+
+        @agent.system_prompt
+        def add_project_details(ctx: RunContext[BlogPostGenerationContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                Project Details:
+                - Project Name: {project.name}
+                - Project Type: {project.type}
+                - Project Summary: {project.summary}
+                - Blog Theme: {project.blog_theme}
+                - Founders: {project.founders}
+                - Key Features: {project.key_features}
+                - Target Audience: {project.target_audience_summary}
+                - Pain Points: {project.pain_points}
+                - Product Usage: {project.product_usage}
+            """
+
+        @agent.system_prompt
+        def add_title_details(ctx: RunContext[BlogPostGenerationContext]) -> str:
+            title = ctx.deps.title_suggestion
+            return f"""
+                Title Information:
+                - Title: {title.title}
+                - Description: {title.description}
+                - Category: {title.category}
+                - Target Keywords: {', '.join(title.target_keywords) if title.target_keywords else "None specified"}
+                - Suggested Meta Description: {title.suggested_meta_description if title.suggested_meta_description else "None specified"}
+            """
+
+        @agent.system_prompt
+        def add_language_specification(ctx: RunContext[BlogPostGenerationContext]) -> str:
+            return f"""
+                IMPORTANT: Generate the content in {ctx.deps.project_details.language} language.
+                Make sure the content is grammatically correct and culturally appropriate for {ctx.deps.project_details.language}-speaking audiences.
+            """
+
+        deps = BlogPostGenerationContext(
+            project_details=self.project.project_details,
+            title_suggestion=self.title_suggestion,
+            content_type=content_type,
+        )
+
+        with capture_run_messages() as messages:
+            try:
+                result = run_agent_synchronously(
+                    agent, "Please generate an article based on the project details and title suggestions.", deps=deps
+                )
+            except Exception as e:
+                logger.error(
+                    "[Generate Content] Failed generation",
+                    messages=messages,
+                    exc_info=True,
+                    error=str(e),
+                )
+                raise
+
         return GeneratedBlogPost.objects.create(
             project=self.project,
             title=self,
@@ -483,144 +569,6 @@ class BlogPostTitleSuggestion(BaseModel):
             tags=result.data.tags,
             content=result.data.content,
         )
-
-    def generate_seo_article(self):
-        template_path = os.path.join(os.path.dirname(__file__), "prompts", "generate_blog_content_for_seo.txt")
-        with open(template_path) as f:
-            seo_description = f.read()
-
-        model = "anthropic:claude-3-5-sonnet-latest"
-        system_prompt = f"""You are an experienced SEO content strategist.
-        You specialize in creating search-engine optimized content that ranks well
-        and provide value to our target audience.
-        Your task is to generate an SEO-optimized blog post. Given the title and description
-        of the desired post. Here are some specific pointer:
-        {seo_description}"""
-        message = f"""
-            {self.project.project_details_string}
-            {self.title_suggestion_string}
-        """
-        max_retries = 2
-        retry_count = 0
-        last_error = None
-
-        while retry_count < max_retries:
-            try:
-                logger.info(
-                    "[Generate SEO Article] running agent",
-                    system_prompt=system_prompt,
-                    message=message,
-                    suggestion_id=self.id,
-                )
-                result = run_agent_synchronously(
-                    self.get_agent(model=model, system_prompt=system_prompt),
-                    message,
-                )
-                logger.info(
-                    "[Generate SEO Article] got AI result",
-                    result=result,
-                    data=result.data,
-                    suggestion_id=self.id,
-                )
-                return self.save_article(result)
-            except Exception as e:
-                last_error = e
-                if "overloaded_error" in str(e) and retry_count < max_retries - 1:
-                    logger.warning(
-                        "Overloaded error encountered, retrying",
-                        error=str(e),
-                        suggestion_id=self.id,
-                        retry_count=retry_count + 1,
-                    )
-                    time.sleep(2)
-                    retry_count += 1
-                    continue
-                elif "Exceeded maximum retries" in str(e):
-                    logger.error(
-                        "Exceeded maximum retries, swtiching model",
-                        error=str(e),
-                        suggestion_id=self.id,
-                        retry_count=retry_count + 1,
-                    )
-                    time.sleep(2)
-                    retry_count += 1
-                    model = "google-gla:gemini-2.0-flash"
-                    continue
-                break
-
-        if last_error:
-            raise last_error
-
-    def generate_sharing_article(self):
-        template_path = os.path.join(os.path.dirname(__file__), "prompts", "generate_blog_content_for_seo.txt")
-        with open(template_path) as f:
-            sharing_description = f.read()
-
-        model = "anthropic:claude-3-5-sonnet-latest"
-        max_retries = 2
-        retry_count = 0
-        last_error = None
-        system_prompt = f"""You are an experienced online writer.
-              You understand both the art of capturing attention and
-              the specific needs of our target audience.
-              Your task is to generate a blog post.
-              Here are some specific pointers:
-              {sharing_description}"""
-        message = f"""
-            {self.project.project_details_string}
-            {self.title_suggestion_string}
-        """
-        while retry_count < max_retries:
-            try:
-                logger.info(
-                    "[Generate Sharing Article] running agent",
-                    system_prompt=system_prompt,
-                    message=message,
-                    suggestion_id=self.id,
-                )
-                result = run_agent_synchronously(
-                    self.get_agent(model=model, system_prompt=system_prompt),
-                    message,
-                )
-                logger.info(
-                    "[Generate Sharing Article] got AI result",
-                    result=result,
-                    data=result.data,
-                    suggestion_id=self.id,
-                )
-                return self.save_article(result)
-            except Exception as e:
-                last_error = e
-                if "overloaded_error" in str(e) and retry_count < max_retries - 1:
-                    logger.warning(
-                        "Overloaded error encountered, retrying",
-                        error=str(e),
-                        suggestion_id=self.id,
-                        retry_count=retry_count + 1,
-                    )
-                    time.sleep(2)
-                    retry_count += 1
-                    continue
-                elif "Exceeded maximum retries" in str(e):
-                    logger.error(
-                        "Exceeded maximum retries, swtiching model",
-                        error=str(e),
-                        suggestion_id=self.id,
-                        retry_count=retry_count + 1,
-                    )
-                    time.sleep(2)
-                    retry_count += 1
-                    model = "google-gla:gemini-2.0-flash"
-                    continue
-                break
-
-        if last_error:
-            raise last_error
-
-    def generate_content(self, content_type=ContentType.SHARING):
-        if content_type == ContentType.SEO:
-            return self.generate_seo_article()
-        return self.generate_sharing_article()
 
 
 class GeneratedBlogPost(BaseModel):

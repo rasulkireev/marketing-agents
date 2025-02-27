@@ -20,7 +20,7 @@
         </div>
 
         <!-- Content -->
-        <div class="relative py-8 sm:text-center">
+        <div class="relative sm:text-center">
           <!-- Subtitle -->
           <div class="flex gap-2 justify-center items-center mb-4">
             <span class="hidden w-8 h-px bg-pink-300 sm:block"></span>
@@ -53,30 +53,10 @@
           </p>
         </div>
       </div>
-
-      <!-- Optional Metadata -->
-      <div class="flex gap-8 justify-center mt-6 text-sm text-center text-gray-600">
-        <div class="flex gap-2 items-center">
-          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span>Last updated: Today</span>
-        </div>
-        <div class="flex gap-2 items-center">
-          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Active Project</span>
-        </div>
-      </div>
     </div>
 
     <!-- Project Details -->
-    <div
-      class="mx-auto mt-10 max-w-4xl"
-      data-controller="title-suggestions"
-      data-title-suggestions-project-id-value="{{ project.id }}"
-    >
+    <div class="mx-auto mt-10 max-w-4xl">
 
       <!-- Project Details Form -->
       <div class="bg-white rounded-2xl border shadow-sm border-gray-200/80" data-controller="collapse">
@@ -184,7 +164,7 @@
             data-controller="project-details"
             data-project-details-project-id-value="{{ project.id }}"
             data-action="project-details#save"
-            class="bg-white rounded-xl shadow-sm"
+            class="rounded-xl"
           >
             {% csrf_token %}
             <div class="p-8 space-y-8">
@@ -336,7 +316,7 @@
                         data-project-details-target="input"
                         class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
                       >
-                        {% for value, label in project.Language.choices %}
+                        {% for value, label in languages %}
                           <option value="{{ value }}" {% if project.language == value %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                       </select>
@@ -348,7 +328,7 @@
             </div>
 
             <!-- Form Footer with Save Button -->
-            <div class="px-8 py-4 bg-gray-50 rounded-b-xl border-t border-gray-200">
+            <div class="px-8 rounded-b-xl">
               <div class="flex justify-end">
                 <button
                   type="submit"
