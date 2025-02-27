@@ -1,6 +1,13 @@
 from pydantic import BaseModel, Field
 
 
+class WebPageContent(BaseModel):
+    title: str
+    description: str
+    html_content: str
+    markdown_content: str
+
+
 class ProjectAnalysis(BaseModel):
     name: str = Field(description="Official name of the project or organization")
     type: str = Field(description="Primary business model or project category")

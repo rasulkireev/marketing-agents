@@ -7,12 +7,12 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
-from pydantic_ai import Agent
+from pydantic_ai import Agent, RunContext
 
 from core.base_models import BaseModel
 from core.choices import Category, ContentType
 from core.model_utils import generate_random_key, run_agent_synchronously
-from core.schemas import BlogPostContent, ProjectAnalysis, TitleSuggestions
+from core.schemas import BlogPostContent, ProjectAnalysis, TitleSuggestions, WebPageContent
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -313,21 +313,28 @@ class Project(BaseModel):
         agent = Agent(
             "google-gla:gemini-2.0-flash",
             result_type=ProjectAnalysis,
+            deps_type=WebPageContent,
             system_prompt=(
                 "You are an expert content analyzer. Based on the web page content provided, "
                 "extract and infer the requested information. Make reasonable inferences based "
                 "on available content, context, and industry knowledge."
             ),
+            retries=2,
         )
 
+        @agent.system_prompt
+        def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
+            return (
+                "Web page content:"
+                f"Title: {ctx.deps.title}"
+                f"Description: {ctx.deps.description}"
+                f"Content: {ctx.deps.markdown_content}"
+            )
+
+        deps = WebPageContent(title=self.title, description=self.description, markdown_content=self.markdown_content)
+
         result = run_agent_synchronously(
-            agent,
-            f"""
-              Web page content:
-              Title: {self.title}
-              Description: {self.description}
-              Content: {self.markdown_content}
-            """,
+            agent, "Please analyze this web page content and extract the key information.", deps=deps
         )
 
         self.name = result.data.name
@@ -340,6 +347,7 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
+        self.date_analyzed = timezone.now()
         self.save()
 
         logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)

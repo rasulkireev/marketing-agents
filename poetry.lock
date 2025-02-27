@@ -3444,6 +3444,21 @@ tests = ["freezegun (>=0.2.8)", "pretend", "pytest (>=6.0)", "pytest-asyncio (>=
 typing = ["mypy (>=1.4)", "rich", "twisted"]
 
 [[package]]
+name = "structlog-sentry"
+version = "2.2.1"
+description = "Sentry integration for structlog"
+optional = false
+python-versions = "<4.0,>=3.7"
+files = [
+    {file = "structlog_sentry-2.2.1-py3-none-any.whl", hash = "sha256:868c82348bc18b7d51ef8f878c57e82835c1758dba38f7589fa02a267096a95d"},
+    {file = "structlog_sentry-2.2.1.tar.gz", hash = "sha256:78cf8751c7712e361d9d5e82fcde6c3f692a67e3e67068ccdd46448014636138"},
+]
+
+[package.dependencies]
+sentry-sdk = ">=2.15.0,<3.0.0"
+structlog = "*"
+
+[[package]]
 name = "text-unidecode"
 version = "1.3"
 description = "The most basic Text::Unidecode port"
@@ -3809,4 +3824,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "40695e2ecb3408829000e4103179e8897290f40d6aef58946b3bca535be2310e"
+content-hash = "080dd17ba429aa75ca0f093643aa6431a19bc46235a9f85157f9980a5fe66f08"
