@@ -16,7 +16,7 @@ from djstripe import models as djstripe_models
 from core.choices import Language
 from core.forms import ProfileUpdateForm, ProjectScanForm
 from core.models import BlogPost, Profile, Project
-from core.utils import check_if_profile_has_pro_subscription
+from core.utils import check_if_profile_has_pro_subscription, number_of_subscribed_users
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -102,6 +102,8 @@ class PricingView(TemplateView):
         else:
             context["has_pro_subscription"] = False
 
+        context["early_bird_spots_left"] = 20 - number_of_subscribed_users() - 1
+
         return context
 
 
@@ -136,7 +138,7 @@ def create_checkout_session(request, pk, plan):
                 "quantity": 1,
             }
         ],
-        mode="subscription" if plan != "one-time" else "payment",
+        mode="payment" if "one-time" in plan else "subscription",
         success_url=success_url,
         cancel_url=cancel_url,
         customer_update={

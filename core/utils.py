@@ -1,6 +1,8 @@
+from django.core.cache import cache
+from django.db.models import OuterRef, Subquery
 from django.forms.utils import ErrorList
 
-from core.models import Profile
+from core.models import Profile, ProfileStates, ProfileStateTransition
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -40,3 +42,25 @@ def check_if_profile_has_pro_subscription(profile_id):
             logger.error("Profile does not exist", profile_id=profile_id)
 
     return has_pro_subscription
+
+
+def number_of_subscribed_users():
+    cache_key = "profile_subscribed_users_count"
+    cached_count = cache.get(cache_key)
+
+    if cached_count is not None:
+        return cached_count
+
+    latest_transitions = (
+        ProfileStateTransition.objects.filter(profile=OuterRef("pk")).order_by("-created_at").values("to_state")[:1]
+    )
+
+    subscribed_count = (
+        Profile.objects.annotate(latest_state=Subquery(latest_transitions))
+        .filter(latest_state=ProfileStates.SUBSCRIBED)
+        .count()
+    )
+
+    cache.set(cache_key, subscribed_count, 3600)
+
+    return subscribed_count
