@@ -69,10 +69,9 @@ export default class extends Controller {
       if (Array.isArray(suggestion.target_keywords)) {
         keywordsHTML = `
           <div class="mt-4">
-            <h5 class="text-sm font-medium text-gray-700">Target Keywords:</h5>
-            <div class="flex flex-wrap gap-2 mt-2">
+            <div class="flex flex-wrap gap-2">
               ${suggestion.target_keywords.map(keyword => `
-                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
+                <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full transition-colors duration-200 hover:bg-gray-200">
                   ${keyword.trim()}
                 </span>
               `).join("")}
@@ -84,10 +83,9 @@ export default class extends Controller {
       else if (typeof suggestion.target_keywords === 'string') {
         keywordsHTML = `
           <div class="mt-4">
-            <h5 class="text-sm font-medium text-gray-700">Target Keywords:</h5>
-            <div class="flex flex-wrap gap-2 mt-2">
+            <div class="flex flex-wrap gap-2">
               ${suggestion.target_keywords.split(",").map(keyword => `
-                <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
+                <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full transition-colors duration-200 hover:bg-gray-200">
                   ${keyword.trim()}
                 </span>
               `).join("")}
@@ -104,21 +102,25 @@ export default class extends Controller {
         data-generate-content-suggestion-id-value="${suggestion.id}"
         data-suggestion-type="${contentType}"
       >
+        <!-- Header section with toggle and actions -->
         <div class="flex gap-x-4 justify-between items-start">
-          <div class="flex-1 p-6 bg-white rounded-lg shadow-sm">
+          <div class="flex-1 p-6">
+            <!-- Title and voting section -->
             <div class="space-y-4">
               <h4 class="text-xl font-bold tracking-tight text-gray-900">
                 ${suggestion.title}
               </h4>
 
-              <div class="flex items-center space-x-2"
+              <!-- Like/Dislike Buttons -->
+              <div class="flex items-center space-x-4"
+                   data-controller="title-score"
                    data-title-score-suggestion-id-value="${suggestion.id}"
                    data-current-score="0">
 
                 <button data-title-score-target="likeButton"
                         data-action="title-score#updateScore"
-                        class="inline-flex gap-x-1 items-center px-2 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 like hover:bg-green-50">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 like hover:bg-green-50">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                   </svg>
                   <span>Like</span>
@@ -126,8 +128,8 @@ export default class extends Controller {
 
                 <button data-title-score-target="dislikeButton"
                         data-action="title-score#updateScore"
-                        class="inline-flex gap-x-1 items-center px-2 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 dislike hover:bg-red-50">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 dislike hover:bg-red-50">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
                   </svg>
                   <span>Dislike</span>
@@ -135,10 +137,12 @@ export default class extends Controller {
               </div>
             </div>
 
+            <!-- Main Description -->
             <p class="mt-3 leading-relaxed text-gray-700">
               ${suggestion.description}
             </p>
 
+            <!-- Category Badge -->
             <div class="mt-4">
               <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
                 Category: ${suggestion.category}
@@ -146,8 +150,12 @@ export default class extends Controller {
             </div>
 
             ${keywordsHTML}
+          </div>
 
-            <div data-generate-content-target="buttonContainer" class="mt-4">
+          <div class="flex gap-x-3 items-center">
+            <!-- Status target element - this was missing and causing the error -->
+            <div data-generate-content-target="status"></div>
+            <div data-generate-content-target="buttonContainer">
               <button
                 data-action="generate-content#generate"
                 class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
@@ -155,6 +163,11 @@ export default class extends Controller {
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- Dropdown content -->
+        <div data-generate-content-target="dropdown" class="hidden mt-4">
+          <div data-generate-content-target="content"></div>
         </div>
       </div>
     `;

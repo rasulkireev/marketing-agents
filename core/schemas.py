@@ -69,7 +69,9 @@ class TitleSuggestion(BaseModel):
     title: str = Field(description="SEO-optimized blog post title")
     category: str = Field(description="Primary content category")
     target_keywords: list[str] = Field(description="Strategic SEO keywords to target")
-    description: str = Field(description="Brief overview of the blog post's main points as comma-separated keywords")
+    description: str = Field(
+        description="Brief overview of why this title is a good fit for the project and why it might work well for the target audience"
+    )
     suggested_meta_description: str = Field(description="SEO-optimized meta description (150-160 characters)")
 
 
