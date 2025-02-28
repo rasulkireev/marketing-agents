@@ -20,8 +20,6 @@ import sentry_sdk
 import structlog
 from structlog_sentry import SentryProcessor
 
-logfire.configure()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(BASE_DIR / ".env")
@@ -32,6 +30,9 @@ env = environ.Env(
 )
 
 ENVIRONMENT = env("ENVIRONMENT")
+
+if ENVIRONMENT == "prod":
+    logfire.configure()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
