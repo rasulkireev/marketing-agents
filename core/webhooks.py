@@ -1,5 +1,5 @@
-from djstripe import webhooks
-from djstripe.models import Customer, Event, Subscription
+from djstripe.event_handlers import djstripe_receiver
+from djstripe.models import Customer, Event, Price, Product, Subscription
 
 from core.models import Profile, ProfileStates
 from seo_blog_bot.utils import get_seo_blog_bot_logger
@@ -7,17 +7,22 @@ from seo_blog_bot.utils import get_seo_blog_bot_logger
 logger = get_seo_blog_bot_logger(__name__)
 
 
-@webhooks.handler("customer.subscription.created")
+@djstripe_receiver("customer.subscription.created")
 def handle_created_subscription(**kwargs):
+    logger.info("handle_created_subscription webhook received", kwargs=kwargs)
     event_id = kwargs["event"].id
     event = Event.objects.get(id=event_id)
 
     customer = Customer.objects.get(id=event.data["object"]["customer"])
     subscription = Subscription.objects.get(id=event.data["object"]["id"])
 
+    product_id = subscription.plan.product
+    product = Product.objects.get(id=product_id)
+
     profile = Profile.objects.get(customer=customer)
     profile.subscription = subscription
-    profile.save(update_fields=["subscription"])
+    profile.product = product
+    profile.save(update_fields=["subscription", "product"])
 
     profile.track_state_change(
         to_state=ProfileStates.SUBSCRIBED,
@@ -33,8 +38,9 @@ def handle_created_subscription(**kwargs):
     )
 
 
-@webhooks.handler("customer.subscription.updated")
+@djstripe_receiver("customer.subscription.updated")
 def handle_updated_subscription(**kwargs):
+    logger.info("handle_updated_subscription webhook received", kwargs=kwargs)
     event_id = kwargs["event"].id
     event = Event.objects.get(id=event_id)
 
@@ -93,8 +99,9 @@ def handle_updated_subscription(**kwargs):
         )
 
 
-@webhooks.handler("customer.subscription.deleted")
+@djstripe_receiver("customer.subscription.deleted")
 def handle_deleted_subscription(**kwargs):
+    logger.info("handle_deleted_subscription webhook received", kwargs=kwargs)
     event_id = kwargs["event"].id
     event = Event.objects.get(id=event_id)
 
@@ -142,5 +149,139 @@ def handle_deleted_subscription(**kwargs):
             event_id=event_id,
             subscription_id=subscription_id,
             customer_id=customer_id,
+            error=str(e),
+        )
+
+
+@djstripe_receiver("checkout.session.completed")
+def handle_checkout_completed(**kwargs):
+    logger.info("handle_checkout_completed webhook received", kwargs=kwargs)
+    event_id = kwargs["event"].id
+    event = Event.objects.get(id=event_id)
+
+    checkout_data = event.data["object"]
+    customer_id = checkout_data.get("customer")
+    checkout_id = checkout_data.get("id")
+    subscription_id = checkout_data.get("subscription")
+    payment_status = checkout_data.get("payment_status")
+    mode = checkout_data.get("mode")  # 'subscription', 'payment', or 'setup'
+
+    # Get metadata from checkout
+    metadata = checkout_data.get("metadata", {})
+    price_id = metadata.get("price_id")
+
+    logger.info(
+        "Checkout session completed",
+        webhook="handle_checkout_completed",
+        event_id=event_id,
+        checkout_id=checkout_id,
+        customer_id=customer_id,
+        payment_status=payment_status,
+        mode=mode,
+        metadata=metadata,
+    )
+
+    if payment_status != "paid":
+        logger.warning(
+            "Checkout completed but payment not successful",
+            event_id=event_id,
+            checkout_id=checkout_id,
+            payment_status=payment_status,
+        )
+        return
+
+    try:
+        # Get the customer and profile
+        customer = Customer.objects.get(id=customer_id)
+        profile = Profile.objects.get(customer=customer)
+
+        # Fields to update on the profile
+        update_fields = []
+
+        if mode == "payment":
+            # One-time payment checkout
+            amount_total = checkout_data.get("amount_total")
+            currency = checkout_data.get("currency")
+            payment_intent = checkout_data.get("payment_intent")
+
+            # Get the product associated with the price
+            product = None
+            product_data = {}
+
+            if price_id:
+                try:
+                    price = Price.objects.get(id=price_id)
+                    product = price.product
+
+                    # Update profile with product
+                    profile.product = product
+                    update_fields.append("product")
+
+                    product_data = {"product_id": product.id, "product_name": product.name}
+
+                    logger.info(
+                        "Associated product with profile from one-time payment",
+                        profile_id=profile.id,
+                        product_id=product.id,
+                        product_name=product.name,
+                    )
+                except Price.DoesNotExist:
+                    logger.warning("Price not found in database", price_id=price_id)
+                except Exception as e:
+                    logger.error("Error retrieving product from price", price_id=price_id, error=str(e))
+
+            if update_fields:
+                profile.save(update_fields=update_fields)
+
+            profile.track_state_change(
+                to_state=ProfileStates.SUBSCRIBED,
+                metadata={
+                    "event": "checkout_payment_completed",
+                    "payment_intent": payment_intent,
+                    "checkout_id": checkout_id,
+                    "amount": amount_total,
+                    "currency": currency,
+                    "price_id": price_id,
+                    "stripe_event_id": event_id,
+                    **product_data,
+                },
+            )
+
+            logger.info(
+                "User completed one-time payment",
+                profile_id=profile.id,
+                payment_intent=payment_intent,
+                checkout_id=checkout_id,
+                amount=amount_total,
+                currency=currency,
+                metadata=metadata,
+            )
+
+        else:
+            logger.info(
+                "Checkout completed with unsupported mode", checkout_id=checkout_id, mode=mode, profile_id=profile.id
+            )
+
+    except (Customer.DoesNotExist, Profile.DoesNotExist) as e:
+        logger.error(
+            "Error processing checkout completion: customer or profile not found",
+            event_id=event_id,
+            checkout_id=checkout_id,
+            customer_id=customer_id,
+            error=str(e),
+        )
+    except Subscription.DoesNotExist as e:
+        logger.error(
+            "Error processing checkout completion: subscription not found",
+            event_id=event_id,
+            checkout_id=checkout_id,
+            subscription_id=subscription_id,
+            error=str(e),
+        )
+    except Exception as e:
+        logger.error(
+            "Unexpected error processing checkout completion",
+            event_id=event_id,
+            checkout_id=checkout_id,
             error=str(e),
         )

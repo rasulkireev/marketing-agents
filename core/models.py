@@ -7,7 +7,7 @@ from django.utils import timezone
 from pydantic_ai import Agent, RunContext, capture_run_messages
 
 from core.base_models import BaseModel
-from core.choices import Category, ContentType, Language, ProjectStyle, ProjectType
+from core.choices import Category, ContentType, Language, ProfileStates, ProjectStyle, ProjectType
 from core.model_utils import generate_random_key, run_agent_synchronously
 from core.prompts import GENERATE_CONTENT_SYSTEM_PROMPTS, TITLE_SUGGESTION_SYSTEM_PROMPTS
 from core.schemas import (
@@ -36,6 +36,14 @@ class Profile(BaseModel):
         related_name="profile",
         help_text="The user's Stripe Subscription object, if it exists",
     )
+    product = models.ForeignKey(
+        "djstripe.Product",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="profile",
+        help_text="The user's Stripe Product object, if it exists",
+    )
     customer = models.ForeignKey(
         "djstripe.Customer",
         null=True,
@@ -43,6 +51,13 @@ class Profile(BaseModel):
         on_delete=models.SET_NULL,
         related_name="profile",
         help_text="The user's Stripe Customer object, if it exists",
+    )
+
+    state = models.CharField(
+        max_length=255,
+        choices=ProfileStates.choices,
+        default=ProfileStates.STRANGER,
+        help_text="The current state of the user's profile",
     )
 
     def __str__(self):
@@ -58,6 +73,8 @@ class Profile(BaseModel):
             ProfileStateTransition.objects.create(
                 profile=self, from_state=from_state, to_state=to_state, backup_profile_id=self.id, metadata=metadata
             )
+            self.state = to_state
+            self.save(update_fields=["state"])
 
     @property
     def current_state(self):
@@ -91,15 +108,6 @@ class Profile(BaseModel):
     @property
     def reached_title_generation_limit(self):
         return self.number_of_title_suggestions >= 20 and not self.has_active_subscription
-
-
-class ProfileStates(models.TextChoices):
-    STRANGER = "stranger"
-    SIGNED_UP = "signed_up"
-    SUBSCRIBED = "subscribed"
-    CANCELLED = "cancelled"
-    CHURNED = "churned"
-    ACCOUNT_DELETED = "account_deleted"
 
 
 class ProfileStateTransition(BaseModel):

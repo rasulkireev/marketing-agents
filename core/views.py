@@ -74,7 +74,7 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         email_address = EmailAddress.objects.get_for_user(user, user.email)
         context["email_verified"] = email_address.verified
         context["resend_confirmation_url"] = reverse("resend_confirmation")
-        context["has_subscription"] = user.profile.subscription is not None
+        context["has_subscription"] = user.profile.product is not None
 
         return context
 
