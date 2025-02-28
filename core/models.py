@@ -85,7 +85,18 @@ class Profile(BaseModel):
 
     @property
     def has_active_subscription(self):
-        return self.current_state in [ProfileStates.SUBSCRIBED, ProfileStates.CANCELLED] or self.user.is_superuser
+        return (
+            self.current_state
+            in [
+                ProfileStates.SUBSCRIBED,
+                ProfileStates.CANCELLED,
+            ]
+            or self.user.is_superuser
+        )
+
+    @property
+    def has_product_or_subscription(self):
+        return self.product is not None or self.subscription is not None
 
     @property
     def number_of_active_projects(self):
