@@ -15,9 +15,12 @@ import os
 from pathlib import Path
 
 import environ
+import logfire
 import sentry_sdk
 import structlog
 from structlog_sentry import SentryProcessor
+
+logfire.configure()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -298,6 +301,7 @@ structlog.configure(
         structlog.stdlib.add_log_level,
         SentryProcessor(event_level=logging.ERROR),
         structlog.stdlib.PositionalArgumentsFormatter(),
+        logfire.StructlogProcessor(),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
