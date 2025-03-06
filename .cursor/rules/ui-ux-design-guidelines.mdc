@@ -1,0 +1,12 @@
+---
+description: This file describes Marketing Agent's design system and how views should be styled
+globs: *.html, views.py, *.js, *.css
+alwaysApply: false
+---
+Use this rule whenever you are writing html, css, or even styles in Stimulus controllers that use D3.js.
+
+The codebase uses TailwindCSS v3.x with no custom design system defined.
+
+- Always generate semantic HTML
+- Never create new styles without explicitly receiving permission to do so
+- Always favor the "utility first" Tailwind approach.  Reusable style classes should not be created often.  Code should be reused primarily through template components.

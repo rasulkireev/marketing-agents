@@ -1,3 +1,6 @@
+.logfire/
+.ruff_cache/
+
 # DB
 backup-dbs/
 media/

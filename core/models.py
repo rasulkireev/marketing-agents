@@ -177,24 +177,6 @@ class Project(BaseModel):
         return self.name
 
     @property
-    def project_details_string(self):
-        return f"""
-            - Today's Date: {timezone.now().strftime("%Y-%m-%d")}
-            - Project URL: {self.url}
-            - Project Name: {self.name}
-            - Project Type: {self.type}
-            - Project Summary: {self.summary}
-            - Blog Theme: {self.blog_theme}
-            - Founders: {self.founders}
-            - Key Features: {self.key_features}
-            - Target Audience: {self.target_audience_summary}
-            - Pain Points: {self.pain_points}
-            - Product Usage: {self.product_usage}
-            - Language: {self.language}
-            - Links: {self.links}
-        """
-
-    @property
     def project_details(self):
         return ProjectDetails(
             name=self.name,
@@ -217,19 +199,6 @@ class Project(BaseModel):
     @property
     def disliked_title_suggestions(self):
         return self.blog_post_title_suggestions.filter(user_score__lt=0).all()
-
-    @property
-    def get_liked_disliked_title_suggestions_string(self):
-        liked_titles = "\n".join(f"- {suggestion.title}" for suggestion in self.liked_title_suggestions)
-        disliked_titles = "\n".join(f"- {suggestion.title}" for suggestion in self.disliked_title_suggestions)
-
-        return f"""
-            Liked Title Suggestions:
-            {liked_titles}
-
-            Disliked Title Suggestions:
-            {disliked_titles}
-        """
 
     def get_page_content(self):
         """
@@ -291,7 +260,7 @@ class Project(BaseModel):
 
     def analyze_content(self):
         """
-        Analyze the page content using Claude via PydanticAI and update project details.
+        Analyze the page content using PydanticAI and update project details.
         Should be called after get_page_content().
         """
         agent = Agent(
@@ -370,15 +339,15 @@ class Project(BaseModel):
             """
 
         @agent.system_prompt
-        def add_language_specification(ctx: RunContext[TitleSuggestionContext]) -> str:
+        def add_number_of_titles_to_generate(ctx: RunContext[TitleSuggestionContext]) -> str:
             return f"""IMPORTANT: Generate only {ctx.deps.num_titles} titles."""
 
         @agent.system_prompt
-        def add_number_of_titles_to_generate(ctx: RunContext[TitleSuggestionContext]) -> str:
+        def add_language_specification(ctx: RunContext[TitleSuggestionContext]) -> str:
             project = ctx.deps.project_details
             return f"""
                 IMPORTANT: Generate all titles in {project.language} language.
-                Make sure the titles are grammatically correct and culturally appropriate for {self.language}-speaking audiences.
+                Make sure the titles are grammatically correct and culturally appropriate for {project.language}-speaking audiences.
             """
 
         @agent.system_prompt
@@ -513,12 +482,11 @@ class BlogPostTitleSuggestion(BaseModel):
             The generated blog post
         """
         agent = Agent(
-            "anthropic:claude-3-7-sonnet-latest",
+            "google-gla:gemini-2.0-flash-thinking-exp",
             result_type=BlogPostContent,
             deps_type=BlogPostGenerationContext,
             system_prompt=GENERATE_CONTENT_SYSTEM_PROMPTS[content_type],
             retries=2,
-            model_settings={"max_tokens": 8000, "temperature": 0.4},
         )
 
         @agent.system_prompt
