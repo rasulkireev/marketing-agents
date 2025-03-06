@@ -487,6 +487,7 @@ class BlogPostTitleSuggestion(BaseModel):
             deps_type=BlogPostGenerationContext,
             system_prompt=GENERATE_CONTENT_SYSTEM_PROMPTS[content_type],
             retries=2,
+            model_settings={"max_tokens": 8192, "temperature": 0.4},
         )
 
         @agent.system_prompt
