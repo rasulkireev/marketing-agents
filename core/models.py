@@ -482,7 +482,7 @@ class BlogPostTitleSuggestion(BaseModel):
             The generated blog post
         """
         agent = Agent(
-            "google-gla:gemini-2.0-flash-thinking-exp",
+            "google-gla:gemini-2.0-flash",
             result_type=BlogPostContent,
             deps_type=BlogPostGenerationContext,
             system_prompt=GENERATE_CONTENT_SYSTEM_PROMPTS[content_type],

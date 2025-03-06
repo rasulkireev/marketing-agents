@@ -31,8 +31,7 @@ env = environ.Env(
 
 ENVIRONMENT = env("ENVIRONMENT")
 
-if ENVIRONMENT == "prod":
-    logfire.configure(environment=ENVIRONMENT)
+logfire.configure(environment=ENVIRONMENT)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
