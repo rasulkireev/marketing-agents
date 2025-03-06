@@ -174,10 +174,22 @@ class Project(BaseModel):
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
+        """
+        Return the instance's name.
+        
+        This method returns the value of the name attribute, which serves as the object's string representation.
+        """
         return self.name
 
     @property
     def project_details(self):
+        """
+        Returns a structured representation of project details.
+        
+        Creates and returns a ProjectDetails instance populated with the project's
+        name, type, summary, blog theme, founders, key features, target audience summary,
+        pain points, product usage, links, and language.
+        """
         return ProjectDetails(
             name=self.name,
             type=self.type,
@@ -198,12 +210,26 @@ class Project(BaseModel):
 
     @property
     def disliked_title_suggestions(self):
+        """
+        Returns blog post title suggestions with a negative user score.
+        
+        Filters the associated blog post title suggestions, returning only those that have been
+        disliked by users (i.e., where the user score is less than zero).
+        """
         return self.blog_post_title_suggestions.filter(user_score__lt=0).all()
 
     def get_page_content(self):
         """
-        Fetch page content using Jina Reader API and update the project.
-        Returns the content if successful, raises ValueError otherwise.
+        Fetch and update project content from the Jina Reader API.
+        
+        Retrieves raw HTML content from the project's URL and structured JSON data from a
+        Jina Reader endpoint. If the JSON request succeeds, updates the project's title
+        (truncated to 500 characters), description, markdown content, HTML content, and
+        scraped date, and saves the changes. Logs errors and returns False if the JSON
+        request fails.
+        
+        Returns:
+            bool: True if the project's content is successfully updated; False otherwise.
         """
         try:
             html_response = requests.get(self.url, timeout=30)
@@ -260,8 +286,17 @@ class Project(BaseModel):
 
     def analyze_content(self):
         """
-        Analyze the page content using PydanticAI and update project details.
-        Should be called after get_page_content().
+        Analyze project web content with an AI agent and update project details.
+        
+        This method uses an AI agent powered by the "google-gla:gemini-2.0-flash" model to analyze the
+        project's web page content (including title, description, and markdown content) and extract key
+        details such as name, type, summary, blog theme, founders, key features, target audience summary,
+        pain points, product usage, and links. Upon obtaining the analysis results, it updates the
+        corresponding project attributes, records the current timestamp, and saves the changes. This
+        function should be called after content is retrieved via get_page_content().
+        
+        Returns:
+            True upon successful analysis and update of project details.
         """
         agent = Agent(
             "google-gla:gemini-2.0-flash",
@@ -310,6 +345,21 @@ class Project(BaseModel):
         return True
 
     def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
+        """
+        Generate SEO-friendly blog post title suggestions for the project.
+        
+        This method leverages an AI agent configured with system prompts that incorporate the current date, project details,
+        a specified number of titles, language requirements, any provided user input, and feedback history. It synchronously
+        executes the agent to generate tailored title suggestions for a blog post and saves them in the database in bulk.
+        
+        Args:
+            content_type: The category of content guiding title generation (default is ContentType.SHARING).
+            num_titles: The number of title suggestions to generate (default is 3).
+            user_prompt: An optional prompt to influence the title generation process.
+        
+        Returns:
+            A list of BlogPostTitleSuggestion instances created in the database.
+        """
         agent = Agent(
             "google-gla:gemini-2.0-flash",
             result_type=TitleSuggestions,
@@ -340,10 +390,34 @@ class Project(BaseModel):
 
         @agent.system_prompt
         def add_number_of_titles_to_generate(ctx: RunContext[TitleSuggestionContext]) -> str:
+            """
+            Returns an instruction string specifying the number of titles to generate.
+            
+            This function formats a message using the 'num_titles' value from the provided
+            context's dependencies, directing the title generation system to produce only
+            the specified number of title suggestions.
+            
+            Args:
+                ctx: The run context containing title suggestion settings, including the
+                     number of titles to generate.
+            """
             return f"""IMPORTANT: Generate only {ctx.deps.num_titles} titles."""
 
         @agent.system_prompt
         def add_language_specification(ctx: RunContext[TitleSuggestionContext]) -> str:
+            """
+            Generates a language specification instruction for title suggestions.
+            
+            Returns a formatted string instructing the title generation system to create titles in the
+            language specified by the project details. The instruction emphasizes grammatical correctness
+            and cultural appropriateness for audiences speaking that language.
+            
+            Args:
+                ctx (RunContext[TitleSuggestionContext]): Execution context containing project details.
+            
+            Returns:
+                str: The formatted language specification instruction.
+            """
             project = ctx.deps.project_details
             return f"""
                 IMPORTANT: Generate all titles in {project.language} language.
@@ -352,6 +426,19 @@ class Project(BaseModel):
 
         @agent.system_prompt
         def add_user_prompt(ctx: RunContext[TitleSuggestionContext]) -> str:
+            """
+            Generates a formatted user prompt for title generation.
+            
+            If a user-specified prompt is provided in the context's dependencies, returns a multi-line 
+            message that emphasizes the instruction's high priority and the need to follow SEO and readability 
+            guidelines. Otherwise, returns an empty string.
+            
+            Args:
+                ctx (RunContext[TitleSuggestionContext]): Execution context carrying dependencies, including the user prompt.
+            
+            Returns:
+                str: A formatted string containing the user prompt, or an empty string if no prompt is provided.
+            """
             if not ctx.deps.user_prompt:
                 return ""
 
@@ -473,13 +560,19 @@ class BlogPostTitleSuggestion(BaseModel):
 
     def generate_content(self, content_type=ContentType.SHARING):
         """
-        Generate blog post content based on the title suggestion and content type.
-
+        Generate a new blog post with AI-generated content.
+        
+        This method leverages an AI-powered agent to create blog post content using the 
+        project's details and title suggestion as context. It constructs a generation context 
+        that includes project metadata, title information, the current date, and language 
+        specifications. The 'content_type' parameter determines whether the content is optimized 
+        for sharing or SEO. On successful generation, a new GeneratedBlogPost is created and saved.
+        
         Args:
-            content_type: The type of content to generate (SEO or SHARING)
-
+            content_type: The content mode to generate (e.g., SEO or SHARING); defaults to SHARING.
+        
         Returns:
-            The generated blog post
+            A GeneratedBlogPost instance containing the generated blog post details.
         """
         agent = Agent(
             "google-gla:gemini-2.0-flash",
@@ -487,11 +580,15 @@ class BlogPostTitleSuggestion(BaseModel):
             deps_type=BlogPostGenerationContext,
             system_prompt=GENERATE_CONTENT_SYSTEM_PROMPTS[content_type],
             retries=2,
-            model_settings={"max_tokens": 8192, "temperature": 0.4},
         )
 
         @agent.system_prompt
         def add_todays_date() -> str:
+            """
+            Return today's date formatted as "Today's Date: YYYY-MM-DD".
+            
+            Retrieves the current date and returns it as a string prefixed with "Today's Date:".
+            """
             return f"Today's Date: {timezone.now().strftime('%Y-%m-%d')}"
 
         @agent.system_prompt
