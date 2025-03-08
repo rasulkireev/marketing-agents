@@ -201,6 +201,14 @@ class Project(BaseModel):
     def disliked_title_suggestions(self):
         return self.blog_post_title_suggestions.filter(user_score__lt=0).all()
 
+    @property
+    def has_pricing_page(self):
+        return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).exists()
+
+    @property
+    def pricing_page(self):
+        return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).latest("id")
+
     def get_page_content(self):
         """
         Fetch page content using Jina Reader API and update the project.
