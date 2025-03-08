@@ -32,6 +32,17 @@ class ProjectType(models.TextChoices):
     OTHER = "Other"
 
 
+class ProjectPageType(models.TextChoices):
+    BLOG = "Blog", "Blog"
+    ABOUT = "About", "About"
+    CONTACT = "Contact", "Contact"
+    FAQ = "FAQ", "FAQ"
+    TERMS_OF_SERVICE = "Terms of Service", "Terms of Service"
+    PRIVACY_POLICY = "Privacy Policy", "Privacy Policy"
+    PRICING = "Pricing", "Pricing"
+    OTHER = "Other", "Other"
+
+
 class Language(models.TextChoices):
     ENGLISH = "English", "English"
     SPANISH = "Spanish", "Spanish"

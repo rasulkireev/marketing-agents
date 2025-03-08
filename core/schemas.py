@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from core.choices import ProjectType
+from core.choices import ProjectPageType, ProjectType
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -12,6 +12,10 @@ class WebPageContent(BaseModel):
     title: str
     description: str
     markdown_content: str
+    html_content: str = Field(
+        description="HTML content of the web page",
+        default="",
+    )
 
 
 class ProjectDetails(BaseModel):
@@ -48,6 +52,36 @@ class ProjectDetails(BaseModel):
                 return v
             else:
                 return ProjectType.OTHER
+        return v
+
+
+class ProjectPageDetails(BaseModel):
+    name: str = Field(description="Official name of the project or organization")
+    type: str = Field(
+        description=(
+            "Primary business model or project category."
+            f"One of the following options: {', '.join([choice[0] for choice in ProjectPageType.choices])}"
+        )
+    )
+    type_ai_guess: str = Field(description="Page Type")
+    summary: str = Field(description="Summary of the page content")
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v):
+        valid_types = [choice[0] for choice in ProjectPageType.choices]
+
+        if v not in valid_types:
+            v_lower = v.lower()
+            for valid_type in valid_types:
+                if v_lower in valid_type.lower():
+                    return valid_type
+
+            logger.warning("[Project Details Schema] Type is not a valid option", provided_type=v)
+            if len(v) > 50:
+                return v
+            else:
+                return ProjectPageType.OTHER
         return v
 
 

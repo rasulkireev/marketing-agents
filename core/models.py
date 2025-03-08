@@ -7,13 +7,14 @@ from django.utils import timezone
 from pydantic_ai import Agent, RunContext, capture_run_messages
 
 from core.base_models import BaseModel
-from core.choices import Category, ContentType, Language, ProfileStates, ProjectStyle, ProjectType
+from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
 from core.model_utils import generate_random_key, run_agent_synchronously
 from core.prompts import GENERATE_CONTENT_SYSTEM_PROMPTS, TITLE_SUGGESTION_SYSTEM_PROMPTS
 from core.schemas import (
     BlogPostContent,
     BlogPostGenerationContext,
     ProjectDetails,
+    ProjectPageDetails,
     TitleSuggestion,
     TitleSuggestionContext,
     TitleSuggestions,
@@ -177,24 +178,6 @@ class Project(BaseModel):
         return self.name
 
     @property
-    def project_details_string(self):
-        return f"""
-            - Today's Date: {timezone.now().strftime("%Y-%m-%d")}
-            - Project URL: {self.url}
-            - Project Name: {self.name}
-            - Project Type: {self.type}
-            - Project Summary: {self.summary}
-            - Blog Theme: {self.blog_theme}
-            - Founders: {self.founders}
-            - Key Features: {self.key_features}
-            - Target Audience: {self.target_audience_summary}
-            - Pain Points: {self.pain_points}
-            - Product Usage: {self.product_usage}
-            - Language: {self.language}
-            - Links: {self.links}
-        """
-
-    @property
     def project_details(self):
         return ProjectDetails(
             name=self.name,
@@ -265,6 +248,7 @@ class Project(BaseModel):
 
             self.save(
                 update_fields=[
+                    "date_scraped",
                     "title",
                     "description",
                     "markdown_content",
@@ -313,12 +297,18 @@ class Project(BaseModel):
                 f"Title: {ctx.deps.title}"
                 f"Description: {ctx.deps.description}"
                 f"Content: {ctx.deps.markdown_content}"
+                f"HTML Content: {ctx.deps.html_content}"
             )
 
         result = run_agent_synchronously(
             agent,
             "Please analyze this web page content and extract the key information.",
-            deps=WebPageContent(title=self.title, description=self.description, markdown_content=self.markdown_content),
+            deps=WebPageContent(
+                title=self.title,
+                description=self.description,
+                markdown_content=self.markdown_content,
+                html_content=self.html_content,
+            ),
         )
 
         logger.info("[Analyze Content] Agent ran successfully", data=result.data)
@@ -467,6 +457,33 @@ class Project(BaseModel):
 
             return BlogPostTitleSuggestion.objects.bulk_create(suggestions)
 
+    def get_a_list_of_links(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=list[str],
+            system_prompt="You are an expert link extractor. Extract all the links from the text provided.",
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_links(ctx: RunContext[list[str]]) -> str:
+            return f"Links: {ctx.deps}"
+
+        logger.info(
+            "[Get a List of Links] Running agent",
+            project_name=self.name,
+            project_id=self.id,
+            links=self.links,
+        )
+
+        result = run_agent_synchronously(
+            agent,
+            "Please extract all the links from the text provided.",
+            deps=self.links,
+        )
+
+        return result.data
+
 
 class BlogPostTitleSuggestion(BaseModel):
     project = models.ForeignKey(
@@ -606,3 +623,144 @@ class GeneratedBlogPost(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
+
+
+class ProjectPage(BaseModel):
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="project_pages")
+
+    url = models.URLField(max_length=200, unique=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    html_content = models.TextField(blank=True, default="")
+
+    # Content from Jina Reader
+    date_scraped = models.DateTimeField(null=True, blank=True)
+    title = models.CharField(max_length=500, blank=True, default="")
+    description = models.TextField(blank=True, default="")
+    markdown_content = models.TextField(blank=True, default="")
+
+    # AI Content
+    date_analyzed = models.DateTimeField(null=True, blank=True)
+    type = models.CharField(max_length=255, choices=ProjectPageType.choices, default=ProjectPageType.BLOG)
+    type_ai_guess = models.CharField(max_length=255)
+    summary = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.project.name}: {self.title}"
+
+    def get_page_content(self):
+        """
+        Fetch page content using Jina Reader API and update the project.
+        Returns the content if successful, raises ValueError otherwise.
+        """
+        try:
+            html_response = requests.get(self.url, timeout=30)
+            html_response.raise_for_status()
+            html_content = html_response.text
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "[Page Content] Error fetching HTML content",
+                error=str(e),
+                project_name=self.title,
+                project_url=self.url,
+            )
+            html_content = ""
+
+        jina_url = f"https://r.jina.ai/{self.url}"
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
+        try:
+            response = requests.get(jina_url, headers=headers, timeout=30)
+            response.raise_for_status()
+
+            data = response.json().get("data", {})
+
+            self.date_scraped = timezone.now()
+            self.title = data.get("title", "")[:500]
+            self.description = data.get("description", "")
+            self.markdown_content = data.get("content", "")
+            self.html_content = html_content
+
+            self.save(
+                update_fields=[
+                    "date_scraped",
+                    "title",
+                    "description",
+                    "markdown_content",
+                    "html_content",
+                ]
+            )
+
+            logger.info(
+                "[Page Content] Successfully fetched content",
+                project_name=self.title,
+                project_url=self.url,
+            )
+
+            return True
+
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "[Page Content] Error fetching content from Jina Reader",
+                error=str(e),
+                project_name=self.title,
+                project_url=self.url,
+            )
+            return False
+
+    def analyze_content(self):
+        """
+        Analyze the page content using Claude via PydanticAI and update project details.
+        Should be called after get_page_content().
+        """
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=ProjectPageDetails,
+            deps_type=WebPageContent,
+            system_prompt=(
+                "You are an expert content analyzer. Based on the web page content provided, "
+                "extract and infer the requested information. Make reasonable inferences based "
+                "on available content, context, and industry knowledge."
+            ),
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
+            return (
+                "Web page content:"
+                f"Title: {ctx.deps.title}"
+                f"Description: {ctx.deps.description}"
+                f"Content: {ctx.deps.markdown_content}"
+            )
+
+        result = run_agent_synchronously(
+            agent,
+            "Please analyze this web page.",
+            deps=WebPageContent(
+                title=self.title,
+                description=self.description,
+                markdown_content=self.markdown_content,
+                html_content=self.html_content,
+            ),
+        )
+
+        self.date_analyzed = timezone.now()
+        self.type = result.data.type
+        self.type_ai_guess = result.data.type_ai_guess
+        self.summary = result.data.summary
+        self.save(
+            update_fields=[
+                "date_analyzed",
+                "type",
+                "type_ai_guess",
+                "summary",
+            ]
+        )
+
+        logger.info(
+            "[Analyze Content] Successfully analyzed content",
+            project_name=self.title,
+            project_url=self.url,
+        )
+
+        return True
