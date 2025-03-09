@@ -63,7 +63,7 @@ class ProjectPageDetails(BaseModel):
             f"One of the following options: {', '.join([choice[0] for choice in ProjectPageType.choices])}"
         )
     )
-    type_ai_guess: str = Field(description="Page Type")
+    type_ai_guess: str = Field(description="Page Type. Should never be 'Other'")
     summary: str = Field(description="Summary of the page content")
 
     @field_validator("type")

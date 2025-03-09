@@ -623,7 +623,7 @@ class GeneratedBlogPost(BaseModel):
 class ProjectPage(BaseModel):
     project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="project_pages")
 
-    url = models.URLField(max_length=200, unique=True)
+    url = models.URLField(max_length=200)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     html_content = models.TextField(blank=True, default="")
@@ -642,6 +642,9 @@ class ProjectPage(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
+
+    class Meta:
+        unique_together = ("project", "url")
 
     def get_page_content(self):
         """

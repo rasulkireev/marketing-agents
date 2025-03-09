@@ -1,0 +1,1 @@
+ssh -t root@138.201.126.181 'docker exec -it $(docker ps --filter "name=srv-captain--seo-blog-bot" | grep "^.*srv-captain--seo-blog-bot\." | awk '\''{print $1}'\'') python manage.py shell_plus --ipython'

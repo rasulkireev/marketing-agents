@@ -41,6 +41,12 @@ def schedule_project_page_analysis(project_id):
     project_links = project.get_a_list_of_links()
 
     logger.info(
+        "[Schedule Project Pages Analysis] Got Project Links",
+        number_of_links=len(project_links),
+        links=project_links,
+    )
+
+    logger.info(
         "[Schedule Project Page Analysis] Scheduling analysis for links",
         project_name=project.name,
         project_id=project.id,

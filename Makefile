@@ -19,3 +19,6 @@ stripe-sync:
 
 restart-worker:
 	docker compose up -d workers --force-recreate
+
+prod-shell:
+	./deployment/prod-shell.sh
