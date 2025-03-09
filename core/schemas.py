@@ -126,3 +126,13 @@ class BlogPostContent(BaseModel):
     slug: str = Field(description="URL-friendly format using lowercase letters, numbers, and hyphens")
     tags: str = Field(description="5-8 relevant keywords as comma-separated values")
     content: str = Field(description="Full blog post content in Markdown format with proper structure and formatting")
+
+
+class PricingPageStrategyContext(BaseModel):
+    project_details: ProjectDetails
+    web_page_content: WebPageContent
+
+
+class PricingPageStrategySuggestion(BaseModel):
+    current_pricing_strategy: str = Field(description="Current pricing strategy")
+    suggested_pricing_strategy: str = Field(description="Suggested pricing strategy")

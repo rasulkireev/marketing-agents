@@ -387,6 +387,46 @@
             </div>
           </div>
 
+          <!-- Offer/Pricing Generator Agent Card -->
+          <div class="overflow-hidden bg-white rounded-xl border border-pink-100 shadow-lg">
+            <!-- Card Header -->
+            <div class="px-8 py-6 border-b border-gray-200">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-xl font-semibold text-gray-900">Pricing/Offer Agent</h3>
+                  <p class="mt-1 text-sm text-gray-500">Create compelling offers using AI</p>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-pink-700 bg-pink-50 rounded-full ring-1 ring-inset ring-pink-600/20">
+                  Beta
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Content -->
+            <div class="px-8 py-6">
+              <div class="prose prose-gray">
+                <p class="text-gray-500">Generate optimized pricing and offers. This agent will help you:</p>
+                <ul class="mt-4 space-y-2 text-gray-500">
+                  <li>Create tiered pricing structures</li>
+                  <li>Generate compelling offers</li>
+                  <li>Optimize value propositions</li>
+                  <li>Design promotional campaigns</li>
+                </ul>
+              </div>
+
+              <div class="flex justify-end mt-6">
+                <a href="{% url 'pricing_agent' project.id %}"
+                   class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                  <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Use Agent
+                </a>
+              </div>
+
+            </div>
+          </div>
+
           <!-- Social Media Agent Card -->
           <div class="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-lg opacity-75">
             <!-- Card Header -->
@@ -452,47 +492,6 @@
                   <li>Create hook-driven content</li>
                   <li>Generate viral headlines</li>
                   <li>Optimize for shareability</li>
-                </ul>
-              </div>
-
-              <!-- Disabled Use Agent Button -->
-              <div class="flex justify-end mt-6">
-                <button
-                  disabled
-                  class="inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-400 bg-gray-100 rounded-lg shadow-sm cursor-not-allowed">
-                  <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Coming Soon
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Offer/Pricing Generator Agent Card -->
-          <div class="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-lg opacity-75">
-            <!-- Card Header -->
-            <div class="px-8 py-6 border-b border-gray-200">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h3 class="text-xl font-semibold text-gray-900">Pricing/Offer Agent</h3>
-                  <p class="mt-1 text-sm text-gray-500">Create compelling offers using AI</p>
-                </div>
-                <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-50 rounded-full ring-1 ring-inset ring-gray-600/20">
-                  Coming Soon
-                </span>
-              </div>
-            </div>
-
-            <!-- Card Content -->
-            <div class="px-8 py-6">
-              <div class="prose prose-gray">
-                <p class="text-gray-500">Generate optimized pricing and offers. This agent will help you:</p>
-                <ul class="mt-4 space-y-2 text-gray-500">
-                  <li>Create tiered pricing structures</li>
-                  <li>Generate compelling offers</li>
-                  <li>Optimize value propositions</li>
-                  <li>Design promotional campaigns</li>
                 </ul>
               </div>
 

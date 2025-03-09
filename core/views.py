@@ -13,9 +13,9 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 from djstripe import models as djstripe_models
 
-from core.choices import Language, ProfileStates
+from core.choices import Language, ProfileStates, ProjectPageType
 from core.forms import ProfileUpdateForm, ProjectScanForm
-from core.models import BlogPost, Profile, Project
+from core.models import BlogPost, PricingPageUpdatesSuggestion, Profile, Project, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -195,3 +195,30 @@ class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
     model = Project
     template_name = "blogging-agent/blog-post-title-suggestions.html"
     context_object_name = "project"
+
+
+class PricingAgentView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "agents/pricing-agent.html"
+    context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        pricing_pages = ProjectPage.objects.filter(project=self.object, type=ProjectPageType.PRICING)
+        pricing_suggestions = PricingPageUpdatesSuggestion.objects.filter(
+            project=self.object,
+        )
+
+        context = super().get_context_data(**kwargs)
+        context["has_pro_subscription"] = self.request.user.profile.has_product_or_subscription
+
+        if pricing_pages.exists():
+            context["pricing_page"] = pricing_pages.latest("id")
+        else:
+            context["pricing_page"] = None
+
+        if pricing_suggestions.exists():
+            context["pricing_suggestions"] = pricing_suggestions
+        else:
+            context["pricing_suggestions"] = None
+
+        return context

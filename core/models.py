@@ -11,6 +11,8 @@ from core.prompts import GENERATE_CONTENT_SYSTEM_PROMPTS, TITLE_SUGGESTION_SYSTE
 from core.schemas import (
     BlogPostContent,
     BlogPostGenerationContext,
+    PricingPageStrategyContext,
+    PricingPageStrategySuggestion,
     ProjectDetails,
     ProjectPageDetails,
     TitleSuggestion,
@@ -618,6 +620,14 @@ class ProjectPage(BaseModel):
     class Meta:
         unique_together = ("project", "url")
 
+    @property
+    def web_page_content(self):
+        return WebPageContent(
+            title=self.title,
+            description=self.description,
+            markdown_content=self.markdown_content,
+        )
+
     def get_page_content(self):
         """
         Fetch page content using Jina Reader API and update the project.
@@ -710,3 +720,66 @@ class ProjectPage(BaseModel):
         )
 
         return True
+
+    def create_new_pricing_strategy(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=PricingPageStrategySuggestion,
+            deps_type=PricingPageStrategyContext,
+            system_prompt="You are an expert pricing strategist. Based on the web page content provided, create a new pricing strategy.",
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_webpage_content(ctx: RunContext[PricingPageStrategyContext]) -> str:
+            return "Pricing page content:" f"Content: {ctx.deps.web_page_content.markdown_content}"
+
+        @agent.system_prompt
+        def add_project_context(ctx: RunContext[PricingPageStrategyContext]) -> str:
+            return f"""
+                Project Context:
+                - Project Name: {self.project.name}
+                - Project Type: {self.project.type}
+                - Project Summary: {self.project.summary}
+                - Target Audience: {self.project.target_audience_summary}
+                - Key Features: {self.project.key_features}
+                - Pain Points: {self.project.pain_points}
+            """
+
+        result = run_agent_synchronously(
+            agent,
+            "Please analyze this pricing page and suggest a new pricing strategy.",
+            deps=PricingPageStrategyContext(
+                project_details=self.project.project_details,
+                web_page_content=self.web_page_content,
+            ),
+        )
+
+        logger.info(
+            "[Create New Pricing Strategy] Successfully generated pricing strategy",
+            project_name=self.project.name,
+            project_url=self.url,
+        )
+
+        return PricingPageUpdatesSuggestion.objects.create(
+            project=self.project,
+            project_page=self,
+            current_pricing_strategy=result.data.current_pricing_strategy,
+            suggested_pricing_strategy=result.data.suggested_pricing_strategy,
+        )
+
+
+class PricingPageUpdatesSuggestion(BaseModel):
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="pricing_page_updates"
+    )
+    project_page = models.ForeignKey(
+        ProjectPage, null=True, blank=True, on_delete=models.CASCADE, related_name="pricing_page_updates"
+    )
+
+    user_prompt = models.TextField(blank=True)
+    current_pricing_strategy = models.TextField()
+    suggested_pricing_strategy = models.TextField()
+
+    def __str__(self):
+        return f"{self.project.name}"

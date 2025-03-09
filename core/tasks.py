@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from django_q.tasks import async_task
 
+from core.choices import ProjectPageType
 from core.models import Project, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -29,9 +30,14 @@ def add_email_to_buttondown(email, tag):
 def analyze_project_page(project_id: int, link: str):
     project = Project.objects.get(id=project_id)
     project_page, created = ProjectPage.objects.get_or_create(project=project, url=link)
+    page_analyzed = False
+
     if created:
         project_page.get_page_content()
-        project_page.analyze_content()
+        page_analyzed = project_page.analyze_content()
+
+    if project_page.type == ProjectPageType.PRICING and page_analyzed:
+        print("PRICING PAGE ANALYZED")
 
     return f"Analyzed {link} for {project.name}"
 
