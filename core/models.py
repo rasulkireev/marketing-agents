@@ -1,5 +1,3 @@
-import requests
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
@@ -8,7 +6,7 @@ from pydantic_ai import Agent, RunContext, capture_run_messages
 
 from core.base_models import BaseModel
 from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
-from core.model_utils import generate_random_key, run_agent_synchronously
+from core.model_utils import generate_random_key, get_html_content, get_markdown_content, run_agent_synchronously
 from core.prompts import GENERATE_CONTENT_SYSTEM_PROMPTS, TITLE_SUGGESTION_SYSTEM_PROMPTS
 from core.schemas import (
     BlogPostContent,
@@ -214,59 +212,35 @@ class Project(BaseModel):
         Fetch page content using Jina Reader API and update the project.
         Returns the content if successful, raises ValueError otherwise.
         """
-        try:
-            html_response = requests.get(self.url, timeout=30)
-            html_response.raise_for_status()
-            html_content = html_response.text
-        except requests.exceptions.RequestException as e:
-            logger.error(
-                "[Page Content] Error fetching HTML content",
-                error=str(e),
-                project_name=self.name,
-                project_url=self.url,
-            )
-            html_content = ""
+        html_content = get_html_content(self.url)
+        title, description, markdown_content = get_markdown_content(self.url)
 
-        jina_url = f"https://r.jina.ai/{self.url}"
-        headers = {"Accept": "application/json", "Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
-        try:
-            response = requests.get(jina_url, headers=headers, timeout=30)
-            response.raise_for_status()
-
-            data = response.json().get("data", {})
-
-            self.date_scraped = timezone.now()
-            self.title = data.get("title", "")[:500]
-            self.description = data.get("description", "")
-            self.markdown_content = data.get("content", "")
-            self.html_content = html_content
-
-            self.save(
-                update_fields=[
-                    "date_scraped",
-                    "title",
-                    "description",
-                    "markdown_content",
-                    "html_content",
-                ]
-            )
-
-            logger.info(
-                "[Page Content] Successfully fetched content",
-                project_name=self.name,
-                project_url=self.url,
-            )
-
-            return True
-
-        except requests.exceptions.RequestException as e:
-            logger.error(
-                "[Page Content] Error fetching content from Jina Reader",
-                error=str(e),
-                project_name=self.name,
-                project_url=self.url,
-            )
+        if not title or not description or not markdown_content:
             return False
+
+        self.date_scraped = timezone.now()
+        self.title = title
+        self.description = description
+        self.markdown_content = markdown_content
+        self.html_content = html_content
+
+        self.save(
+            update_fields=[
+                "date_scraped",
+                "title",
+                "description",
+                "markdown_content",
+                "html_content",
+            ]
+        )
+
+        logger.info(
+            "[Page Content] Successfully fetched content",
+            project_name=self.name,
+            project_url=self.url,
+        )
+
+        return True
 
     def analyze_content(self):
         """
@@ -624,8 +598,6 @@ class ProjectPage(BaseModel):
     project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="project_pages")
 
     url = models.URLField(max_length=200)
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
     html_content = models.TextField(blank=True, default="")
 
     # Content from Jina Reader
@@ -651,59 +623,35 @@ class ProjectPage(BaseModel):
         Fetch page content using Jina Reader API and update the project.
         Returns the content if successful, raises ValueError otherwise.
         """
-        try:
-            html_response = requests.get(self.url, timeout=30)
-            html_response.raise_for_status()
-            html_content = html_response.text
-        except requests.exceptions.RequestException as e:
-            logger.error(
-                "[Page Content] Error fetching HTML content",
-                error=str(e),
-                project_name=self.title,
-                project_url=self.url,
-            )
-            html_content = ""
+        html_content = get_html_content(self.url)
+        title, description, markdown_content = get_markdown_content(self.url)
 
-        jina_url = f"https://r.jina.ai/{self.url}"
-        headers = {"Accept": "application/json", "Authorization": f"Bearer {settings.JINA_READER_API_KEY}"}
-        try:
-            response = requests.get(jina_url, headers=headers, timeout=30)
-            response.raise_for_status()
-
-            data = response.json().get("data", {})
-
-            self.date_scraped = timezone.now()
-            self.title = data.get("title", "")[:500]
-            self.description = data.get("description", "")
-            self.markdown_content = data.get("content", "")
-            self.html_content = html_content
-
-            self.save(
-                update_fields=[
-                    "date_scraped",
-                    "title",
-                    "description",
-                    "markdown_content",
-                    "html_content",
-                ]
-            )
-
-            logger.info(
-                "[Page Content] Successfully fetched content",
-                project_name=self.title,
-                project_url=self.url,
-            )
-
-            return True
-
-        except requests.exceptions.RequestException as e:
-            logger.error(
-                "[Page Content] Error fetching content from Jina Reader",
-                error=str(e),
-                project_name=self.title,
-                project_url=self.url,
-            )
+        if not title or not description or not markdown_content:
             return False
+
+        self.date_scraped = timezone.now()
+        self.title = title
+        self.description = description
+        self.markdown_content = markdown_content
+        self.html_content = html_content
+
+        self.save(
+            update_fields=[
+                "date_scraped",
+                "title",
+                "description",
+                "markdown_content",
+                "html_content",
+            ]
+        )
+
+        logger.info(
+            "[Page Content] Successfully fetched content",
+            project_name=self.project.name,
+            project_url=self.url,
+        )
+
+        return True
 
     def analyze_content(self):
         """
