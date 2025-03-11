@@ -58,3 +58,14 @@ class GeneratedContentOut(Schema):
 
 class UpdateTitleScoreIn(Schema):
     score: int
+
+
+class AddPricingPageIn(Schema):
+    project_id: int
+    url: str
+
+
+class CreatePricingStrategyIn(Schema):
+    project_id: int
+    strategy_name: str = "Alex Hormozi"
+    user_prompt: str = ""

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% load widget_tweaks %}
+{% load markdown_extras %}
+
+{% block content %}
+<div class="mx-auto mt-10 max-w-4xl">
+
+    <!-- Create New Strategy Button -->
+    <div class="flex justify-end mb-6" data-controller="pricing-strategy">
+      <button type="button"
+              data-action="click->pricing-strategy#createStrategy"
+              data-pricing-strategy-target="createButton"
+              class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+          <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Generate New Strategy
+      </button>
+    </div>
+
+    <!-- Pricing Suggestions Section -->
+    {% if pricing_suggestions %}
+      <div class="mt-8 space-y-6" data-controller="pricing-suggestions">
+        <h3 class="text-xl font-semibold text-gray-900">Pricing Strategy Suggestions</h3>
+
+        {% for suggestion in pricing_suggestions %}
+          <details class="bg-white rounded-lg border border-pink-100 shadow-sm group">
+            <summary class="flex justify-between items-center p-6 list-none cursor-pointer">
+              <div class="flex gap-x-3 items-center">
+                <div class="flex justify-center items-center w-8 h-8 bg-pink-50 rounded-lg">
+                  <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h4 class="text-lg font-medium text-gray-900">{% if suggestion.strategy_name %}{{ suggestion.strategy_name }}{% endif %} Pricing Strategy #{{ forloop.counter }}</h4>
+              </div>
+              <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </summary>
+
+            <div class="px-6 pb-6 space-y-4">
+              <!-- Current Strategy -->
+              <div class="max-w-full prose lg:prose-lg prose-ol:ml-4">
+                <h5 class="text-sm font-medium text-gray-900">Current Strategy</h5>
+                <div class="overflow-auto p-4 mt-2 bg-gray-50 rounded-lg">
+                  <p class="text-sm text-gray-600 whitespace-pre-wrap break-words prose-ol:pl-5 prose-ul:pl-5">{{ suggestion.current_pricing_strategy | markdown | safe }}</p>
+                </div>
+              </div>
+
+              <!-- Suggested Strategy -->
+              <div class="max-w-full prose lg:prose-lg prose-ol:ml-4">
+                <h5 class="text-sm font-medium text-gray-900">Suggested Strategy</h5>
+                <div class="overflow-auto p-4 mt-2 bg-pink-50 rounded-lg">
+                  <p class="text-sm text-gray-600 whitespace-pre-wrap break-words prose-ol:pl-5 prose-ul:pl-5">{{ suggestion.suggested_pricing_strategy | markdown | safe }}</p>
+                </div>
+              </div>
+            </div>
+          </details>
+        {% endfor %}
+      </div>
+    {% endif %}
+</div>
+{% endblock content %}
