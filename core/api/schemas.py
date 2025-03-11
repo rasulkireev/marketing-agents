@@ -63,3 +63,9 @@ class UpdateTitleScoreIn(Schema):
 class AddPricingPageIn(Schema):
     project_id: int
     url: str
+
+
+class CreatePricingStrategyIn(Schema):
+    project_id: int
+    strategy_name: str = "Alex Hormozi"
+    user_prompt: str = ""

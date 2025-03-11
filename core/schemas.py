@@ -135,6 +135,10 @@ class BlogPostContent(BaseModel):
 class PricingPageStrategyContext(BaseModel):
     project_details: ProjectDetails
     web_page_content: WebPageContent
+    user_prompt: str = Field(
+        description="Optional user-provided guidance for pricing strategy generation",
+        default="",
+    )
 
 
 class PricingPageStrategySuggestion(BaseModel):

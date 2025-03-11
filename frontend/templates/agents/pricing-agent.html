@@ -5,6 +5,20 @@
 
 {% block content %}
 <div class="mx-auto mt-10 max-w-4xl">
+
+    <!-- Create New Strategy Button -->
+    <div class="flex justify-end mb-6" data-controller="pricing-strategy">
+      <button type="button"
+              data-action="click->pricing-strategy#createStrategy"
+              data-pricing-strategy-target="createButton"
+              class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+          <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Generate New Strategy
+      </button>
+    </div>
+
     <!-- Pricing Suggestions Section -->
     {% if pricing_suggestions %}
       <div class="mt-8 space-y-6" data-controller="pricing-suggestions">
@@ -19,7 +33,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h4 class="text-lg font-medium text-gray-900">Pricing Strategy {% if suggestion.strategy_name %}{{ suggestion.strategy_name }}{% endif %} #{{ forloop.counter }}</h4>
+                <h4 class="text-lg font-medium text-gray-900">{% if suggestion.strategy_name %}{{ suggestion.strategy_name }}{% endif %} Pricing Strategy #{{ forloop.counter }}</h4>
               </div>
               <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />

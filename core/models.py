@@ -724,7 +724,7 @@ class ProjectPage(BaseModel):
 
         return True
 
-    def create_new_pricing_strategy(self, strategy_name: str = "Alex Hormozi"):
+    def create_new_pricing_strategy(self, strategy_name: str = "Alex Hormozi", user_prompt: str = ""):
         agent = Agent(
             "google-gla:gemini-2.0-flash",
             result_type=PricingPageStrategySuggestion,
@@ -756,6 +756,16 @@ class ProjectPage(BaseModel):
                 - Provide actionable advice that can be implemented immediately.
                 - Avoid vague suggestions that are not actionable.
                 - Focus on the specific needs and challenges of the target audience.
+            """
+
+        @agent.system_prompt
+        def add_user_prompt(ctx: RunContext[PricingPageStrategyContext]) -> str:
+            if not ctx.deps.user_prompt:
+                return ""
+
+            return f"""
+                IMPORTANT USER REQUEST: The user has specifically requested to focus on the following:
+                "{ctx.deps.user_prompt}"
             """
 
         result = run_agent_synchronously(
