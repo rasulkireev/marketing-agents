@@ -610,7 +610,7 @@ class ProjectPage(BaseModel):
 
     # AI Content
     date_analyzed = models.DateTimeField(null=True, blank=True)
-    type = models.CharField(max_length=255, choices=ProjectPageType.choices, blank=True, null=True)
+    type = models.CharField(max_length=255, choices=ProjectPageType.choices, blank=True, default="")
     type_ai_guess = models.CharField(max_length=255)
     summary = models.TextField(blank=True)
 
