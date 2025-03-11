@@ -45,7 +45,7 @@ export default class extends Controller {
       this.formTarget.innerHTML = `
         <div class="space-y-4">
           <div class="flex justify-end">
-            <a href="/projects/${projectId}/agent"
+            <a href="/pricing-agent/${projectId}/"
                class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
               <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
