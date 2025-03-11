@@ -759,6 +759,12 @@ class ProjectPage(BaseModel):
             """
 
         @agent.system_prompt
+        def markdown_formatting() -> str:
+            return """
+                IMPORTANT: Make sure the output is valid markdown.
+            """
+
+        @agent.system_prompt
         def add_user_prompt(ctx: RunContext[PricingPageStrategyContext]) -> str:
             if not ctx.deps.user_prompt:
                 return ""
