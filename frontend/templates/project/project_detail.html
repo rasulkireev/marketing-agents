@@ -414,6 +414,7 @@
                 </ul>
               </div>
 
+              {% if has_pricing_page %}
               <div class="flex justify-end mt-6">
                 <a href="{% url 'pricing_agent' project.id %}"
                    class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
@@ -423,7 +424,40 @@
                   Use Agent
                 </a>
               </div>
-
+              {% else %}
+              <div class="mt-6">
+                <form data-controller="pricing-analysis"
+                      data-project-id="{{ project.id }}"
+                      data-action="submit->pricing-analysis#analyze"
+                      data-pricing-analysis-target="form"
+                      class="space-y-4">
+                  {% csrf_token %}
+                  <div>
+                    <label for="pricing_url" class="block text-sm font-medium text-gray-700">Pricing Page URL</label>
+                    <div class="mt-1">
+                      <input type="url"
+                             name="pricing_url"
+                             id="pricing_url"
+                             required
+                             data-pricing-analysis-target="url"
+                             class="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                             placeholder="https://example.com/pricing">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Enter the URL of your pricing page to analyze</p>
+                  </div>
+                  <div class="flex justify-end">
+                    <button type="submit"
+                            data-pricing-analysis-target="submitButton"
+                            class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                      <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Analyze Pricing Page
+                    </button>
+                  </div>
+                </form>
+              </div>
+              {% endif %}
             </div>
           </div>
 

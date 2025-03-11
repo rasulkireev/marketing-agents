@@ -5,6 +5,7 @@ from ninja import NinjaAPI
 
 from core.api.auth import MultipleAuthSchema
 from core.api.schemas import (
+    AddPricingPageIn,
     GeneratedContentOut,
     GenerateTitleSuggestionOut,
     GenerateTitleSuggestionsIn,
@@ -13,8 +14,8 @@ from core.api.schemas import (
     ProjectScanOut,
     UpdateTitleScoreIn,
 )
-from core.choices import ContentType
-from core.models import BlogPostTitleSuggestion, Project
+from core.choices import ContentType, ProjectPageType
+from core.models import BlogPostTitleSuggestion, Project, ProjectPage
 from core.tasks import schedule_project_page_analysis
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -243,10 +244,29 @@ def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTit
         suggestion.user_score = data.score
         suggestion.save(update_fields=["user_score"])
 
-        logger.info("Title score updated", suggestion_id=suggestion_id, profile_id=profile.id, score=data.score)
+        logger.info(
+            "Title score updated",
+            suggestion_id=suggestion_id,
+            profile_id=profile.id,
+            score=data.score,
+        )
 
         return {"status": "success", "message": "Score updated successfully"}
 
     except Exception as e:
         logger.error("Failed to update title score", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id)
         return {"status": "error", "message": f"Failed to update score: {str(e)}"}
+
+
+@api.post("/add-pricing-page")
+def add_pricing_page(request: HttpRequest, data: AddPricingPageIn):
+    profile = request.auth
+    project = Project.objects.get(id=data.project_id, profile=profile)
+
+    project_page = ProjectPage.objects.create(project=project, url=data.url, type=ProjectPageType.PRICING)
+
+    project_page.get_page_content()
+    project_page.analyze_content()
+    project_page.create_new_pricing_strategy()
+
+    return {"status": "success", "message": "Pricing page added successfully"}

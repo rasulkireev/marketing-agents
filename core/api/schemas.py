@@ -58,3 +58,8 @@ class GeneratedContentOut(Schema):
 
 class UpdateTitleScoreIn(Schema):
     score: int
+
+
+class AddPricingPageIn(Schema):
+    project_id: int
+    url: str

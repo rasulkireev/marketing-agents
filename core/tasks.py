@@ -37,7 +37,7 @@ def analyze_project_page(project_id: int, link: str):
         page_analyzed = project_page.analyze_content()
 
     if project_page.type == ProjectPageType.PRICING and page_analyzed:
-        print("PRICING PAGE ANALYZED")
+        async_task(project_page.create_new_pricing_strategy)
 
     return f"Analyzed {link} for {project.name}"
 
@@ -45,12 +45,6 @@ def analyze_project_page(project_id: int, link: str):
 def schedule_project_page_analysis(project_id):
     project = Project.objects.get(id=project_id)
     project_links = project.get_a_list_of_links()
-
-    logger.info(
-        "[Schedule Project Pages Analysis] Got Project Links",
-        number_of_links=len(project_links),
-        links=project_links,
-    )
 
     logger.info(
         "[Schedule Project Page Analysis] Scheduling analysis for links",

@@ -7,7 +7,11 @@ from pydantic_ai import Agent, RunContext, capture_run_messages
 from core.base_models import BaseModel
 from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
 from core.model_utils import generate_random_key, get_html_content, get_markdown_content, run_agent_synchronously
-from core.prompts import GENERATE_CONTENT_SYSTEM_PROMPTS, TITLE_SUGGESTION_SYSTEM_PROMPTS
+from core.prompts import (
+    GENERATE_CONTENT_SYSTEM_PROMPTS,
+    PRICING_PAGE_STRATEGY_SYSTEM_PROMPT,
+    TITLE_SUGGESTION_SYSTEM_PROMPTS,
+)
 from core.schemas import (
     BlogPostContent,
     BlogPostGenerationContext,
@@ -204,10 +208,6 @@ class Project(BaseModel):
     @property
     def has_pricing_page(self):
         return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).exists()
-
-    @property
-    def pricing_page(self):
-        return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).latest("id")
 
     def get_page_content(self):
         """
@@ -610,7 +610,7 @@ class ProjectPage(BaseModel):
 
     # AI Content
     date_analyzed = models.DateTimeField(null=True, blank=True)
-    type = models.CharField(max_length=255, choices=ProjectPageType.choices, default=ProjectPageType.BLOG)
+    type = models.CharField(max_length=255, choices=ProjectPageType.choices, blank=True, null=True)
     type_ai_guess = models.CharField(max_length=255)
     summary = models.TextField(blank=True)
 
@@ -618,7 +618,7 @@ class ProjectPage(BaseModel):
         return f"{self.project.name}: {self.title}"
 
     class Meta:
-        unique_together = ("project", "url")
+        unique_together = ("project", "url", "type")
 
     @property
     def web_page_content(self):
@@ -701,7 +701,10 @@ class ProjectPage(BaseModel):
         )
 
         self.date_analyzed = timezone.now()
-        self.type = result.data.type
+
+        if self.type == "":
+            self.type = result.data.type
+
         self.type_ai_guess = result.data.type_ai_guess
         self.summary = result.data.summary
         self.save(
@@ -721,12 +724,12 @@ class ProjectPage(BaseModel):
 
         return True
 
-    def create_new_pricing_strategy(self):
+    def create_new_pricing_strategy(self, strategy_name: str = "Alex Hormozi"):
         agent = Agent(
             "google-gla:gemini-2.0-flash",
             result_type=PricingPageStrategySuggestion,
             deps_type=PricingPageStrategyContext,
-            system_prompt="You are an expert pricing strategist. Based on the web page content provided, create a new pricing strategy.",
+            system_prompt=PRICING_PAGE_STRATEGY_SYSTEM_PROMPT[strategy_name],
             retries=2,
         )
 
@@ -744,6 +747,15 @@ class ProjectPage(BaseModel):
                 - Target Audience: {self.project.target_audience_summary}
                 - Key Features: {self.project.key_features}
                 - Pain Points: {self.project.pain_points}
+            """
+
+        @agent.system_prompt
+        def actionable_advice() -> str:
+            return """
+                IMPORTANT:
+                - Provide actionable advice that can be implemented immediately.
+                - Avoid vague suggestions that are not actionable.
+                - Focus on the specific needs and challenges of the target audience.
             """
 
         result = run_agent_synchronously(
@@ -764,6 +776,7 @@ class ProjectPage(BaseModel):
         return PricingPageUpdatesSuggestion.objects.create(
             project=self.project,
             project_page=self,
+            strategy_name=strategy_name,
             current_pricing_strategy=result.data.current_pricing_strategy,
             suggested_pricing_strategy=result.data.suggested_pricing_strategy,
         )
@@ -777,6 +790,7 @@ class PricingPageUpdatesSuggestion(BaseModel):
         ProjectPage, null=True, blank=True, on_delete=models.CASCADE, related_name="pricing_page_updates"
     )
 
+    strategy_name = models.CharField(max_length=255, blank=True, null=True)
     user_prompt = models.TextField(blank=True)
     current_pricing_strategy = models.TextField()
     suggested_pricing_strategy = models.TextField()

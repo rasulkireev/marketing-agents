@@ -187,6 +187,7 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["has_content_access"] = self.request.user.profile.has_active_subscription
+        context["has_pricing_page"] = self.object.has_pricing_page
         context["languages"] = Language.choices
         return context
 

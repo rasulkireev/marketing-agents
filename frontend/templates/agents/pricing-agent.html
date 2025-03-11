@@ -5,8 +5,6 @@
 
 {% block content %}
 <div class="mx-auto mt-10 max-w-4xl">
-  {% if pricing_page %}
-
     <!-- Pricing Suggestions Section -->
     {% if pricing_suggestions %}
       <div class="mt-8 space-y-6" data-controller="pricing-suggestions">
@@ -21,7 +19,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h4 class="text-lg font-medium text-gray-900">Pricing Strategy #{{ forloop.counter }}</h4>
+                <h4 class="text-lg font-medium text-gray-900">Pricing Strategy {% if suggestion.strategy_name %}{{ suggestion.strategy_name }}{% endif %} #{{ forloop.counter }}</h4>
               </div>
               <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -49,48 +47,5 @@
         {% endfor %}
       </div>
     {% endif %}
-
-  {% else %}
-      <!-- URL Input Form -->
-      <div
-      data-controller="pricing-scan"
-      class="p-6 bg-gradient-to-r from-pink-50 to-white rounded-lg border border-pink-100"
-    >
-      <div class="mb-6 text-center">
-        <h2 class="mb-2 text-2xl font-bold text-gray-900">Analyze Your Pricing Page</h2>
-        <p class="text-gray-600">Enter your pricing page URL below and let our AI analyze your pricing strategy.</p>
-      </div>
-
-      <form
-        data-action="submit->pricing-scan#handleSubmit"
-        class="mx-auto max-w-md"
-      >
-        {% csrf_token %}
-        <div class="flex gap-x-4">
-          {% render_field form.url
-            class="flex-auto px-3.5 py-2.5 min-w-0 text-gray-900 rounded-lg border-0 ring-2 ring-inset ring-pink-200 shadow-md transition-colors duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-500 hover:ring-pink-300 sm:text-sm sm:leading-6"
-            placeholder="Enter your pricing page URL"
-            data-pricing-scan-target="input"
-          %}
-          <button
-            type="submit"
-            class="flex-none px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:from-pink-600 hover:to-purple-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
-          >
-            <span>Analyze</span>
-            <span class="ml-1">✨</span>
-          </button>
-        </div>
-      </form>
-
-      <!-- Loading State (hidden by default) -->
-      <div
-        data-pricing-scan-target="loading"
-        class="hidden mt-8 text-center"
-      >
-        <div class="inline-block w-8 h-8 rounded-full border-4 border-pink-200 animate-spin border-t-pink-600"></div>
-        <p class="mt-2 text-sm text-gray-600">Analyzing your pricing page...</p>
-      </div>
-    </div>
-  {% endif %}
 </div>
 {% endblock content %}
