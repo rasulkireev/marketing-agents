@@ -223,3 +223,12 @@ class PricingAgentView(LoginRequiredMixin, DetailView):
             context["pricing_suggestions"] = None
 
         return context
+
+
+class PageRoastView(TemplateView):
+    template_name = "tools/page-roast.html"
+    context_object_name = "page_roast"
+
+
+class ToolsView(TemplateView):
+    template_name = "pages/tools.html"

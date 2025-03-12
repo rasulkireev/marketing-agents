@@ -94,7 +94,9 @@
                       <a href="{% url 'blog_posts' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
                         Blog
                       </a>
-
+                      <a href="{% url 'tools' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
+                        Tools
+                      </a>
                       <a href="{% url 'pricing' %}" class="px-3 py-2.5 -mx-3 text-base font-semibold leading-7 text-center text-gray-900 rounded-lg hover:bg-gray-50">
                         Pricing
                       </a>
@@ -178,11 +180,12 @@
             <a href="{% url 'blog_posts' %}" class="text-base font-semibold leading-6 text-gray-900 hover:text-gray-700">
               Blog
             </a>
-
+            <a href="{% url 'tools' %}" class="text-base font-semibold leading-6 text-gray-900 hover:text-gray-700">
+              Tools
+            </a>
             <a href="{% url 'pricing' %}" class="text-base font-semibold leading-6 text-gray-900 hover:text-gray-700">
               Pricing
             </a>
-
             {% if user.is_authenticated %}
             <!-- Profile dropdown -->
             <div data-controller="dropdown" class="relative ml-3">

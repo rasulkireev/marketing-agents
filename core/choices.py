@@ -91,3 +91,8 @@ class ProfileStates(models.TextChoices):
     CANCELLED = "cancelled"
     CHURNED = "churned"
     ACCOUNT_DELETED = "account_deleted"
+
+
+class PageRoaster(models.TextChoices):
+    SAM_PARR = "Sam Parr", "Sam Parr"
+    ALEX_HORMOZI = "Alex Hormozi", "Alex Hormozi"

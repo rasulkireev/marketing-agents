@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load webpack_loader static %}
+
+{% block meta %}
+<title>Marketing Agents - Pricing</title>
+<meta name="description" content="How much to use Marketing Agents?" />
+<meta name="keywords" content="" />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://{{ request.get_host }}{% url 'pricing' %}"/>
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Marketing Agents - Pricing" />
+<meta property="og:url" content="https://{{ request.get_host }}{% url 'pricing' %}"/>
+<meta property="og:description" content="How much to use Marketing Agents?" />
+<meta property="og:image" content="https://osig.app/g?site=x&style=logo&font=markerfelt&title=Marketing Agents - Pricing&subtitle=How much to use Marketing Agents?&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+<meta property="og:locale" content="en_US" />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:creator" content="@rasulkireev" />
+<meta name="twitter:site" content="@rasulkireev" />
+<meta name="twitter:title" content="Marketing Agents - Pricing" />
+<meta name="twitter:description" content="How much to use Marketing Agents?" />
+<meta name="twitter:image" content="https://osig.app/g?site=x&style=logo&font=markerfelt&title=Marketing Agents - Pricing&subtitle=How much to use Marketing Agents?&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+{% endblock meta %}
+
+{% block content %}
+<div class="container mx-auto">
+  <a href="{% url 'sam_parr_page_roast' %}" class="text-blue-500">Sam Parr Page Roast</a>
+</div>
+{% endblock content %}
+
+{% block schema %}
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Marketing Agents - Pricing",
+    "description": "How much to use Marketing Agents?",
+    "thumbnailUrl": "https://osig.app/g?site=x&style=logo&font=markerfelt&title=Marketing Agents - Pricing&subtitle=How much to use Marketing Agents?&image_url=https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}",
+    "url": "https://{{ request.get_host }}{% url 'pricing' %}",
+    "author": {
+      "@type": "Person",
+      "givenName": "Rasul",
+      "familyName": "Kireev",
+      "url": "https://rasulkireev.com/"
+    }
+  }
+  </script>
+{% endblock schema %}

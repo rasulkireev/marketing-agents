@@ -26,4 +26,6 @@ urlpatterns = [
     ),
     path("create-customer-portal/", views.create_customer_portal_session, name="create_customer_portal_session"),
     # Add these with your other URLs
+    path("tools/", views.ToolsView.as_view(), name="tools"),
+    path("sam-parr-roasts-your-page", views.PageRoastView.as_view(), name="sam_parr_page_roast"),
 ]

@@ -5,7 +5,16 @@ from django.utils import timezone
 from pydantic_ai import Agent, RunContext, capture_run_messages
 
 from core.base_models import BaseModel
-from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
+from core.choices import (
+    Category,
+    ContentType,
+    Language,
+    PageRoaster,
+    ProfileStates,
+    ProjectPageType,
+    ProjectStyle,
+    ProjectType,
+)
 from core.model_utils import generate_random_key, get_html_content, get_markdown_content, run_agent_synchronously
 from core.prompts import (
     GENERATE_CONTENT_SYSTEM_PROMPTS,
@@ -813,3 +822,20 @@ class PricingPageUpdatesSuggestion(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}"
+
+
+class PageRoast(BaseModel):
+    roaster = models.CharField(max_length=255, choices=PageRoaster.choices, default=PageRoaster.SAM_PARR)
+
+    url = models.URLField(max_length=200)
+
+    date_scraped = models.DateTimeField(null=True, blank=True)
+    title = models.CharField(max_length=500, blank=True, default="")
+    description = models.TextField(blank=True, default="")
+    html_content = models.TextField(blank=True, default="")
+    markdown_content = models.TextField(blank=True, default="")
+
+    roasting_content = models.TextField(blank=True, default="")
+
+    def __str__(self):
+        return f"{self.url} - {self.roaster}"
