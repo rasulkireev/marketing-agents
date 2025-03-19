@@ -331,6 +331,7 @@ class Project(BaseModel):
                 - Target Audience: {project.target_audience_summary}
                 - Pain Points: {project.pain_points}
                 - Product Usage: {project.product_usage}
+                - Competitors: {project.competitors}
             """
 
         @agent.system_prompt
