@@ -537,12 +537,6 @@ class BlogPostTitleSuggestion(BaseModel):
         @agent.system_prompt
         def add_project_pages(ctx: RunContext[BlogPostGenerationContext]) -> str:
             pages = ctx.deps.project_pages
-            logger.info(
-                "Add project pages to the content",
-                project_name=ctx.deps.project_details.name,
-                project_id=ctx.deps.project_details.id,
-                pages=pages,
-            )
             if pages:
                 instruction = """
                   Below is the list of page this project has. Can you insert them into
@@ -578,6 +572,13 @@ class BlogPostTitleSuggestion(BaseModel):
             return f"""
                 IMPORTANT: Generate the content in {ctx.deps.project_details.language} language.
                 Make sure the content is grammatically correct and culturally appropriate for {ctx.deps.project_details.language}-speaking audiences.
+            """
+
+        @agent.system_prompt
+        def valid_markdown_format() -> str:
+            return """
+                IMPORTANT: Generate the content in valid markdown format.
+                Make sure the content is formatted correctly with headings, paragraphs, and lists and links.
             """
 
         project_pages = [
