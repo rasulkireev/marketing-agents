@@ -176,6 +176,7 @@ class Project(BaseModel):
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
+    competitors = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
@@ -195,6 +196,7 @@ class Project(BaseModel):
             product_usage=self.product_usage,
             links=self.links,
             language=self.language,
+            competitors=self.competitors,
         )
 
     @property
@@ -294,6 +296,7 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
+        self.competitors = result.data.competitors
         self.date_analyzed = timezone.now()
         self.save()
 
