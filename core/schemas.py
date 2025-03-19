@@ -118,11 +118,19 @@ class TitleSuggestions(BaseModel):
     titles: list[TitleSuggestion] = Field(description="Collection of title suggestions with metadata")
 
 
+class ProjectPageContext(BaseModel):
+    url: str = Field(description="URL of the project page")
+    title: str = Field(description="Title of the project page")
+    description: str = Field(description="Description of the project page")
+    summary: str = Field(description="Summary of the project page")
+
+
 class BlogPostGenerationContext(BaseModel):
     """Context for generating blog post content."""
 
     project_details: ProjectDetails
     title_suggestion: TitleSuggestion
+    project_pages: List[ProjectPageContext] = []
     content_type: str = Field(description="Type of content to generate (SEO or SHARING)")
 
 
