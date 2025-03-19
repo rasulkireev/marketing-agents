@@ -18,6 +18,7 @@ from core.schemas import (
     PricingPageStrategyContext,
     PricingPageStrategySuggestion,
     ProjectDetails,
+    ProjectPageContext,
     ProjectPageDetails,
     TitleSuggestion,
     TitleSuggestionContext,
@@ -534,6 +535,27 @@ class BlogPostTitleSuggestion(BaseModel):
             """
 
         @agent.system_prompt
+        def add_project_pages(ctx: RunContext[BlogPostGenerationContext]) -> str:
+            pages = ctx.deps.project_pages
+            if pages:
+                instruction = """
+                  Below is the list of page this project has. Can you insert them into
+                  the content you are about to generate where it makes sense.\n
+                """
+                for page in pages:
+                    instruction += f"""
+                      --------
+                      - Title: {page.title}
+                      - URL: {page.url}
+                      - Description: {page.description}
+                      - Summary: {page.summary}
+                      --------
+                    """
+                return instruction
+            else:
+                return ""
+
+        @agent.system_prompt
         def add_title_details(ctx: RunContext[BlogPostGenerationContext]) -> str:
             title = ctx.deps.title_suggestion
             return f"""
@@ -552,9 +574,27 @@ class BlogPostTitleSuggestion(BaseModel):
                 Make sure the content is grammatically correct and culturally appropriate for {ctx.deps.project_details.language}-speaking audiences.
             """
 
+        @agent.system_prompt
+        def valid_markdown_format() -> str:
+            return """
+                IMPORTANT: Generate the content in valid markdown format.
+                Make sure the content is formatted correctly with headings, paragraphs, and lists and links.
+            """
+
+        project_pages = [
+            ProjectPageContext(
+                url=page.url,
+                title=page.title,
+                description=page.description,
+                summary=page.summary,
+            )
+            for page in self.project.project_pages.all()
+        ]
+
         deps = BlogPostGenerationContext(
             project_details=self.project.project_details,
             title_suggestion=self.title_suggestion,
+            project_pages=project_pages,
             content_type=content_type,
         )
 
