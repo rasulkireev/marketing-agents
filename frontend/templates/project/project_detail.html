@@ -253,6 +253,21 @@
                       placeholder="Explain how your product is used..."
                     >{{ project.product_usage }}</textarea>
                   </div>
+
+                  <div class="space-y-2">
+                    <label for="competitors" class="block text-sm font-medium text-gray-700">
+                      Competitors
+                      <span class="ml-1 text-xs text-gray-500">(List of competitors)</span>
+                    </label>
+                    <textarea
+                      id="competitors"
+                      name="competitors"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="List of competitors..."
+                    >{{ project.competitors }}</textarea>
+                  </div>
                 </div>
               </div>
 

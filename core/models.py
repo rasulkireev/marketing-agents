@@ -27,6 +27,7 @@ from core.schemas import (
     PricingPageStrategyContext,
     PricingPageStrategySuggestion,
     ProjectDetails,
+    ProjectPageContext,
     ProjectPageDetails,
     TitleSuggestion,
     TitleSuggestionContext,
@@ -185,6 +186,7 @@ class Project(BaseModel):
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
+    competitors = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
@@ -204,6 +206,7 @@ class Project(BaseModel):
             product_usage=self.product_usage,
             links=self.links,
             language=self.language,
+            competitors=self.competitors,
         )
 
     @property
@@ -303,6 +306,7 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
+        self.competitors = result.data.competitors
         self.date_analyzed = timezone.now()
         self.save()
 
@@ -337,6 +341,7 @@ class Project(BaseModel):
                 - Target Audience: {project.target_audience_summary}
                 - Pain Points: {project.pain_points}
                 - Product Usage: {project.product_usage}
+                - Competitors: {project.competitors}
             """
 
         @agent.system_prompt
@@ -539,6 +544,27 @@ class BlogPostTitleSuggestion(BaseModel):
             """
 
         @agent.system_prompt
+        def add_project_pages(ctx: RunContext[BlogPostGenerationContext]) -> str:
+            pages = ctx.deps.project_pages
+            if pages:
+                instruction = """
+                  Below is the list of page this project has. Can you insert them into
+                  the content you are about to generate where it makes sense.\n
+                """
+                for page in pages:
+                    instruction += f"""
+                      --------
+                      - Title: {page.title}
+                      - URL: {page.url}
+                      - Description: {page.description}
+                      - Summary: {page.summary}
+                      --------
+                    """
+                return instruction
+            else:
+                return ""
+
+        @agent.system_prompt
         def add_title_details(ctx: RunContext[BlogPostGenerationContext]) -> str:
             title = ctx.deps.title_suggestion
             return f"""
@@ -557,9 +583,27 @@ class BlogPostTitleSuggestion(BaseModel):
                 Make sure the content is grammatically correct and culturally appropriate for {ctx.deps.project_details.language}-speaking audiences.
             """
 
+        @agent.system_prompt
+        def valid_markdown_format() -> str:
+            return """
+                IMPORTANT: Generate the content in valid markdown format.
+                Make sure the content is formatted correctly with headings, paragraphs, and lists and links.
+            """
+
+        project_pages = [
+            ProjectPageContext(
+                url=page.url,
+                title=page.title,
+                description=page.description,
+                summary=page.summary,
+            )
+            for page in self.project.project_pages.all()
+        ]
+
         deps = BlogPostGenerationContext(
             project_details=self.project.project_details,
             title_suggestion=self.title_suggestion,
+            project_pages=project_pages,
             content_type=content_type,
         )
 
