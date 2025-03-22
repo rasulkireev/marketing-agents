@@ -3,6 +3,8 @@ from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
 from pydantic_ai import Agent, RunContext, capture_run_messages
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from core.base_models import BaseModel
 from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
@@ -15,6 +17,7 @@ from core.prompts import (
 from core.schemas import (
     BlogPostContent,
     BlogPostGenerationContext,
+    CompetitorDetails,
     PricingPageStrategyContext,
     PricingPageStrategySuggestion,
     ProjectDetails,
@@ -25,6 +28,7 @@ from core.schemas import (
     TitleSuggestions,
     WebPageContent,
 )
+from seo_blog_bot import settings
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -303,6 +307,8 @@ class Project(BaseModel):
 
         logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
 
+        self.get_and_create_competitors()
+
         return True
 
     def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
@@ -457,6 +463,55 @@ class Project(BaseModel):
             "Please extract all the links from the text provided.",
             deps=self.links,
         )
+
+        return result.data
+
+    def get_and_create_competitors(self):
+        model = OpenAIModel(
+            "sonar",
+            provider=OpenAIProvider(
+                base_url="https://api.perplexity.ai",
+                api_key=settings.PERPLEXITY_API_KEY,
+            ),
+        )
+        agent = Agent(
+            model,
+            deps_type=ProjectDetails,
+            result_type=list[CompetitorDetails],
+            system_prompt="You are a helpful assistant that helps me find competitors for my project.",
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_project_details(ctx: RunContext[ProjectDetails]) -> str:
+            project = ctx.deps
+            return f"""I'm working on a project which has the following attributes:
+                Summary:
+                {project.summary}
+
+                Key Features:
+                {project.key_features}
+
+                Target Audience:
+                {project.target_audience_summary}
+
+                Pain Points Addressed:
+                {project.pain_points}
+            """
+
+        result = run_agent_synchronously(
+            agent,
+            "Give me a list of SaaS businesses that might be considered my competition.",
+            deps=self.project_details,
+        )
+
+        for competitor in result.data:
+            Competitor.objects.create(
+                project=self,
+                name=competitor.name,
+                url=competitor.url,
+                description=competitor.description,
+            )
 
         return result.data
 
@@ -857,3 +912,13 @@ class PricingPageUpdatesSuggestion(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}"
+
+
+class Competitor(BaseModel):
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitors")
+    name = models.CharField(max_length=255)
+    url = models.URLField(max_length=200)
+    description = models.TextField()
+
+    def __str__(self):
+        return f"{self.name}"

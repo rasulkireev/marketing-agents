@@ -153,3 +153,9 @@ class PricingPageStrategyContext(BaseModel):
 class PricingPageStrategySuggestion(BaseModel):
     current_pricing_strategy: str = Field(description="Current pricing strategy")
     suggested_pricing_strategy: str = Field(description="Suggested pricing strategy")
+
+
+class CompetitorDetails(BaseModel):
+    name: str = Field(description="Name of the competitor")
+    url: str = Field(description="URL of the competitor")
+    description: str = Field(description="Description of the competitor")
