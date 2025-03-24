@@ -224,7 +224,6 @@ def update_project(request: HttpRequest, project_id: int):
     project.pain_points = request.POST.get("pain_points", "")
     project.product_usage = request.POST.get("product_usage", "")
     project.links = request.POST.get("links", "")
-    project.competitors = request.POST.get("competitors", "")
     project.blog_theme = request.POST.get("blog_theme", "")
     project.founders = request.POST.get("founders", "")
     project.language = request.POST.get("language", "")

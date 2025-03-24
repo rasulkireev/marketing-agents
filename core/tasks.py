@@ -64,3 +64,12 @@ def schedule_project_page_analysis(project_id):
         count += 1
 
     return f"Scheduled analysis for {count} links"
+
+
+def schedule_project_competitor_analysis(project_id):
+    project = Project.objects.get(id=project_id)
+    competitors = project.find_competitors()
+    if competitors:
+        project.get_and_save_list_of_competitors()
+
+    return f"Saved Competitors for {project.name}"

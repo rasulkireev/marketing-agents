@@ -39,7 +39,6 @@ class ProjectDetails(BaseModel):
                       to the full url like so. https://{page-url}/pricing"""
     )
     language: str = Field(description="Language that the site uses.")
-    competitors: str = Field(description="List of competitors in markdown list format: name, url")
 
     @field_validator("type")
     @classmethod

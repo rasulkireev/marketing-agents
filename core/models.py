@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
-from pydantic_ai import Agent, RunContext, capture_run_messages
+from django_q.tasks import async_task
+from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
@@ -181,7 +182,7 @@ class Project(BaseModel):
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
-    competitors = models.TextField(blank=True)
+    competitors_list = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
@@ -201,7 +202,6 @@ class Project(BaseModel):
             product_usage=self.product_usage,
             links=self.links,
             language=self.language,
-            competitors=self.competitors,
         )
 
     @property
@@ -287,6 +287,8 @@ class Project(BaseModel):
                 markdown_content=self.markdown_content,
                 html_content=self.html_content,
             ),
+            function_name="analyze_content",
+            model_name="Project",
         )
 
         logger.info("[Analyze Content] Agent ran successfully", data=result.data)
@@ -301,13 +303,12 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
-        self.competitors = result.data.competitors
         self.date_analyzed = timezone.now()
         self.save()
 
         logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
 
-        self.get_and_create_competitors()
+        async_task("core.tasks.schedule_project_competitor_analysis", self.id)
 
         return True
 
@@ -338,7 +339,6 @@ class Project(BaseModel):
                 - Target Audience: {project.target_audience_summary}
                 - Pain Points: {project.pain_points}
                 - Product Usage: {project.product_usage}
-                - Competitors: {project.competitors}
             """
 
         @agent.system_prompt
@@ -413,7 +413,11 @@ class Project(BaseModel):
         )
 
         result = run_agent_synchronously(
-            agent, "Please generate blog post title suggestions based on the project details.", deps=deps
+            agent,
+            "Please generate blog post title suggestions based on the project details.",
+            deps=deps,
+            function_name="generate_title_suggestions",
+            model_name="Project",
         )
 
         logger.info(
@@ -451,22 +455,17 @@ class Project(BaseModel):
         def add_links(ctx: RunContext[list[str]]) -> str:
             return f"Links: {ctx.deps}"
 
-        logger.info(
-            "[Get a List of Links] Running agent",
-            project_name=self.name,
-            project_id=self.id,
-            links=self.links,
-        )
-
         result = run_agent_synchronously(
             agent,
             "Please extract all the links from the text provided.",
             deps=self.links,
+            function_name="get_a_list_of_links",
+            model_name="Project",
         )
 
         return result.data
 
-    def get_and_create_competitors(self):
+    def find_competitors(self):
         model = OpenAIModel(
             "sonar",
             provider=OpenAIProvider(
@@ -477,7 +476,7 @@ class Project(BaseModel):
         agent = Agent(
             model,
             deps_type=ProjectDetails,
-            result_type=list[CompetitorDetails],
+            result_type=str,
             system_prompt="You are a helpful assistant that helps me find competitors for my project.",
             retries=2,
         )
@@ -499,19 +498,59 @@ class Project(BaseModel):
                 {project.pain_points}
             """
 
+        @agent.system_prompt
+        def required_data() -> str:
+            return "Make sure that each competitor has a name, url, and description."
+
+        @agent.system_prompt
+        def number_of_competitors() -> str:
+            return "Give me a list of at least 15 competitors."
+
         result = run_agent_synchronously(
             agent,
-            "Give me a list of SaaS businesses that might be considered my competition.",
+            "Give me a list of sites that might be considered my competition.",
             deps=self.project_details,
+            function_name="find_competitors",
+            model_name="Project",
         )
 
+        self.competitors_list = result.data
+        self.save(update_fields=["competitors_list"])
+
+        return result.data
+
+    def get_and_save_list_of_competitors(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=list[CompetitorDetails],
+            system_prompt="You are an expert data extractor. Extract all the data from the text provided.",
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_competitors(ctx: RunContext[list[CompetitorDetails]]) -> str:
+            return f"Here are the competitors: {ctx.deps}"
+
+        result = run_agent_synchronously(
+            agent,
+            "Please extract all the competitors from the text provided.",
+            deps=self.competitors_list,
+            function_name="get_and_save_list_of_competitors",
+            model_name="Project",
+        )
+
+        competitors = []
         for competitor in result.data:
-            Competitor.objects.create(
-                project=self,
-                name=competitor.name,
-                url=competitor.url,
-                description=competitor.description,
+            competitors.append(
+                Competitor(
+                    project=self,
+                    name=competitor.name,
+                    url=competitor.url,
+                    description=competitor.description,
+                )
             )
+
+        Competitor.objects.bulk_create(competitors)
 
         return result.data
 
@@ -653,19 +692,13 @@ class BlogPostTitleSuggestion(BaseModel):
             content_type=content_type,
         )
 
-        with capture_run_messages() as messages:
-            try:
-                result = run_agent_synchronously(
-                    agent, "Please generate an article based on the project details and title suggestions.", deps=deps
-                )
-            except Exception as e:
-                logger.error(
-                    "[Generate Content] Failed generation",
-                    messages=messages,
-                    exc_info=True,
-                    error=str(e),
-                )
-                raise
+        result = run_agent_synchronously(
+            agent,
+            "Please generate an article based on the project details and title suggestions.",
+            deps=deps,
+            function_name="generate_content",
+            model_name="BlogPostTitleSuggestion",
+        )
 
         return GeneratedBlogPost.objects.create(
             project=self.project,
@@ -797,6 +830,8 @@ class ProjectPage(BaseModel):
                 markdown_content=self.markdown_content,
                 html_content=self.html_content,
             ),
+            function_name="analyze_content",
+            model_name="ProjectPage",
         )
 
         self.date_analyzed = timezone.now()
@@ -880,6 +915,8 @@ class ProjectPage(BaseModel):
                 project_details=self.project.project_details,
                 web_page_content=self.web_page_content,
             ),
+            function_name="create_new_pricing_strategy",
+            model_name="ProjectPage",
         )
 
         logger.info(
