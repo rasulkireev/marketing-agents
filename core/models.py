@@ -2,7 +2,6 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
-from django_q.tasks import async_task
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
@@ -18,6 +17,8 @@ from core.prompts import (
 from core.schemas import (
     BlogPostContent,
     BlogPostGenerationContext,
+    CompetitorAnalysis,
+    CompetitorAnalysisContext,
     CompetitorDetails,
     PricingPageStrategyContext,
     PricingPageStrategySuggestion,
@@ -243,12 +244,6 @@ class Project(BaseModel):
             ]
         )
 
-        logger.info(
-            "[Page Content] Successfully fetched content",
-            project_name=self.name,
-            project_url=self.url,
-        )
-
         return True
 
     def analyze_content(self):
@@ -291,8 +286,6 @@ class Project(BaseModel):
             model_name="Project",
         )
 
-        logger.info("[Analyze Content] Agent ran successfully", data=result.data)
-
         self.name = result.data.name
         self.type = result.data.type
         self.summary = result.data.summary
@@ -303,12 +296,9 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
+        self.language = result.data.language
         self.date_analyzed = timezone.now()
         self.save()
-
-        logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
-
-        async_task("core.tasks.schedule_project_competitor_analysis", self.id)
 
         return True
 
@@ -420,13 +410,6 @@ class Project(BaseModel):
             model_name="Project",
         )
 
-        logger.info(
-            "[Generate SEO Title Suggestions] Successfully generated titles",
-            project_name=self.name,
-            project_url=self.url,
-            num_titles=num_titles,
-        )
-
         with transaction.atomic():
             suggestions = []
             for title in result.data.titles:
@@ -485,6 +468,9 @@ class Project(BaseModel):
         def add_project_details(ctx: RunContext[ProjectDetails]) -> str:
             project = ctx.deps
             return f"""I'm working on a project which has the following attributes:
+                Name:
+                {project.name}
+
                 Summary:
                 {project.summary}
 
@@ -496,6 +482,8 @@ class Project(BaseModel):
 
                 Pain Points Addressed:
                 {project.pain_points}
+
+                Language: {project.language}
             """
 
         @agent.system_prompt
@@ -505,6 +493,12 @@ class Project(BaseModel):
         @agent.system_prompt
         def number_of_competitors() -> str:
             return "Give me a list of at least 15 competitors."
+
+        @agent.system_prompt
+        def language_specification() -> str:
+            return (
+                f"IMPORTANT: Be mindful that competitors are likely to be in {self.project_details.language} language."
+            )
 
         result = run_agent_synchronously(
             agent,
@@ -550,9 +544,9 @@ class Project(BaseModel):
                 )
             )
 
-        Competitor.objects.bulk_create(competitors)
+        competitors = Competitor.objects.bulk_create(competitors)
 
-        return result.data
+        return competitors
 
 
 class BlogPostTitleSuggestion(BaseModel):
@@ -787,12 +781,6 @@ class ProjectPage(BaseModel):
             ]
         )
 
-        logger.info(
-            "[Page Content] Successfully fetched content",
-            project_name=self.project.name,
-            project_url=self.url,
-        )
-
         return True
 
     def analyze_content(self):
@@ -848,12 +836,6 @@ class ProjectPage(BaseModel):
                 "type_ai_guess",
                 "summary",
             ]
-        )
-
-        logger.info(
-            "[Analyze Content] Successfully analyzed content",
-            project_name=self.title,
-            project_url=self.url,
         )
 
         return True
@@ -919,12 +901,6 @@ class ProjectPage(BaseModel):
             model_name="ProjectPage",
         )
 
-        logger.info(
-            "[Create New Pricing Strategy] Successfully generated pricing strategy",
-            project_name=self.project.name,
-            project_url=self.url,
-        )
-
         return PricingPageUpdatesSuggestion.objects.create(
             project=self.project,
             project_page=self,
@@ -957,5 +933,148 @@ class Competitor(BaseModel):
     url = models.URLField(max_length=200)
     description = models.TextField()
 
+    date_scraped = models.DateTimeField(null=True, blank=True)
+    homepage_title = models.CharField(max_length=500, blank=True, default="")
+    homepage_description = models.TextField(blank=True, default="")
+    markdown_content = models.TextField(blank=True)
+    summary = models.TextField(blank=True)
+
+    date_analyzed = models.DateTimeField(null=True, blank=True)
+    # how does this competitor compare to the project?
+    competitor_analysis = models.TextField(blank=True)
+    key_differences = models.TextField(blank=True)
+    strengths = models.TextField(blank=True)
+    weaknesses = models.TextField(blank=True)
+    opportunities = models.TextField(blank=True)
+    threats = models.TextField(blank=True)
+    key_features = models.TextField(blank=True)
+    key_benefits = models.TextField(blank=True)
+    key_drawbacks = models.TextField(blank=True)
+    links = models.JSONField(default=list, blank=True, null=True)
+
     def __str__(self):
         return f"{self.name}"
+
+    @property
+    def competitor_details(self):
+        return CompetitorDetails(
+            name=self.name,
+            url=self.url,
+            description=self.description,
+        )
+
+    def get_page_content(self):
+        """
+        Fetch page content using Jina Reader API and update the project.
+        Returns the content if successful, raises ValueError otherwise.
+        """
+        homepage_title, homepage_description, markdown_content = get_markdown_content(self.url)
+
+        if not homepage_title or not homepage_description or not markdown_content:
+            return False
+
+        self.date_scraped = timezone.now()
+        self.homepage_title = homepage_title
+        self.homepage_description = homepage_description
+        self.markdown_content = markdown_content
+
+        self.save(
+            update_fields=[
+                "date_scraped",
+                "homepage_title",
+                "homepage_description",
+                "markdown_content",
+            ]
+        )
+
+        return True
+
+    def analyze_competitor(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=CompetitorAnalysis,
+            deps_type=CompetitorAnalysisContext,
+            system_prompt=(
+                "You are an expert marketer. Based on the competitor details and homepage content provided, "
+                "extract and infer the requested information. Make reasonable inferences based "
+                "on available content, context, and industry knowledge."
+            ),
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_todays_date() -> str:
+            return f"Today's Date: {timezone.now().strftime('%Y-%m-%d')}"
+
+        @agent.system_prompt
+        def my_project_details(ctx: RunContext[CompetitorAnalysisContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                Project Details:
+                - Project Name: {project.name}
+                - Project Type: {project.type}
+                - Project Summary: {project.summary}
+                - Blog Theme: {project.blog_theme}
+                - Founders: {project.founders}
+                - Key Features: {project.key_features}
+                - Target Audience: {project.target_audience_summary}
+                - Pain Points: {project.pain_points}
+                - Product Usage: {project.product_usage}
+            """
+
+        @agent.system_prompt
+        def competitor_details(ctx: RunContext[CompetitorAnalysisContext]) -> str:
+            competitor = ctx.deps.competitor_details
+            return f"""
+                Competitor Details:
+                - Competitor Name: {competitor.name}
+                - Competitor URL: {competitor.url}
+                - Competitor Description: {competitor.description}
+                - Competitor Homepage Content: {ctx.deps.competitor_homepage_content}
+            """
+
+        deps = CompetitorAnalysisContext(
+            project_details=self.project.project_details,
+            competitor_details=self.competitor_details,
+            competitor_homepage_content=self.markdown_content,
+        )
+        result = run_agent_synchronously(
+            agent,
+            "Please analyze this competitor and extract the key information.",
+            deps=deps,
+            function_name="analyze_competitor",
+            model_name="Competitor",
+        )
+
+        self.competitor_analysis = result.data.competitor_analysis
+        self.key_differences = result.data.key_differences
+        self.strengths = result.data.strengths
+        self.summary = result.data.summary
+        self.weaknesses = result.data.weaknesses
+        self.opportunities = result.data.opportunities
+        self.threats = result.data.threats
+        self.key_features = result.data.key_features
+        self.key_benefits = result.data.key_benefits
+        self.key_drawbacks = result.data.key_drawbacks
+        self.links = result.data.links
+        self.date_analyzed = timezone.now()
+        self.save()
+
+        return True
+
+
+class CompetitorComparisonBlogPost(BaseModel):
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitor_comparison_blog_posts"
+    )
+    competitor = models.ForeignKey(
+        Competitor, null=True, blank=True, on_delete=models.CASCADE, related_name="competitor_comparison_blog_posts"
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    slug = models.SlugField(max_length=250)
+    content = models.TextField()
+
+    def __str__(self):
+        return f"{self.project.name}: {self.title}"

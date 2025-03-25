@@ -15,7 +15,7 @@ from djstripe import models as djstripe_models
 
 from core.choices import Language, ProfileStates, ProjectPageType
 from core.forms import ProfileUpdateForm, ProjectScanForm
-from core.models import BlogPost, PricingPageUpdatesSuggestion, Profile, Project, ProjectPage
+from core.models import BlogPost, Competitor, PricingPageUpdatesSuggestion, Profile, Project, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -221,5 +221,24 @@ class PricingAgentView(LoginRequiredMixin, DetailView):
             context["pricing_suggestions"] = pricing_suggestions
         else:
             context["pricing_suggestions"] = None
+
+        return context
+
+
+class CompetitorAnalysisAgentView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "agents/competitor-analysis-agent.html"
+    context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        competitors = Competitor.objects.filter(project=self.object)
+
+        context = super().get_context_data(**kwargs)
+        context["has_pro_subscription"] = self.request.user.profile.has_product_or_subscription
+
+        if competitors.exists():
+            context["competitors"] = competitors
+        else:
+            context["competitors"] = None
 
         return context

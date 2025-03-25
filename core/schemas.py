@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-from core.choices import ProjectPageType, ProjectType
+from core.choices import Language, ProjectPageType, ProjectType
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -38,7 +38,12 @@ class ProjectDetails(BaseModel):
                       Please make sure the urls are full. If the link is "/pricing", please complete it
                       to the full url like so. https://{page-url}/pricing"""
     )
-    language: str = Field(description="Language that the site uses.")
+    language: str = Field(
+        description=(
+            "Language that the site uses."
+            f"One of the following options: {', '.join([choice[0] for choice in Language.choices])}"
+        )
+    )
 
     @field_validator("type")
     @classmethod
@@ -56,6 +61,24 @@ class ProjectDetails(BaseModel):
                 return v
             else:
                 return ProjectType.OTHER
+        return v
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, v):
+        valid_types = [choice[0] for choice in Language.choices]
+
+        if v not in valid_types:
+            v_lower = v.lower()
+            for valid_type in valid_types:
+                if v_lower in valid_type.lower():
+                    return valid_type
+
+            logger.warning("[Project Details Schema] Language is not a valid option", provided_language=v)
+            if len(v) > 50:
+                return v
+            else:
+                return Language.ENGLISH
         return v
 
 
@@ -158,3 +181,36 @@ class CompetitorDetails(BaseModel):
     name: str = Field(description="Name of the competitor")
     url: str = Field(description="URL of the competitor")
     description: str = Field(description="Description of the competitor")
+
+
+class CompetitorAnalysisContext(BaseModel):
+    project_details: ProjectDetails
+    competitor_details: CompetitorDetails
+    competitor_homepage_content: str
+
+
+class CompetitorAnalysis(BaseModel):
+    competitor_analysis: str = Field(
+        description="""
+      How does this competitor compare to my project?
+      Where am I better than them?
+      Where am I worse than them?
+    """
+    )
+    key_differences: str = Field(description="What are the key differences with my project?")
+    strengths: str = Field(description="What are the strengths of this competitor?")
+    weaknesses: str = Field(description="What are the weaknesses of this competitor?")
+    opportunities: str = Field(description="What are the opportunities for us to be better than this competitor?")
+    threats: str = Field(description="What are the threats from this competitor?")
+    key_benefits: str = Field(description="What are the key benefits of this competitor?")
+    key_drawbacks: str = Field(description="What are the key drawbacks of this competitor?")
+    key_features: str = Field(description="What are the key features of this competitor?")
+    summary: str = Field(description="Comprehensive overview of the competitor's purpose and value proposition")
+    links: str = Field(
+        description="""
+        List of relevant URLs in markdown list format.
+        Please make sure the urls are full.
+        If the link is '/pricing', please complete it to the full url like so:
+        https://{page-url}/pricing
+    """
+    )

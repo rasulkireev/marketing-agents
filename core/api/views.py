@@ -17,7 +17,7 @@ from core.api.schemas import (
 )
 from core.choices import ContentType, ProjectPageType
 from core.models import BlogPostTitleSuggestion, Project, ProjectPage
-from core.tasks import schedule_project_page_analysis
+from core.tasks import schedule_project_competitor_analysis, schedule_project_page_analysis
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -50,12 +50,8 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         analyzed_project = project.analyze_content()
 
         if got_content and analyzed_project:
-            logger.info(
-                "[Scan Project] Successfully scanned project",
-                project_id=project.id,
-                project_name=project.name,
-            )
             async_task(schedule_project_page_analysis, project.id)
+            async_task(schedule_project_competitor_analysis, project.id)
             return {
                 "status": "success",
                 "project_id": project.id,
@@ -66,7 +62,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
             }
         else:
             logger.error(
-                "[Scan Project] Failed to scan project",
+                "[Scan Project] Project has no content",
                 got_content=got_content,
                 analyzed_project=analyzed_project,
                 project_id=project.id if project else None,
@@ -98,14 +94,6 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 @api.post("/generate-title-suggestions", response=GenerateTitleSuggestionsOut)
 def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggestionsIn):
     profile = request.auth
-    logger.info(
-        "[Generate Title Suggestions] API Called",
-        project_id=data.project_id,
-        profile_id=profile.id,
-        content_type=data.content_type,
-        number_of_titles=data.num_titles,
-    )
-
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
 
     try:
@@ -244,13 +232,6 @@ def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTit
     try:
         suggestion.user_score = data.score
         suggestion.save(update_fields=["user_score"])
-
-        logger.info(
-            "Title score updated",
-            suggestion_id=suggestion_id,
-            profile_id=profile.id,
-            score=data.score,
-        )
 
         return {"status": "success", "message": "Score updated successfully"}
 
