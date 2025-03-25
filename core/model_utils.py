@@ -2,6 +2,7 @@ import random
 import string
 
 import requests
+from pydantic_ai import capture_run_messages
 
 from seo_blog_bot import settings
 from seo_blog_bot.utils import get_seo_blog_bot_logger
@@ -14,7 +15,7 @@ def generate_random_key():
     return "".join(random.choice(characters) for _ in range(10))
 
 
-def run_agent_synchronously(agent, input_string, deps=None):
+def run_agent_synchronously(agent, input_string, deps=None, function_name="", model_name=""):
     """
     Run a PydanticAI agent synchronously.
 
@@ -37,15 +38,40 @@ def run_agent_synchronously(agent, input_string, deps=None):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    try:
-        # Pass deps to the agent.run method if provided
-        if deps is not None:
-            result = loop.run_until_complete(agent.run(input_string, deps=deps))
-        else:
-            result = loop.run_until_complete(agent.run(input_string))
-        return result
-    except Exception as e:
-        raise RuntimeError(f"Agent execution failed: {str(e)}") from e
+    with capture_run_messages() as messages:
+        try:
+            logger.info(
+                "[Run Agent Synchronously] Running agent",
+                messages=messages,
+                input_string=input_string,
+                deps=deps,
+                function_name=function_name,
+                model_name=model_name,
+            )
+            if deps is not None:
+                result = loop.run_until_complete(agent.run(input_string, deps=deps))
+            else:
+                result = loop.run_until_complete(agent.run(input_string))
+
+            logger.info(
+                "[Run Agent Synchronously] Agent run successfully",
+                messages=messages,
+                input_string=input_string,
+                deps=deps,
+                result=result,
+                function_name=function_name,
+                model_name=model_name,
+            )
+            return result
+        except Exception as e:
+            logger.error(
+                "[Run Agent Synchronously] Failed execution",
+                messages=messages,
+                exc_info=e,
+                error=str(e),
+                function_name=function_name,
+                model_name=model_name,
+            )
 
 
 def get_html_content(url):

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% load widget_tweaks %}
+{% load markdown_extras %}
+
+{% block content %}
+<div class="mx-auto mt-10 max-w-4xl">
+    <!-- Move the data-controller to wrap both the button and dialog -->
+    <div data-controller="competitor-analysis">
+        <!-- Create New Analysis Button -->
+        <div class="flex justify-end mb-6">
+            <button type="button"
+                    data-action="click->competitor-analysis#analyze"
+                    class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Analyze New Competitor
+            </button>
+        </div>
+
+        <!-- URL Input Dialog -->
+        <dialog id="competitor-url-dialog"
+                class="p-0 rounded-lg shadow-xl backdrop:bg-gray-500/75"
+                data-competitor-analysis-target="dialog">
+            <div class="w-full max-w-lg">
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-medium text-gray-900">Analyze New Competitor</h3>
+                        <button type="button"
+                                class="text-gray-400 hover:text-gray-500"
+                                data-action="competitor-analysis#closeDialog">
+                            <span class="sr-only">Close</span>
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form data-action="submit->competitor-analysis#submitAnalysis" class="space-y-4">
+                        <div>
+                            <label for="competitor-url" class="block text-sm font-medium text-gray-700">Competitor Website URL</label>
+                            <div class="mt-1">
+                                <input type="url"
+                                       name="competitor-url"
+                                       id="competitor-url"
+                                       required
+                                       data-competitor-analysis-target="url"
+                                       class="block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                                       placeholder="https://example.com">
+                            </div>
+                        </div>
+                        <div class="flex gap-x-3 justify-end">
+                            <button type="button"
+                                    data-action="competitor-analysis#closeDialog"
+                                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                                Analyze
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+    </div>
+
+    <!-- Competitors Section -->
+    {% if competitors %}
+        <div class="mt-8 space-y-6">
+            <h3 class="text-xl font-semibold text-gray-900">Competitor Analysis</h3>
+
+            {% for competitor in competitors %}
+                <details class="bg-white rounded-lg border border-pink-100 shadow-sm group">
+                    <summary class="flex justify-between items-center p-6 list-none cursor-pointer">
+                        <div class="flex gap-x-3 items-center">
+                            <div class="flex justify-center items-center w-8 h-8 bg-pink-50 rounded-lg">
+                                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-900">{{ competitor.name }}</h4>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </summary>
+
+                    <div class="px-6 pb-6 space-y-4">
+                        <!-- Market Position -->
+                        <div class="max-w-full prose lg:prose-lg prose-ol:ml-4">
+                            <h5 class="text-sm font-medium text-gray-900">Market Position</h5>
+                            <div class="overflow-auto p-4 mt-2 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-600">Sample market position analysis for {{ competitor.name }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Key Strengths -->
+                        <div class="max-w-full prose lg:prose-lg prose-ol:ml-4">
+                            <h5 class="text-sm font-medium text-gray-900">Key Strengths</h5>
+                            <div class="overflow-auto p-4 mt-2 bg-pink-50 rounded-lg">
+                                <p class="text-sm text-gray-600">Sample strengths analysis for {{ competitor.name }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="mt-8 text-center text-gray-500">
+            <p>No competitor analysis available yet. Click the button above to analyze a new competitor.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock content %}
