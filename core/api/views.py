@@ -5,7 +5,9 @@ from ninja import NinjaAPI
 
 from core.api.auth import MultipleAuthSchema
 from core.api.schemas import (
+    AddCompetitorIn,
     AddPricingPageIn,
+    CompetitorAnalysisOut,
     CreatePricingStrategyIn,
     GeneratedContentOut,
     GenerateTitleSuggestionOut,
@@ -16,7 +18,7 @@ from core.api.schemas import (
     UpdateTitleScoreIn,
 )
 from core.choices import ContentType, ProjectPageType
-from core.models import BlogPostTitleSuggestion, Project, ProjectPage
+from core.models import BlogPostTitleSuggestion, Competitor, Project, ProjectPage
 from core.tasks import schedule_project_competitor_analysis, schedule_project_page_analysis
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -51,7 +53,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
 
         if got_content and analyzed_project:
             async_task(schedule_project_page_analysis, project.id)
-            async_task(schedule_project_competitor_analysis, project.id)
+            async_task(schedule_project_competitor_analysis, project.id, timeout=180)
             return {
                 "status": "success",
                 "project_id": project.id,
@@ -264,3 +266,55 @@ def create_pricing_strategy(request: HttpRequest, data: CreatePricingStrategyIn)
     project_page.create_new_pricing_strategy(strategy_name=data.strategy_name, user_prompt=data.user_prompt)
 
     return {"status": "success", "message": "Pricing page added successfully"}
+
+
+@api.post("/add-competitor", response=CompetitorAnalysisOut)
+def add_competitor(request: HttpRequest, data: AddCompetitorIn):
+    profile = request.auth
+    project = get_object_or_404(Project, id=data.project_id, profile=profile)
+
+    try:
+        if Competitor.objects.filter(project=project, url=data.url).exists():
+            return {"status": "error", "message": "This competitor already exists for your project"}
+
+        competitor = Competitor.objects.create(
+            project=project,
+            name=data.name if hasattr(data, "name") and data.name else "Unknown Competitor",
+            url=data.url,
+            description=data.description if hasattr(data, "description") and data.description else "",
+        )
+
+        got_content = competitor.get_page_content()
+        got_name_and_description = competitor.populate_name_description()
+
+        if not got_content or not got_name_and_description:
+            competitor.delete()
+            return {"status": "error", "message": "Failed to get page content for this competitor URL"}
+
+        analyzed = competitor.analyze_competitor()
+
+        if not analyzed:
+            competitor.delete()
+            return {"status": "error", "message": "Failed to analyze this competitor"}
+
+        return {
+            "status": "success",
+            "competitor_id": competitor.id,
+            "name": competitor.name,
+            "url": competitor.url,
+            "description": competitor.description,
+            "summary": competitor.summary,
+            "competitor_analysis": competitor.competitor_analysis,
+            "key_differences": competitor.key_differences,
+            "strengths": competitor.strengths,
+            "weaknesses": competitor.weaknesses,
+            "opportunities": competitor.opportunities,
+            "threats": competitor.threats,
+            "key_features": competitor.key_features,
+            "key_benefits": competitor.key_benefits,
+            "key_drawbacks": competitor.key_drawbacks,
+        }
+
+    except Exception as e:
+        logger.error("Failed to add competitor", error=str(e), exc_info=True, project_id=project.id, url=data.url)
+        return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}

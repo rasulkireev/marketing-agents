@@ -5,9 +5,9 @@
 
 {% block content %}
 <div class="mx-auto mt-10 max-w-4xl">
-    <!-- Move the data-controller to wrap both the button and dialog -->
     <div data-controller="competitor-analysis">
-        <!-- Create New Analysis Button -->
+        {% csrf_token %}
+        <input type="hidden" id="project_id" value="{{ project.id }}">
         <div class="flex justify-end mb-6">
             <button type="button"
                     data-action="click->competitor-analysis#analyze"
@@ -19,12 +19,11 @@
             </button>
         </div>
 
-        <!-- URL Input Dialog -->
         <dialog id="competitor-url-dialog"
                 class="p-0 rounded-lg shadow-xl backdrop:bg-gray-500/75"
                 data-competitor-analysis-target="dialog">
-            <div class="w-full max-w-lg">
-                <div class="p-6 space-y-4">
+            <div class="w-full max-w-4xl">
+                <div class="p-8 space-y-6">
                     <div class="flex justify-between items-center">
                         <h3 class="text-lg font-medium text-gray-900">Analyze New Competitor</h3>
                         <button type="button"
@@ -37,7 +36,9 @@
                         </button>
                     </div>
 
-                    <form data-action="submit->competitor-analysis#submitAnalysis" class="space-y-4">
+                    <div data-competitor-analysis-target="errorMessage" class="hidden p-3 text-sm font-medium text-white bg-red-500 rounded-md"></div>
+
+                    <form data-action="submit->competitor-analysis#submitAnalysis" class="space-y-4" data-competitor-analysis-target="form">
                         <div>
                             <label for="competitor-url" class="block text-sm font-medium text-gray-700">Competitor Website URL</label>
                             <div class="mt-1">
@@ -57,61 +58,139 @@
                                 Cancel
                             </button>
                             <button type="submit"
-                                    class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
-                                Analyze
+                                    data-competitor-analysis-target="submitButton"
+                                    class="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                                <svg data-competitor-analysis-target="spinner" class="hidden mr-2 w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Analyze</span>
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </dialog>
-    </div>
 
-    <!-- Competitors Section -->
-    {% if competitors %}
+        <!-- Competitors Section -->
         <div class="mt-8 space-y-6">
             <h3 class="text-xl font-semibold text-gray-900">Competitor Analysis</h3>
 
-            {% for competitor in competitors %}
-                <details class="bg-white rounded-lg border border-pink-100 shadow-sm group">
-                    <summary class="flex justify-between items-center p-6 list-none cursor-pointer">
-                        <div class="flex gap-x-3 items-center">
-                            <div class="flex justify-center items-center w-8 h-8 bg-pink-50 rounded-lg">
-                                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            <div class="competitors-container">
+                {% if competitors %}
+                    {% for competitor in competitors %}
+                        <details class="mb-4 bg-white rounded-lg border border-pink-100 shadow-sm group">
+                            <summary class="flex justify-between items-center p-6 list-none cursor-pointer">
+                                <div class="flex gap-x-3 items-center">
+                                    <div class="flex justify-center items-center w-8 h-8 bg-pink-50 rounded-lg">
+                                        <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-lg font-medium text-gray-900">{{ competitor.name }}</h4>
+                                        <p class="text-sm text-gray-500">{{ competitor.url }}</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
-                            </div>
-                            <h4 class="text-lg font-medium text-gray-900">{{ competitor.name }}</h4>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </summary>
+                            </summary>
 
-                    <div class="px-6 pb-6 space-y-4">
-                        <!-- Market Position -->
-                        <div class="max-w-full prose lg:prose-lg prose-ol:ml-4">
-                            <h5 class="text-sm font-medium text-gray-900">Market Position</h5>
-                            <div class="overflow-auto p-4 mt-2 bg-gray-50 rounded-lg">
-                                <p class="text-sm text-gray-600">Sample market position analysis for {{ competitor.name }}</p>
-                            </div>
-                        </div>
+                            <div class="px-6 pb-6 space-y-6">
+                                <!-- Summary -->
+                                {% if competitor.summary %}
+                                <div class="max-w-full prose">
+                                    <h5 class="text-sm font-medium text-gray-900">Summary</h5>
+                                    <div class="p-4 mt-2 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">{{ competitor.summary|linebreaks }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
 
-                        <!-- Key Strengths -->
-                        <div class="max-w-full prose lg:prose-lg prose-ol:ml-4">
-                            <h5 class="text-sm font-medium text-gray-900">Key Strengths</h5>
-                            <div class="overflow-auto p-4 mt-2 bg-pink-50 rounded-lg">
-                                <p class="text-sm text-gray-600">Sample strengths analysis for {{ competitor.name }}</p>
+                                <!-- Competitor Analysis -->
+                                {% if competitor.competitor_analysis %}
+                                <div class="max-w-full prose">
+                                    <h5 class="text-sm font-medium text-gray-900">Analysis</h5>
+                                    <div class="p-4 mt-2 bg-gray-50 rounded-lg">
+                                        <p class="text-sm text-gray-600">{{ competitor.competitor_analysis|linebreaks }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- SWOT Analysis -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <!-- Strengths -->
+                                    {% if competitor.strengths %}
+                                    <div class="max-w-full prose">
+                                        <h5 class="text-sm font-medium text-gray-900">Strengths</h5>
+                                        <div class="p-4 mt-2 bg-green-50 rounded-lg">
+                                            <p class="text-sm text-gray-600">{{ competitor.strengths|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Weaknesses -->
+                                    {% if competitor.weaknesses %}
+                                    <div class="max-w-full prose">
+                                        <h5 class="text-sm font-medium text-gray-900">Weaknesses</h5>
+                                        <div class="p-4 mt-2 bg-red-50 rounded-lg">
+                                            <p class="text-sm text-gray-600">{{ competitor.weaknesses|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Opportunities -->
+                                    {% if competitor.opportunities %}
+                                    <div class="max-w-full prose">
+                                        <h5 class="text-sm font-medium text-gray-900">Opportunities</h5>
+                                        <div class="p-4 mt-2 bg-blue-50 rounded-lg">
+                                            <p class="text-sm text-gray-600">{{ competitor.opportunities|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <!-- Threats -->
+                                    {% if competitor.threats %}
+                                    <div class="max-w-full prose">
+                                        <h5 class="text-sm font-medium text-gray-900">Threats</h5>
+                                        <div class="p-4 mt-2 bg-yellow-50 rounded-lg">
+                                            <p class="text-sm text-gray-600">{{ competitor.threats|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Key Features and Benefits -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    {% if competitor.key_features %}
+                                    <div class="max-w-full prose">
+                                        <h5 class="text-sm font-medium text-gray-900">Key Features</h5>
+                                        <div class="p-4 mt-2 bg-gray-50 rounded-lg">
+                                            <p class="text-sm text-gray-600">{{ competitor.key_features|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    {% if competitor.key_benefits %}
+                                    <div class="max-w-full prose">
+                                        <h5 class="text-sm font-medium text-gray-900">Key Benefits</h5>
+                                        <div class="p-4 mt-2 bg-gray-50 rounded-lg">
+                                            <p class="text-sm text-gray-600">{{ competitor.key_benefits|linebreaks }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
+                        </details>
+                    {% endfor %}
+                {% else %}
+                    <div class="mt-8 text-center text-gray-500 empty-competitors-message">
+                        <p>No competitor analysis available yet. Click the button above to analyze a new competitor.</p>
                     </div>
-                </details>
-            {% endfor %}
+                {% endif %}
+            </div>
         </div>
-    {% else %}
-        <div class="mt-8 text-center text-gray-500">
-            <p>No competitor analysis available yet. Click the button above to analyze a new competitor.</p>
-        </div>
-    {% endif %}
+    </div>
 </div>
 {% endblock content %}

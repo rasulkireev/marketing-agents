@@ -989,6 +989,42 @@ class Competitor(BaseModel):
 
         return True
 
+    def populate_name_description(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=CompetitorDetails,
+            deps_type=WebPageContent,
+            system_prompt=(
+                "You are an expert marketer. Based on the competitor details and homepage content provided, "
+                "extract and infer the requested information. Make reasonable inferences based "
+                "on available content, context, and industry knowledge."
+            ),
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
+            return f"Web page content:" f"Content: {ctx.deps.markdown_content}"
+
+        deps = WebPageContent(
+            title=self.homepage_title,
+            description=self.homepage_description,
+            markdown_content=self.markdown_content,
+        )
+        result = run_agent_synchronously(
+            agent,
+            "Please analyze this competitor and extract the key information.",
+            deps=deps,
+            function_name="populate_name_description",
+            model_name="Competitor",
+        )
+
+        self.name = result.data.name
+        self.description = result.data.description
+        self.save(update_fields=["name", "description"])
+
+        return True
+
     def analyze_competitor(self):
         agent = Agent(
             "google-gla:gemini-2.0-flash",

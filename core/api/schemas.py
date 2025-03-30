@@ -69,3 +69,29 @@ class CreatePricingStrategyIn(Schema):
     project_id: int
     strategy_name: str = "Alex Hormozi"
     user_prompt: str = ""
+
+
+class AddCompetitorIn(Schema):
+    project_id: int
+    url: str
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class CompetitorAnalysisOut(Schema):
+    status: str
+    message: Optional[str] = None
+    competitor_id: Optional[int] = None
+    name: Optional[str] = None
+    url: Optional[str] = None
+    description: Optional[str] = None
+    summary: Optional[str] = None
+    competitor_analysis: Optional[str] = None
+    key_differences: Optional[str] = None
+    strengths: Optional[str] = None
+    weaknesses: Optional[str] = None
+    opportunities: Optional[str] = None
+    threats: Optional[str] = None
+    key_features: Optional[str] = None
+    key_benefits: Optional[str] = None
+    key_drawbacks: Optional[str] = None

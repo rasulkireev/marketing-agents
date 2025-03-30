@@ -231,7 +231,9 @@ class CompetitorAnalysisAgentView(LoginRequiredMixin, DetailView):
     context_object_name = "project"
 
     def get_context_data(self, **kwargs):
-        competitors = Competitor.objects.filter(project=self.object)
+        competitors = Competitor.objects.filter(
+            project=self.object,
+        ).exclude(markdown_content="")
 
         context = super().get_context_data(**kwargs)
         context["has_pro_subscription"] = self.request.user.profile.has_product_or_subscription
