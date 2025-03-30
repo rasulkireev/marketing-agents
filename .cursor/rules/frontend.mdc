@@ -9,7 +9,7 @@ alwaysApply: false
 - Leverage Stimulus data attributes to connect HTML elements with JavaScript functionality
 - Utilize Stimulus targets to reference specific elements within a controller
 - Employ Stimulus actions to handle user interactions and events
-- New controllers shold be created in `frontend/src/controller` directory
+- New controllers shold be created in `frontend/src/controllers` directory
 
 ## Stimulusjs Specific Guidelines
 - Add semicolons at the end of statements
