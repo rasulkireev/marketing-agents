@@ -2,7 +2,9 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
-from pydantic_ai import Agent, RunContext, capture_run_messages
+from pydantic_ai import Agent, RunContext
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from core.base_models import BaseModel
 from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
@@ -15,6 +17,9 @@ from core.prompts import (
 from core.schemas import (
     BlogPostContent,
     BlogPostGenerationContext,
+    CompetitorAnalysis,
+    CompetitorAnalysisContext,
+    CompetitorDetails,
     PricingPageStrategyContext,
     PricingPageStrategySuggestion,
     ProjectDetails,
@@ -25,6 +30,7 @@ from core.schemas import (
     TitleSuggestions,
     WebPageContent,
 )
+from seo_blog_bot import settings
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -177,7 +183,7 @@ class Project(BaseModel):
     pain_points = models.TextField(blank=True)
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
-    competitors = models.TextField(blank=True)
+    competitors_list = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
 
     def __str__(self):
@@ -197,7 +203,6 @@ class Project(BaseModel):
             product_usage=self.product_usage,
             links=self.links,
             language=self.language,
-            competitors=self.competitors,
         )
 
     @property
@@ -239,12 +244,6 @@ class Project(BaseModel):
             ]
         )
 
-        logger.info(
-            "[Page Content] Successfully fetched content",
-            project_name=self.name,
-            project_url=self.url,
-        )
-
         return True
 
     def analyze_content(self):
@@ -283,9 +282,9 @@ class Project(BaseModel):
                 markdown_content=self.markdown_content,
                 html_content=self.html_content,
             ),
+            function_name="analyze_content",
+            model_name="Project",
         )
-
-        logger.info("[Analyze Content] Agent ran successfully", data=result.data)
 
         self.name = result.data.name
         self.type = result.data.type
@@ -297,11 +296,9 @@ class Project(BaseModel):
         self.pain_points = result.data.pain_points
         self.product_usage = result.data.product_usage
         self.links = result.data.links
-        self.competitors = result.data.competitors
+        self.language = result.data.language
         self.date_analyzed = timezone.now()
         self.save()
-
-        logger.info("[Analyze Content] Successfully analyzed content", project_name=self.name, project_url=self.url)
 
         return True
 
@@ -332,7 +329,6 @@ class Project(BaseModel):
                 - Target Audience: {project.target_audience_summary}
                 - Pain Points: {project.pain_points}
                 - Product Usage: {project.product_usage}
-                - Competitors: {project.competitors}
             """
 
         @agent.system_prompt
@@ -407,14 +403,11 @@ class Project(BaseModel):
         )
 
         result = run_agent_synchronously(
-            agent, "Please generate blog post title suggestions based on the project details.", deps=deps
-        )
-
-        logger.info(
-            "[Generate SEO Title Suggestions] Successfully generated titles",
-            project_name=self.name,
-            project_url=self.url,
-            num_titles=num_titles,
+            agent,
+            "Please generate blog post title suggestions based on the project details.",
+            deps=deps,
+            function_name="generate_title_suggestions",
+            model_name="Project",
         )
 
         with transaction.atomic():
@@ -445,20 +438,115 @@ class Project(BaseModel):
         def add_links(ctx: RunContext[list[str]]) -> str:
             return f"Links: {ctx.deps}"
 
-        logger.info(
-            "[Get a List of Links] Running agent",
-            project_name=self.name,
-            project_id=self.id,
-            links=self.links,
-        )
-
         result = run_agent_synchronously(
             agent,
             "Please extract all the links from the text provided.",
             deps=self.links,
+            function_name="get_a_list_of_links",
+            model_name="Project",
         )
 
         return result.data
+
+    def find_competitors(self):
+        model = OpenAIModel(
+            "sonar",
+            provider=OpenAIProvider(
+                base_url="https://api.perplexity.ai",
+                api_key=settings.PERPLEXITY_API_KEY,
+            ),
+        )
+        agent = Agent(
+            model,
+            deps_type=ProjectDetails,
+            result_type=str,
+            system_prompt="You are a helpful assistant that helps me find competitors for my project.",
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_project_details(ctx: RunContext[ProjectDetails]) -> str:
+            project = ctx.deps
+            return f"""I'm working on a project which has the following attributes:
+                Name:
+                {project.name}
+
+                Summary:
+                {project.summary}
+
+                Key Features:
+                {project.key_features}
+
+                Target Audience:
+                {project.target_audience_summary}
+
+                Pain Points Addressed:
+                {project.pain_points}
+
+                Language: {project.language}
+            """
+
+        @agent.system_prompt
+        def required_data() -> str:
+            return "Make sure that each competitor has a name, url, and description."
+
+        @agent.system_prompt
+        def number_of_competitors() -> str:
+            return "Give me a list of at least 15 competitors."
+
+        @agent.system_prompt
+        def language_specification() -> str:
+            return (
+                f"IMPORTANT: Be mindful that competitors are likely to be in {self.project_details.language} language."
+            )
+
+        result = run_agent_synchronously(
+            agent,
+            "Give me a list of sites that might be considered my competition.",
+            deps=self.project_details,
+            function_name="find_competitors",
+            model_name="Project",
+        )
+
+        self.competitors_list = result.data
+        self.save(update_fields=["competitors_list"])
+
+        return result.data
+
+    def get_and_save_list_of_competitors(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=list[CompetitorDetails],
+            system_prompt="You are an expert data extractor. Extract all the data from the text provided.",
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_competitors(ctx: RunContext[list[CompetitorDetails]]) -> str:
+            return f"Here are the competitors: {ctx.deps}"
+
+        result = run_agent_synchronously(
+            agent,
+            "Please extract all the competitors from the text provided.",
+            deps=self.competitors_list,
+            function_name="get_and_save_list_of_competitors",
+            model_name="Project",
+        )
+
+        competitors = []
+        for competitor in result.data:
+            competitors.append(
+                Competitor(
+                    project=self,
+                    name=competitor.name,
+                    url=competitor.url,
+                    description=competitor.description,
+                )
+            )
+
+        competitors = Competitor.objects.bulk_create(competitors)
+
+        return competitors
 
 
 class BlogPostTitleSuggestion(BaseModel):
@@ -598,19 +686,13 @@ class BlogPostTitleSuggestion(BaseModel):
             content_type=content_type,
         )
 
-        with capture_run_messages() as messages:
-            try:
-                result = run_agent_synchronously(
-                    agent, "Please generate an article based on the project details and title suggestions.", deps=deps
-                )
-            except Exception as e:
-                logger.error(
-                    "[Generate Content] Failed generation",
-                    messages=messages,
-                    exc_info=True,
-                    error=str(e),
-                )
-                raise
+        result = run_agent_synchronously(
+            agent,
+            "Please generate an article based on the project details and title suggestions.",
+            deps=deps,
+            function_name="generate_content",
+            model_name="BlogPostTitleSuggestion",
+        )
 
         return GeneratedBlogPost.objects.create(
             project=self.project,
@@ -699,12 +781,6 @@ class ProjectPage(BaseModel):
             ]
         )
 
-        logger.info(
-            "[Page Content] Successfully fetched content",
-            project_name=self.project.name,
-            project_url=self.url,
-        )
-
         return True
 
     def analyze_content(self):
@@ -742,6 +818,8 @@ class ProjectPage(BaseModel):
                 markdown_content=self.markdown_content,
                 html_content=self.html_content,
             ),
+            function_name="analyze_content",
+            model_name="ProjectPage",
         )
 
         self.date_analyzed = timezone.now()
@@ -758,12 +836,6 @@ class ProjectPage(BaseModel):
                 "type_ai_guess",
                 "summary",
             ]
-        )
-
-        logger.info(
-            "[Analyze Content] Successfully analyzed content",
-            project_name=self.title,
-            project_url=self.url,
         )
 
         return True
@@ -825,12 +897,8 @@ class ProjectPage(BaseModel):
                 project_details=self.project.project_details,
                 web_page_content=self.web_page_content,
             ),
-        )
-
-        logger.info(
-            "[Create New Pricing Strategy] Successfully generated pricing strategy",
-            project_name=self.project.name,
-            project_url=self.url,
+            function_name="create_new_pricing_strategy",
+            model_name="ProjectPage",
         )
 
         return PricingPageUpdatesSuggestion.objects.create(
@@ -857,3 +925,192 @@ class PricingPageUpdatesSuggestion(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}"
+
+
+class Competitor(BaseModel):
+    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitors")
+    name = models.CharField(max_length=255)
+    url = models.URLField(max_length=200)
+    description = models.TextField()
+
+    date_scraped = models.DateTimeField(null=True, blank=True)
+    homepage_title = models.CharField(max_length=500, blank=True, default="")
+    homepage_description = models.TextField(blank=True, default="")
+    markdown_content = models.TextField(blank=True)
+    summary = models.TextField(blank=True)
+
+    date_analyzed = models.DateTimeField(null=True, blank=True)
+    # how does this competitor compare to the project?
+    competitor_analysis = models.TextField(blank=True)
+    key_differences = models.TextField(blank=True)
+    strengths = models.TextField(blank=True)
+    weaknesses = models.TextField(blank=True)
+    opportunities = models.TextField(blank=True)
+    threats = models.TextField(blank=True)
+    key_features = models.TextField(blank=True)
+    key_benefits = models.TextField(blank=True)
+    key_drawbacks = models.TextField(blank=True)
+    links = models.JSONField(default=list, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name}"
+
+    @property
+    def competitor_details(self):
+        return CompetitorDetails(
+            name=self.name,
+            url=self.url,
+            description=self.description,
+        )
+
+    def get_page_content(self):
+        """
+        Fetch page content using Jina Reader API and update the project.
+        Returns the content if successful, raises ValueError otherwise.
+        """
+        homepage_title, homepage_description, markdown_content = get_markdown_content(self.url)
+
+        if not homepage_title or not homepage_description or not markdown_content:
+            return False
+
+        self.date_scraped = timezone.now()
+        self.homepage_title = homepage_title
+        self.homepage_description = homepage_description
+        self.markdown_content = markdown_content
+
+        self.save(
+            update_fields=[
+                "date_scraped",
+                "homepage_title",
+                "homepage_description",
+                "markdown_content",
+            ]
+        )
+
+        return True
+
+    def populate_name_description(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=CompetitorDetails,
+            deps_type=WebPageContent,
+            system_prompt=(
+                "You are an expert marketer. Based on the competitor details and homepage content provided, "
+                "extract and infer the requested information. Make reasonable inferences based "
+                "on available content, context, and industry knowledge."
+            ),
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
+            return f"Web page content:" f"Content: {ctx.deps.markdown_content}"
+
+        deps = WebPageContent(
+            title=self.homepage_title,
+            description=self.homepage_description,
+            markdown_content=self.markdown_content,
+        )
+        result = run_agent_synchronously(
+            agent,
+            "Please analyze this competitor and extract the key information.",
+            deps=deps,
+            function_name="populate_name_description",
+            model_name="Competitor",
+        )
+
+        self.name = result.data.name
+        self.description = result.data.description
+        self.save(update_fields=["name", "description"])
+
+        return True
+
+    def analyze_competitor(self):
+        agent = Agent(
+            "google-gla:gemini-2.0-flash",
+            result_type=CompetitorAnalysis,
+            deps_type=CompetitorAnalysisContext,
+            system_prompt=(
+                "You are an expert marketer. Based on the competitor details and homepage content provided, "
+                "extract and infer the requested information. Make reasonable inferences based "
+                "on available content, context, and industry knowledge."
+            ),
+            retries=2,
+        )
+
+        @agent.system_prompt
+        def add_todays_date() -> str:
+            return f"Today's Date: {timezone.now().strftime('%Y-%m-%d')}"
+
+        @agent.system_prompt
+        def my_project_details(ctx: RunContext[CompetitorAnalysisContext]) -> str:
+            project = ctx.deps.project_details
+            return f"""
+                Project Details:
+                - Project Name: {project.name}
+                - Project Type: {project.type}
+                - Project Summary: {project.summary}
+                - Blog Theme: {project.blog_theme}
+                - Founders: {project.founders}
+                - Key Features: {project.key_features}
+                - Target Audience: {project.target_audience_summary}
+                - Pain Points: {project.pain_points}
+                - Product Usage: {project.product_usage}
+            """
+
+        @agent.system_prompt
+        def competitor_details(ctx: RunContext[CompetitorAnalysisContext]) -> str:
+            competitor = ctx.deps.competitor_details
+            return f"""
+                Competitor Details:
+                - Competitor Name: {competitor.name}
+                - Competitor URL: {competitor.url}
+                - Competitor Description: {competitor.description}
+                - Competitor Homepage Content: {ctx.deps.competitor_homepage_content}
+            """
+
+        deps = CompetitorAnalysisContext(
+            project_details=self.project.project_details,
+            competitor_details=self.competitor_details,
+            competitor_homepage_content=self.markdown_content,
+        )
+        result = run_agent_synchronously(
+            agent,
+            "Please analyze this competitor and extract the key information.",
+            deps=deps,
+            function_name="analyze_competitor",
+            model_name="Competitor",
+        )
+
+        self.competitor_analysis = result.data.competitor_analysis
+        self.key_differences = result.data.key_differences
+        self.strengths = result.data.strengths
+        self.summary = result.data.summary
+        self.weaknesses = result.data.weaknesses
+        self.opportunities = result.data.opportunities
+        self.threats = result.data.threats
+        self.key_features = result.data.key_features
+        self.key_benefits = result.data.key_benefits
+        self.key_drawbacks = result.data.key_drawbacks
+        self.links = result.data.links
+        self.date_analyzed = timezone.now()
+        self.save()
+
+        return True
+
+
+class CompetitorComparisonBlogPost(BaseModel):
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitor_comparison_blog_posts"
+    )
+    competitor = models.ForeignKey(
+        Competitor, null=True, blank=True, on_delete=models.CASCADE, related_name="competitor_comparison_blog_posts"
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    slug = models.SlugField(max_length=250)
+    content = models.TextField()
+
+    def __str__(self):
+        return f"{self.project.name}: {self.title}"

@@ -14,7 +14,6 @@ alwaysApply: false
 - Implement comprehensive logging
 - Use double quotes instead of single quotes
 
-
 ## Django/Python
 - Use CBVs for complex views; FBVs for simpler logic
 - Leverage Django's ORM; avoid raw SQL when possible
