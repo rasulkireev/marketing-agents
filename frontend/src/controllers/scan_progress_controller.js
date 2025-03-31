@@ -151,12 +151,12 @@ export default class extends Controller {
 
   createProjectElement(data) {
     const element = document.createElement('div');
-    element.className = 'overflow-hidden p-8 rounded-xl border border-pink-100 shadow-lg opacity-0 backdrop-blur-sm transition-all duration-300 transform translate-x-full bg-white/90 hover:shadow-xl hover:border-pink-200 hover:-translate-y-1';
+    element.className = 'overflow-hidden p-4 rounded-xl border border-pink-100 shadow-lg backdrop-blur-sm transition-all duration-300 transform md:p-8 bg-white/90 hover:shadow-xl hover:border-pink-200 hover:-translate-y-1';
 
     element.innerHTML = `
       <div class="flex flex-col h-full">
         <!-- Header -->
-        <div class="flex gap-x-3 items-center">
+        <div class="flex gap-x-3 items-center space-y-2">
           <h3 class="text-2xl font-bold text-gray-900">
             ${data.name || data.url}
           </h3>
@@ -168,7 +168,7 @@ export default class extends Controller {
         ${data.summary ? `<p class="mt-4 text-sm text-left text-gray-600 line-clamp-4">${data.summary}</p>` : ''}
 
         <!-- View Details Button -->
-        <div class="flex justify-end pt-6 mt-auto">
+        <div class="flex justify-center pt-6 mt-auto md:justify-end">
           <a href="/project/${data.project_id}/"
              class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-sm transition-all duration-300 hover:from-pink-600 hover:to-purple-700">
             View details →

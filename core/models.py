@@ -1114,3 +1114,28 @@ class CompetitorComparisonBlogPost(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
+
+
+class Feedback(BaseModel):
+    profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="feedback")
+    feedback = models.TextField()
+    page = models.CharField(max_length=255)
+    date_submitted = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.profile.user.email}: {self.feedback}"
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+
+        if is_new:
+            from django.conf import settings
+            from django.core.mail import send_mail
+
+            subject = "New Feedback Submitted"
+            message = f"New feedback was submitted:\n\nUser: {self.profile.user.email if self.profile else 'Anonymous'}\nFeedback: {self.feedback}\nPage: {self.page}"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            recipient_list = ["kireevr1996@gmail.com"]
+
+            send_mail(subject, message, from_email, recipient_list, fail_silently=True)

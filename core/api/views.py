@@ -15,10 +15,11 @@ from core.api.schemas import (
     GenerateTitleSuggestionsOut,
     ProjectScanIn,
     ProjectScanOut,
+    SubmitFeedbackIn,
     UpdateTitleScoreIn,
 )
 from core.choices import ContentType, ProjectPageType
-from core.models import BlogPostTitleSuggestion, Competitor, Project, ProjectPage
+from core.models import BlogPostTitleSuggestion, Competitor, Feedback, Project, ProjectPage
 from core.tasks import schedule_project_competitor_analysis, schedule_project_page_analysis
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -318,3 +319,14 @@ def add_competitor(request: HttpRequest, data: AddCompetitorIn):
     except Exception as e:
         logger.error("Failed to add competitor", error=str(e), exc_info=True, project_id=project.id, url=data.url)
         return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}
+
+
+@api.post("/submit-feedback")
+def submit_feedback(request: HttpRequest, data: SubmitFeedbackIn):
+    profile = request.auth
+    try:
+        Feedback.objects.create(profile=profile, feedback=data.feedback, page=data.page)
+        return {"status": "success", "message": "Feedback submitted successfully"}
+    except Exception as e:
+        logger.error("Failed to submit feedback", error=str(e), profile_id=profile.id)
+        return {"status": "error", "message": "Failed to submit feedback. Please try again."}
