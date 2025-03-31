@@ -90,6 +90,14 @@ export default class extends Controller {
       return;
     }
 
+    // Add loading state
+    const submitButton = event.target.tagName === 'BUTTON' ? event.target : this.element.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton?.textContent || 'Submit';
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Submitting...';
+    }
+
     fetch('/api/submit-feedback', {
       method: 'POST',
       headers: {
@@ -98,7 +106,12 @@ export default class extends Controller {
       },
       body: JSON.stringify({ feedback, page: window.location.pathname }),
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
     .then(data => {
       this.resetForm();
       this.closeFeedback();
@@ -107,10 +120,12 @@ export default class extends Controller {
     .catch((error) => {
       console.error('Error:', error);
       showMessage(error.message || "Failed to submit feedback. Please try again later.", 'error');
+      // Reset loading state on error
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
     });
-
-    this.resetForm();
-    this.closeFeedback();
   }
 
   resetForm() {
