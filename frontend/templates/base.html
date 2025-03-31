@@ -52,6 +52,11 @@
     {% include 'components/messages.html' with messages=messages %}
   {% endblock default_messages %}
 
+  <!-- Include the feedback component -->
+  {% if user.is_authenticated %}
+    {% include 'components/feedback.html' %}
+  {% endif %}
+
   <div class="bg-white">
     <header class="bg-white">
       <nav class="flex justify-between items-center p-6 mx-auto max-w-7xl lg:px-8" aria-label="Global">

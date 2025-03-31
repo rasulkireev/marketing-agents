@@ -67,11 +67,11 @@
       <div class="mt-8 space-y-8" data-scan-progress-target="projectsList">
         {% if projects %}
           {% for project_data in projects %}
-            <div class="overflow-hidden p-8 rounded-xl border border-pink-100 shadow-lg backdrop-blur-sm transition-all duration-300 transform bg-white/90 hover:shadow-xl hover:border-pink-200 hover:-translate-y-1">
+            <div class="overflow-hidden p-4 rounded-xl border border-pink-100 shadow-lg backdrop-blur-sm transition-all duration-300 transform md:p-8 bg-white/90 hover:shadow-xl hover:border-pink-200 hover:-translate-y-1">
               <!-- Project Content -->
               <div class="flex flex-col h-full">
                 <!-- Header -->
-                <div class="flex gap-x-3 items-center">
+                <div class="flex flex-col gap-x-3 items-center space-y-2 md:flex-row">
                   <h3 class="text-2xl font-bold text-gray-900">
                     {% if project_data.project.name %}
                       {{ project_data.project.name }}
@@ -90,7 +90,7 @@
                 {% endif %}
 
                 <!-- View Details Button (pushed to bottom) -->
-                <div class="flex justify-end pt-6 mt-auto">
+                <div class="flex justify-center pt-6 mt-auto md:justify-end">
                   <a href="{% url 'project_detail' project_data.project.id %}"
                      class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-sm transition-all duration-300 hover:from-pink-600 hover:to-purple-700">
                     View details →

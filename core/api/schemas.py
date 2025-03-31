@@ -95,3 +95,8 @@ class CompetitorAnalysisOut(Schema):
     key_features: Optional[str] = None
     key_benefits: Optional[str] = None
     key_drawbacks: Optional[str] = None
+
+
+class SubmitFeedbackIn(Schema):
+    feedback: str
+    page: str
