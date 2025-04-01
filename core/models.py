@@ -225,7 +225,7 @@ class Project(BaseModel):
         html_content = get_html_content(self.url)
         title, description, markdown_content = get_markdown_content(self.url)
 
-        if not title or not description or not markdown_content:
+        if not markdown_content:
             logger.error(
                 "[Get Page Content] Failed to get page content",
                 title=title,
