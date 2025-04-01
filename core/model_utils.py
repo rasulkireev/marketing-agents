@@ -105,7 +105,7 @@ def get_markdown_content(url):
 
         logger.info(
             "[Get Markdown Content] Successfully fetched content from Jina Reader",
-            **data,
+            data=data,
             url=url,
         )
 
