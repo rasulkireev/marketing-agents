@@ -420,6 +420,7 @@ class Project(BaseModel):
                     category=title.category,
                     content_type=content_type,
                     target_keywords=title.target_keywords,
+                    prompt=user_prompt,
                     suggested_meta_description=title.suggested_meta_description,
                 )
                 suggestions.append(suggestion)
