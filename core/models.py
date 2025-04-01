@@ -226,6 +226,13 @@ class Project(BaseModel):
         title, description, markdown_content = get_markdown_content(self.url)
 
         if not title or not description or not markdown_content:
+            logger.error(
+                "[Get Page Content] Failed to get page content",
+                title=title,
+                description=description,
+                markdown_content=markdown_content,
+                url=self.url,
+            )
             return False
 
         self.date_scraped = timezone.now()

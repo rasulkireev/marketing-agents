@@ -103,6 +103,12 @@ def get_markdown_content(url):
 
         data = response.json().get("data", {})
 
+        logger.info(
+            "[Get Markdown Content] Successfully fetched content from Jina Reader",
+            **data,
+            url=url,
+        )
+
         return (
             data.get("title", "")[:500],
             data.get("description", ""),
