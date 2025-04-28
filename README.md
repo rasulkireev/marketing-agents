@@ -1,7 +1,14 @@
 
 # Marketing Agents
 
-## Getting Started
+## Deployment
+
+1. Rename .env.example to .env and update all the relevant variables.
+2. You should be able to run `docker compose up -d` on the server or your local machine.
+
+## Local Development
+
+### Getting Started
 
 All the information on how to run, develop and update your new application can be found in the documentation.
 
@@ -14,7 +21,7 @@ To start you'll need to run these commands:
 4. `make serve` : Make sure you have a Docker Engine running. I recommend OrbStack.
 
 
-## Next steps
+### Next steps
 - When everything is running, go to http://localhost:8000/ to check if the backend is running.
 - You can sign up via regular signup. The first user will be made admin and superuser.
 - Go to http://localhost:8000/admin/ and update Site info (http://localhost:8000/admin/sites/site/1/change/) to
@@ -22,7 +29,7 @@ To start you'll need to run these commands:
   - Your project name
 
 
-## Stripe
+### Stripe
 - For local. When you run make serve for the first time, a stripe-cli container will be created.
 Looks at the logs for this container and at the top you will see a webhook secret generated.
 Copy this and add it to your `.env` file.
@@ -38,7 +45,7 @@ The following notes are applicable only after you got the app running locally vi
   I haven't found a reliable way to programmatcialy set this template. When you have created your products in Stripe and synced them, update the template with the correct plan id.
 
 
-## Deployment
+### Deployment
 
 1. Create 4 apps on CapRover.
   - `seo-blog-bot`
@@ -60,5 +67,5 @@ The following notes are applicable only after you got the app running locally vi
 
 5. Then just push main branch.
 
-## Notes
+### Notes
 - Don't forget to update the site domain and name on the Admin Panel.
