@@ -15,7 +15,16 @@ from djstripe import models as djstripe_models
 
 from core.choices import Language, ProfileStates, ProjectPageType
 from core.forms import ProfileUpdateForm, ProjectScanForm
-from core.models import BlogPost, Competitor, PricingPageUpdatesSuggestion, Profile, Project, ProjectPage
+from core.models import (
+    BlogPost,
+    Competitor,
+    Keyword,
+    PricingPageUpdatesSuggestion,
+    Profile,
+    Project,
+    ProjectKeyword,
+    ProjectPage,
+)
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -194,8 +203,23 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
 
 class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
     model = Project
-    template_name = "blogging-agent/blog-post-title-suggestions.html"
+    template_name = "agents/blogging-agent.html"
     context_object_name = "project"
+
+
+class KeywordsAgentView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "agents/keywords-agent.html"
+    context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        project_keywords = ProjectKeyword.objects.filter(project=self.object)
+        keywords = Keyword.objects.filter(id__in=project_keywords.values_list("keyword_id", flat=True))
+        context["keywords"] = keywords
+
+        return context
 
 
 class PricingAgentView(LoginRequiredMixin, DetailView):

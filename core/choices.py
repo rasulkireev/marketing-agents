@@ -91,3 +91,8 @@ class ProfileStates(models.TextChoices):
     CANCELLED = "cancelled"
     CHURNED = "churned"
     ACCOUNT_DELETED = "account_deleted"
+
+
+class KeywordDataSource(models.TextChoices):
+    GOOGLE_KEYWORD_PLANNER = "gkp", "Google Keyword Planner"
+    CLICKSTREAM = "cli", "Clickstream"

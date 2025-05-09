@@ -500,6 +500,46 @@
             </div>
           </div>
 
+          <!-- Keywords Agent Card -->
+          <div class="overflow-hidden bg-white rounded-xl border border-pink-100 shadow-lg">
+            <!-- Card Header -->
+            <div class="px-8 py-6 border-b border-gray-200">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h3 class="text-xl font-semibold text-gray-900">Keywords Agent</h3>
+                  <p class="mt-1 text-sm text-gray-500">Discover and analyze keywords using AI</p>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-pink-700 bg-pink-50 rounded-full ring-1 ring-inset ring-pink-600/20">
+                  Beta
+                </span>
+              </div>
+            </div>
+
+            <!-- Card Content -->
+            <div class="px-8 py-6">
+              <div class="prose prose-pink">
+                <p class="text-gray-600">Find the best keywords to target for your content. This agent will:</p>
+                <ul class="mt-4 space-y-2 text-gray-600">
+                  <li>Generate relevant keyword ideas</li>
+                  <li>Analyze keyword difficulty and search volume</li>
+                  <li>Identify long-tail keywords</li>
+                  <li>Group keywords by topic</li>
+                </ul>
+              </div>
+
+              <!-- Use Agent Button -->
+              <div class="flex justify-end mt-6">
+                <a href="{% url 'keywords_agent' project.id %}"
+                   class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                  <svg class="mr-2 w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Use Agent
+                </a>
+              </div>
+            </div>
+          </div>
+
           <!-- Social Media Agent Card -->
           <div class="overflow-hidden bg-white rounded-xl border border-gray-200 shadow-lg opacity-75">
             <!-- Card Header -->

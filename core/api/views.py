@@ -1,6 +1,5 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from django_q.tasks import async_task
 from ninja import NinjaAPI
 
 from core.api.auth import MultipleAuthSchema
@@ -20,7 +19,6 @@ from core.api.schemas import (
 )
 from core.choices import ContentType, ProjectPageType
 from core.models import BlogPostTitleSuggestion, Competitor, Feedback, Project, ProjectPage
-from core.tasks import schedule_project_competitor_analysis, schedule_project_page_analysis
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -53,8 +51,6 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         analyzed_project = project.analyze_content()
 
         if got_content and analyzed_project:
-            async_task(schedule_project_page_analysis, project.id)
-            async_task(schedule_project_competitor_analysis, project.id, timeout=180)
             return {
                 "status": "success",
                 "project_id": project.id,
