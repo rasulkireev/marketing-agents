@@ -1,6 +1,5 @@
 from decimal import Decimal, InvalidOperation
 
-# New imports
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -1153,7 +1152,9 @@ class Keyword(BaseModel):
         max_digits=10, decimal_places=2, null=True, blank=True, help_text="The cost per click value"
     )
     competition = models.FloatField(null=True, blank=True, help_text="The competition metric of the keyword (0 to 1)")
-    country = models.CharField(max_length=10, blank=True, help_text="The country for which metrics were fetched")
+    country = models.CharField(
+        max_length=10, blank=True, default="us", help_text="The country for which metrics were fetched"
+    )
     data_source = models.CharField(
         max_length=3,
         choices=KeywordDataSource.choices,
@@ -1302,6 +1303,7 @@ class Keyword(BaseModel):
 class ProjectKeyword(BaseModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="project_keywords")
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, related_name="keyword_projects")
+    use = models.BooleanField(default=False)
     date_associated = models.DateTimeField(
         auto_now_add=True, help_text="When the keyword was associated with the project"
     )

@@ -8,10 +8,10 @@
 {% endblock meta %}
 
 {% block content %}
-  <div class="py-12 bg-white sm:py-16">
+  <div class="py-16 min-h-screen">
     <div class="px-6 mx-auto max-w-7xl lg:px-8">
       <!-- Header Section -->
-      <div class="mx-auto max-w-2xl lg:mx-0">
+      <div class="mx-auto mb-10 max-w-2xl lg:mx-0">
         <div class="flex gap-x-4 items-center">
           <a href="{% url 'project_detail' project.id %}"
              class="flex items-center text-sm font-medium text-gray-500 transition-colors duration-150 hover:text-pink-600">
@@ -23,35 +23,86 @@
             Back to Project
           </a>
         </div>
-        <p class="mt-2 text-base font-semibold leading-7 text-pink-600">Keywords Agent</p>
-        <h1 class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        <h1 class="mt-2 text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
           Keywords for {{ project.name }}
         </h1>
         <p class="mt-6 text-lg leading-8 text-gray-600">
-          Below is a list of keywords associated with this project.
+          Below is a list of keywords associated with this project, including their metrics and trend data.
         </p>
       </div>
 
+      <!-- Add Keyword Form -->
+      <form data-controller="keyword-trends" data-action="submit->keyword-trends#addKeyword" class="flex flex-col gap-4 items-start p-6 mb-12 rounded-xl border border-pink-200 shadow-lg bg-white/80 sm:flex-row sm:items-end">
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        <div class="flex-1 w-full">
+          <label for="add-keyword-input" class="block mb-1 text-sm font-medium text-pink-700">Add a Keyword</label>
+          <input id="add-keyword-input" name="keyword_text" type="text" required placeholder="Enter keyword..." class="block px-3 py-2 w-full text-gray-900 bg-white rounded-md border border-pink-200 shadow-sm focus:ring-pink-500 focus:border-pink-500" />
+        </div>
+        <button type="submit" class="inline-flex items-center px-5 py-2.5 text-base font-semibold text-white bg-pink-600 rounded-md shadow-md transition hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">Add Keyword</button>
+        <div data-keyword-trends-target="formMessage" class="ml-4 text-sm min-h-[1.5em] text-pink-600"></div>
+      </form>
+      <!-- End Add Keyword Form -->
+
       <!-- Main Content Area: Keyword List -->
       <div class="mx-auto mt-10 max-w-2xl lg:max-w-none">
-        <div class="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
-          <h2 class="text-xl font-semibold text-gray-900">Keyword List</h2>
+        <div data-controller="keyword-trends">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="flex gap-2 items-center text-2xl font-bold text-gray-900">
+              <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.88 3.549A9 9 0 1021 12.001M19.07 4.93l-7.07 7.07-2.12-2.12"/></svg>
+              Keyword List
+            </h2>
+            <input type="text"
+                   placeholder="Search keywords..."
+                   class="px-3 py-2 ml-4 w-56 text-sm text-gray-900 bg-white rounded-md border border-pink-200 focus:ring-pink-500 focus:border-pink-500"
+                   data-keyword-trends-target="search"
+                   data-action="input->keyword-trends#filterKeywords">
+          </div>
           {% if keywords %}
-            <ul class="mt-4 space-y-2">
+            <ul class="grid gap-6 mt-4 sm:grid-cols-2 lg:grid-cols-3" data-keyword-trends-target="list">
               {% for keyword in keywords %}
-                <li class="p-3 text-gray-700 bg-gray-50 rounded-md">{{ keyword.keyword_text }}</li>
+                <li class="flex flex-col p-5 h-full bg-gray-50 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md group">
+                  <div class="flex flex-col flex-1 justify-between">
+                    <div>
+                      <p class="text-lg font-bold text-pink-700 transition group-hover:text-pink-800">{{ keyword.keyword_text }}</p>
+                      <div class="mt-2 space-y-1 text-sm text-gray-600">
+                        <p><span class="font-semibold text-gray-800">Volume:</span> {{ keyword.volume|default:"N/A" }}</p>
+                        <p><span class="font-semibold text-gray-800">CPC:</span> {{ keyword.cpc_value|default:"N/A" }} {{ keyword.cpc_currency|default:"" }}</p>
+                        <p><span class="font-semibold text-gray-800">Competition:</span> {{ keyword.competition|default:"N/A" }}</p>
+                      </div>
+                    </div>
+                    <div class="flex flex-col items-center mt-4">
+                      <p class="mb-1 text-xs text-center text-gray-500">Trend</p>
+                      {% with "trend-data-" as prefix_str %}
+                      {% with keyword.id|stringformat:"s" as keyword_id_str %}
+                      {% with prefix_str|add:keyword_id_str as final_trend_id %}
+                        {{ keyword.trend_data|json_script:final_trend_id }}
+                        <div data-keyword-trends-target="graph"
+                             data-trend-data-id="{{ final_trend_id }}"
+                             class="w-full h-28 bg-gray-100 rounded border border-gray-200"></div>
+                      {% endwith %}
+                      {% endwith %}
+                      {% endwith %}
+                    </div>
+                    <div class="flex justify-center mt-4">
+                      <button type="button"
+                              class="px-3 py-1.5 rounded-md text-xs font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2
+                              {% if keyword.use %}bg-pink-600 text-white hover:bg-pink-700{% else %}bg-white text-pink-700 border border-pink-300 hover:bg-pink-50{% endif %}"
+                              data-action="click->keyword-trends#toggleUse"
+                              data-keyword-id="{{ keyword.id }}"
+                              data-project-id="{{ project.id }}"
+                              data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
+                        {% if keyword.use %}Unmark as Used{% else %}Mark as Used{% endif %}
+                      </button>
+                    </div>
+                  </div>
+                </li>
               {% endfor %}
             </ul>
           {% else %}
-            <p class="mt-4 text-sm text-gray-500">No keywords found for this project.</p>
+            <p class="mt-4 text-base text-center text-gray-500">No keywords found for this project.</p>
           {% endif %}
         </div>
       </div>
     </div>
   </div>
 {% endblock content %}
-
-{% block javascript %}
-  {{ block.super }}
-  {# Removed Stimulus controller script link as it's no longer needed for this simple display #}
-{% endblock javascript %}

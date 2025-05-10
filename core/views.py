@@ -18,7 +18,6 @@ from core.forms import ProfileUpdateForm, ProjectScanForm
 from core.models import (
     BlogPost,
     Competitor,
-    Keyword,
     PricingPageUpdatesSuggestion,
     Profile,
     Project,
@@ -215,9 +214,26 @@ class KeywordsAgentView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        project_keywords = ProjectKeyword.objects.filter(project=self.object)
-        keywords = Keyword.objects.filter(id__in=project_keywords.values_list("keyword_id", flat=True))
-        context["keywords"] = keywords
+        # Fetch all ProjectKeyword objects for this project, select_related to avoid N+1
+        # Order by most recent first (assuming 'created' field, fallback to '-id')
+        project_keywords = (
+            ProjectKeyword.objects.filter(project=self.object)
+            .select_related("keyword")
+            .order_by("-id")  # Change to '-created' if a 'created' field exists
+        )
+
+        processed_keywords = []
+        for pk in project_keywords:
+            keyword_obj = pk.keyword
+            # Extract the 'value', 'month', and 'year' from each trend object.
+            keyword_obj.trend_data = [
+                {"value": trend.value, "month": trend.month, "year": trend.year} for trend in keyword_obj.trends.all()
+            ]
+            # Attach the 'use' field from ProjectKeyword
+            keyword_obj.use = pk.use
+            processed_keywords.append(keyword_obj)
+
+        context["keywords"] = processed_keywords
 
         return context
 
