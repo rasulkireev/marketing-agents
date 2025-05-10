@@ -1164,6 +1164,14 @@ class Keyword(BaseModel):
     )
     last_fetched_at = models.DateTimeField(auto_now=True, help_text="Timestamp of when the data was last fetched")
 
+    class Meta:
+        unique_together = ("keyword_text", "country", "data_source")
+        verbose_name = "Keyword"
+        verbose_name_plural = "Keywords"
+
+    def __str__(self):
+        return f"{self.keyword_text} ({self.country or 'global'} - {self.data_source or 'N/A'})"
+
     def fetch_and_update_metrics(self, currency="usd"):
         if not hasattr(settings, "KEYWORDS_EVERYWHERE_API_KEY"):
             logger.error("[KeywordFetch] KEYWORDS_EVERYWHERE_API_KEY not found in settings.")
@@ -1290,14 +1298,6 @@ class Keyword(BaseModel):
                 error=str(e),
             )
             return False
-
-    class Meta:
-        unique_together = ("keyword_text", "country", "data_source")
-        verbose_name = "Keyword"
-        verbose_name_plural = "Keywords"
-
-    def __str__(self):
-        return f"{self.keyword_text} ({self.country or 'global'} - {self.data_source or 'N/A'})"
 
 
 class ProjectKeyword(BaseModel):
