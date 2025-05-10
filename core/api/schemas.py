@@ -100,3 +100,38 @@ class CompetitorAnalysisOut(Schema):
 class SubmitFeedbackIn(Schema):
     feedback: str
     page: str
+
+
+class AddKeywordIn(Schema):
+    project_id: int
+    keyword_text: str
+
+
+class KeywordMetricsOut(Schema):
+    id: int
+    keyword_text: str
+    volume: Optional[int] = None
+    cpc_currency: Optional[str] = None
+    cpc_value: Optional[float] = None  # Using float for schema, Decimal in model
+    competition: Optional[float] = None
+    country: Optional[str] = None
+    data_source: Optional[str] = None
+    last_fetched_at: Optional[str] = None  # datetime converted to str
+    trend_data: Optional[list[dict]] = None
+
+
+class AddKeywordOut(Schema):
+    status: str
+    message: Optional[str] = None
+    keyword: Optional[KeywordMetricsOut] = None
+
+
+class ToggleProjectKeywordUseIn(Schema):
+    project_id: int
+    keyword_id: int
+
+
+class ToggleProjectKeywordUseOut(Schema):
+    status: str
+    message: Optional[str] = None
+    use: Optional[bool] = None

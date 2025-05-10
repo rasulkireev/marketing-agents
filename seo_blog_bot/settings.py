@@ -225,10 +225,10 @@ SOCIALACCOUNT_PROVIDERS = {
 
 ANYMAIL = {
     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
-    "MAILGUN_SENDER_DOMAIN": "mg.seoblogbot.com",
+    "MAILGUN_SENDER_DOMAIN": "mg.marketingagents.net",
 }
-DEFAULT_FROM_EMAIL = "Rasul from Marketing Agents <rasul@seoblogbot.com>"
-SERVER_EMAIL = "Marketing Agents Errors <error@seoblogbot.com>"
+DEFAULT_FROM_EMAIL = "Rasul from Marketing Agents <rasul@marketingagents.net>"
+SERVER_EMAIL = "Marketing Agents Errors <error@marketingagents.net>"
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -340,3 +340,5 @@ JINA_READER_API_KEY = env("JINA_READER_API_KEY")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 GEMINI_API_KEY = env("GEMINI_API_KEY")
 PERPLEXITY_API_KEY = env("PERPLEXITY_API_KEY")
+
+KEYWORDS_EVERYWHERE_API_KEY = env("KEYWORDS_EVERYWHERE_API_KEY")

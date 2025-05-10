@@ -33,6 +33,10 @@ class ProjectDetails(BaseModel):
     target_audience_summary: str = Field(description="Profile of ideal users including demographics and needs")
     pain_points: str = Field(description="List of target audience challenges in markdown list format")
     product_usage: str = Field(description="List of common use cases in markdown list format")
+    proposed_keywords: str = Field(
+        description="""Comma separated list of 10 long-tail and 10 short-tail
+        keywords you think this site would rank well for"""
+    )
     links: str = Field(
         description="""List of relevant URLs in markdown list format.
                       Please make sure the urls are full. If the link is "/pricing", please complete it

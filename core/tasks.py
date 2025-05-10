@@ -2,8 +2,8 @@ import requests
 from django.conf import settings
 from django_q.tasks import async_task
 
-from core.choices import ProjectPageType
-from core.models import Competitor, Project, ProjectPage
+from core.choices import KeywordDataSource, ProjectPageType
+from core.models import Competitor, Keyword, Project, ProjectKeyword, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -77,3 +77,62 @@ def analyze_project_competitor(competitor_id):
         competitor.analyze_competitor()
 
     return f"Analyzed Competitor for {competitor.name}"
+
+
+def process_project_keywords(project_id: int):
+    """
+    Processes proposed keywords for a project:
+    1. Saves them to the Keyword model.
+    2. Fetches metrics for each keyword.
+    3. Associates keywords with the project.
+    """
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        logger.error(f"[KeywordProcessing] Project with id {project_id} not found.")
+        return f"Project with id {project_id} not found."
+
+    if not project.proposed_keywords:
+        logger.info(f"[KeywordProcessing] No proposed keywords for project {project.id} ({project.name}).")
+        return f"No proposed keywords for project {project.name}."
+
+    keyword_strings = [kw.strip() for kw in project.proposed_keywords.split(",") if kw.strip()]
+    processed_count = 0
+    failed_count = 0
+
+    # Determine country code from project language, default to 'us'
+    # Keywords Everywhere API uses 2-letter lowercase country codes.
+    # Project language codes (e.g., 'en', 'es') fit this.
+    country_code = "us"  # Default
+    # if project.language and len(project.language) >= 2:
+    #     country_code = project.language[:2].lower()
+
+    for keyword_str in keyword_strings:
+        try:
+            keyword_obj, created = Keyword.objects.get_or_create(
+                keyword_text=keyword_str, country=country_code, data_source=KeywordDataSource.GOOGLE_KEYWORD_PLANNER
+            )
+            if created:
+                logger.info("[KeywordProcessing] Created new keyword", keyword_text=keyword_str)
+
+            metrics_fetched = keyword_obj.fetch_and_update_metrics()
+            if not metrics_fetched:
+                logger.warning(
+                    f"[KeywordProcessing] Failed to fetch metrics for keyword: {keyword_obj.id} ('{keyword_str}')."
+                )
+
+            # Associate with project
+            ProjectKeyword.objects.get_or_create(project=project, keyword=keyword_obj)
+            processed_count += 1
+        except Exception as e:
+            failed_count += 1
+            logger.error(
+                f"[KeywordProcessing] Error processing keyword '{keyword_str}' for project {project.id}.",
+                error=str(e),
+                project_id=project.id,
+                keyword_text=keyword_str,
+            )
+
+    result_message = f"Keyword processing for project {project.name} (ID: {project.id}): Processed {processed_count} keywords, Failed: {failed_count}."
+    logger.info(result_message)
+    return result_message

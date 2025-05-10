@@ -15,6 +15,7 @@ urlpatterns = [
     path("project/<int:pk>/", views.ProjectDetailView.as_view(), name="project_detail"),
     path("blogging-agent/<int:pk>/", views.BloggingAgentDetailView.as_view(), name="blogging_agent_detail"),
     path("pricing-agent/<int:pk>/", views.PricingAgentView.as_view(), name="pricing_agent"),
+    path("keywords-agent/<int:pk>/", views.KeywordsAgentView.as_view(), name="keywords_agent"),
     path(
         "competitor-analysis-agent/<int:pk>/",
         views.CompetitorAnalysisAgentView.as_view(),
