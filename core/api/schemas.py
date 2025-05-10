@@ -117,6 +117,7 @@ class KeywordMetricsOut(Schema):
     country: Optional[str] = None
     data_source: Optional[str] = None
     last_fetched_at: Optional[str] = None  # datetime converted to str
+    trend_data: Optional[list[dict]] = None
 
 
 class AddKeywordOut(Schema):
