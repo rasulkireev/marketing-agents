@@ -438,4 +438,4 @@ def submit_blog_post(request: HttpRequest, data: BlogPostIn):
         )
         return BlogPostOut(status="success", message="Blog post submitted successfully.")
     except Exception as e:
-        return BlogPostOut(status="failure", message=f"Failed to submit blog post: {str(e)}")
+        return BlogPostOut(status="error", message=f"Failed to submit blog post: {str(e)}")

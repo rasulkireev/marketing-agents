@@ -149,5 +149,5 @@ class BlogPostIn(Schema):
 
 
 class BlogPostOut(Schema):
-    status: str  # API response status: 'success' or 'failure'
+    status: str
     message: str
