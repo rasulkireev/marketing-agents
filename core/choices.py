@@ -99,5 +99,5 @@ class KeywordDataSource(models.TextChoices):
 
 
 class BlogPostStatus(models.TextChoices):
-    DRAFT = "DR", "Draft"
-    PUBLISHED = "PB", "Published"
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
