@@ -8,6 +8,8 @@ from core.api.schemas import (
     AddKeywordIn,
     AddKeywordOut,
     AddPricingPageIn,
+    BlogPostIn,
+    BlogPostOut,
     CompetitorAnalysisOut,
     CreatePricingStrategyIn,
     GeneratedContentOut,
@@ -22,12 +24,21 @@ from core.api.schemas import (
     UpdateTitleScoreIn,
 )
 from core.choices import ContentType, ProjectPageType
-from core.models import BlogPostTitleSuggestion, Competitor, Feedback, Keyword, Project, ProjectKeyword, ProjectPage
+from core.models import (
+    BlogPost,
+    BlogPostTitleSuggestion,
+    Competitor,
+    Feedback,
+    Keyword,
+    Project,
+    ProjectKeyword,
+    ProjectPage,
+)
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
 
-api = NinjaAPI(auth=MultipleAuthSchema(), csrf=True, version="1.0.0")
+api = NinjaAPI(auth=MultipleAuthSchema(), csrf=False, version="1.0.0")
 
 
 @api.post("/scan", response=ProjectScanOut)
@@ -411,3 +422,21 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
             profile_id=profile.id,
         )
         return ToggleProjectKeywordUseOut(status="error", message=f"Failed to toggle use: {str(e)}")
+
+
+@api.post("/blog-posts/submit", response=BlogPostOut)
+def submit_blog_post(request: HttpRequest, data: BlogPostIn):
+    try:
+        BlogPost.objects.create(
+            profile=request.auth,
+            title=data.title,
+            description=data.description,
+            slug=data.slug,
+            tags=data.tags,
+            content=data.content,
+            status=data.status,
+            # icon and image are ignored for now (file upload not handled)
+        )
+        return BlogPostOut(status="success", message="Blog post submitted successfully.")
+    except Exception as e:
+        return BlogPostOut(status="error", message=f"Failed to submit blog post: {str(e)}")

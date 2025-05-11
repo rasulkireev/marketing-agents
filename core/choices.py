@@ -96,3 +96,8 @@ class ProfileStates(models.TextChoices):
 class KeywordDataSource(models.TextChoices):
     GOOGLE_KEYWORD_PLANNER = "gkp", "Google Keyword Planner"
     CLICKSTREAM = "cli", "Clickstream"
+
+
+class BlogPostStatus(models.TextChoices):
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
