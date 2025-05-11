@@ -1,12 +1,18 @@
 import { Controller } from "@hotwired/stimulus";
 import * as d3 from "d3";
+import { showMessage } from "../utils/messages";
 
 // Controller to handle rendering of D3 trend graphs for keywords
 export default class extends Controller {
-  static targets = [ "graph", "formMessage", "search", "list" ];
+  static targets = [ "graph", "formMessage", "search", "list", "addButton", "sort" ];
 
   connect() {
     this.renderAllGraphs();
+    // Default sort on connect
+    if (this.hasSortTarget) {
+      this.sortTarget.value = "created_desc";
+      this.sortKeywords();
+    }
   }
 
   renderAllGraphs() {
@@ -144,18 +150,19 @@ export default class extends Controller {
   async addKeyword(event) {
     event.preventDefault();
     const form = event.target;
-    const formMessage = this.hasFormMessageTarget ? this.formMessageTarget : null;
-    if (formMessage) {
-      formMessage.textContent = "Adding keyword...";
-      formMessage.className = "ml-4 text-sm text-gray-500";
+    const addButton = this.hasAddButtonTarget ? this.addButtonTarget : null;
+    if (addButton) {
+      addButton.disabled = true;
+      addButton.innerHTML = `<svg class="mr-2 -ml-1 w-5 h-5 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>Adding...`;
     }
     const formData = new FormData(form);
     const project_id = formData.get("project_id");
     const keyword_text = formData.get("keyword_text");
     if (!keyword_text || !project_id) {
-      if (formMessage) {
-        formMessage.textContent = "Keyword and project are required.";
-        formMessage.className = "ml-4 text-sm text-red-600";
+      showMessage("Keyword and project are required.", "error");
+      if (addButton) {
+        addButton.disabled = false;
+        addButton.textContent = "Add Keyword";
       }
       return;
     }
@@ -170,21 +177,20 @@ export default class extends Controller {
       });
       const data = await response.json();
       if (data.status === "success") {
-        if (formMessage) {
-          formMessage.textContent = "Keyword added! Reloading...";
-          formMessage.className = "ml-4 text-sm text-green-600";
-        }
+        showMessage("Keyword added successfully!", "success");
         setTimeout(() => { window.location.reload(); }, 800);
       } else {
-        if (formMessage) {
-          formMessage.textContent = data.message || "Failed to add keyword.";
-          formMessage.className = "ml-4 text-sm text-red-600";
+        showMessage(data.message || "Failed to add keyword.", "error");
+        if (addButton) {
+          addButton.disabled = false;
+          addButton.textContent = "Add Keyword";
         }
       }
     } catch (e) {
-      if (formMessage) {
-        formMessage.textContent = "An error occurred. Please try again.";
-        formMessage.className = "ml-4 text-sm text-red-600";
+      showMessage("An error occurred. Please try again.", "error");
+      if (addButton) {
+        addButton.disabled = false;
+        addButton.textContent = "Add Keyword";
       }
     }
   }
@@ -213,7 +219,7 @@ export default class extends Controller {
     }
     const originalText = button.textContent;
     button.disabled = true;
-    button.textContent = "Toggling...";
+    button.textContent = "";
     try {
       const response = await fetch("/api/keywords/toggle-use", {
         method: "POST",
@@ -226,11 +232,11 @@ export default class extends Controller {
       const data = await response.json();
       if (data.status === "success") {
         if (data.use === true) {
-          button.textContent = "Unmark as Used";
+          button.textContent = "Unuse";
           button.className = "px-3 py-1.5 text-xs font-semibold text-white bg-pink-600 rounded-md shadow-sm transition focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 hover:bg-pink-700";
           button.setAttribute("data-keyword-use", "true");
         } else {
-          button.textContent = "Mark as Used";
+          button.textContent = "Use";
           button.className = "px-3 py-1.5 text-xs font-semibold text-pink-700 bg-white rounded-md border border-pink-300 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 hover:bg-pink-50";
           button.setAttribute("data-keyword-use", "false");
         }
@@ -274,6 +280,60 @@ export default class extends Controller {
         item.style.display = "none";
       }
     });
+  }
+
+  sortKeywords() {
+    if (!this.hasListTarget || !this.hasSortTarget) return;
+    const sortValue = this.sortTarget.value;
+    const items = Array.from(this.listTarget.querySelectorAll("li"));
+    let getSortValue;
+    let direction = 1;
+    switch (sortValue) {
+      case "created_asc":
+        getSortValue = li => new Date(li.getAttribute("data-created-at"));
+        direction = 1;
+        break;
+      case "created_desc":
+        getSortValue = li => new Date(li.getAttribute("data-created-at"));
+        direction = -1;
+        break;
+      case "volume_desc":
+        getSortValue = li => parseInt(li.getAttribute("data-volume")) || 0;
+        direction = -1;
+        break;
+      case "volume_asc":
+        getSortValue = li => parseInt(li.getAttribute("data-volume")) || 0;
+        direction = 1;
+        break;
+      case "competition_desc":
+        getSortValue = li => parseFloat(li.getAttribute("data-competition")) || 0;
+        direction = -1;
+        break;
+      case "competition_asc":
+        getSortValue = li => parseFloat(li.getAttribute("data-competition")) || 0;
+        direction = 1;
+        break;
+      case "cpc_desc":
+        getSortValue = li => parseFloat(li.getAttribute("data-cpc-value")) || 0;
+        direction = -1;
+        break;
+      case "cpc_asc":
+        getSortValue = li => parseFloat(li.getAttribute("data-cpc-value")) || 0;
+        direction = 1;
+        break;
+      default:
+        getSortValue = li => new Date(li.getAttribute("data-created-at"));
+        direction = -1;
+    }
+    items.sort((a, b) => {
+      const aVal = getSortValue(a);
+      const bVal = getSortValue(b);
+      if (aVal < bVal) return -1 * direction;
+      if (aVal > bVal) return 1 * direction;
+      return 0;
+    });
+    // Remove all <li> and re-append in sorted order
+    items.forEach(li => this.listTarget.appendChild(li));
   }
 
   disconnect() {

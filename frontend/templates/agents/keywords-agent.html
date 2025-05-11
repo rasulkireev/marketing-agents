@@ -31,36 +31,53 @@
         </p>
       </div>
 
-      <!-- Add Keyword Form -->
-      <form data-controller="keyword-trends" data-action="submit->keyword-trends#addKeyword" class="flex flex-col gap-4 items-start p-6 mb-12 rounded-xl border border-pink-200 shadow-lg bg-white/80 sm:flex-row sm:items-end">
-        <input type="hidden" name="project_id" value="{{ project.id }}">
-        <div class="flex-1 w-full">
-          <label for="add-keyword-input" class="block mb-1 text-sm font-medium text-pink-700">Add a Keyword</label>
-          <input id="add-keyword-input" name="keyword_text" type="text" required placeholder="Enter keyword..." class="block px-3 py-2 w-full text-gray-900 bg-white rounded-md border border-pink-200 shadow-sm focus:ring-pink-500 focus:border-pink-500" />
-        </div>
-        <button type="submit" class="inline-flex items-center px-5 py-2.5 text-base font-semibold text-white bg-pink-600 rounded-md shadow-md transition hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">Add Keyword</button>
-        <div data-keyword-trends-target="formMessage" class="ml-4 text-sm min-h-[1.5em] text-pink-600"></div>
-      </form>
-      <!-- End Add Keyword Form -->
-
       <!-- Main Content Area: Keyword List -->
       <div class="mx-auto mt-10 max-w-2xl lg:max-w-none">
         <div data-controller="keyword-trends">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="flex gap-2 items-center text-2xl font-bold text-gray-900">
-              <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.88 3.549A9 9 0 1021 12.001M19.07 4.93l-7.07 7.07-2.12-2.12"/></svg>
-              Keyword List
-            </h2>
-            <input type="text"
-                   placeholder="Search keywords..."
-                   class="px-3 py-2 ml-4 w-56 text-sm text-gray-900 bg-white rounded-md border border-pink-200 focus:ring-pink-500 focus:border-pink-500"
-                   data-keyword-trends-target="search"
-                   data-action="input->keyword-trends#filterKeywords">
+          <!-- Unified Controls: Add Keyword (left), Search/Sort (right) -->
+          <div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end sm:gap-6">
+            <!-- Add Keyword Form (Left) -->
+            <form data-controller="keyword-trends" data-action="submit->keyword-trends#addKeyword" class="flex flex-col gap-2 items-start p-4 w-full max-w-md rounded-xl border border-pink-200 shadow-none bg-white/80 sm:w-1/2 sm:max-w-lg sm:p-4">
+              <input type="hidden" name="project_id" value="{{ project.id }}">
+              <div class="flex flex-row gap-2 items-end w-full">
+                <input id="add-keyword-input" name="keyword_text" type="text" required placeholder="Enter keyword..." class="block px-3 py-2 w-full text-gray-900 bg-white rounded-md border border-pink-200 shadow-sm focus:ring-pink-500 focus:border-pink-500" />
+                <button type="submit" data-keyword-trends-target="addButton" class="inline-flex items-center px-6 py-2 min-w-max text-base font-semibold text-white whitespace-nowrap bg-pink-600 rounded-md shadow-md transition hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">Add Keyword</button>
+              </div>
+            </form>
+            <!-- Search and Sort Controls (Right) -->
+            <div class="flex flex-col gap-2 w-full sm:w-1/2 sm:max-w-lg sm:flex-row sm:items-end sm:justify-end sm:gap-4">
+              <div class="flex flex-col w-full sm:w-1/2">
+                <label for="search-keywords" class="mb-1 text-sm font-medium text-pink-700">Search Keywords</label>
+                <input id="search-keywords"
+                       type="text"
+                       placeholder="Search keywords..."
+                       class="px-3 py-2 w-full h-10 text-sm text-gray-900 bg-white rounded-md border border-pink-200 focus:ring-pink-500 focus:border-pink-500"
+                       data-keyword-trends-target="search"
+                       data-action="input->keyword-trends#filterKeywords">
+              </div>
+              <div class="flex flex-col w-full sm:w-1/2">
+                <label for="sort-keywords" class="mb-1 text-sm font-medium text-pink-700">Sort By</label>
+                <select id="sort-keywords" class="px-2 py-2 w-full h-10 text-sm bg-white rounded-md border border-pink-200 focus:ring-pink-500 focus:border-pink-500" data-keyword-trends-target="sort" data-action="change->keyword-trends#sortKeywords">
+                  <option value="created_desc">Newest First</option>
+                  <option value="created_asc">Oldest First</option>
+                  <option value="volume_desc">Volume (High to Low)</option>
+                  <option value="volume_asc">Volume (Low to High)</option>
+                  <option value="competition_desc">Competition (High to Low)</option>
+                  <option value="competition_asc">Competition (Low to High)</option>
+                  <option value="cpc_desc">CPC (High to Low)</option>
+                  <option value="cpc_asc">CPC (Low to High)</option>
+                </select>
+              </div>
+            </div>
           </div>
           {% if keywords %}
             <ul class="grid gap-6 mt-4 sm:grid-cols-2 lg:grid-cols-3" data-keyword-trends-target="list">
               {% for keyword in keywords %}
-                <li class="flex flex-col p-5 h-full bg-gray-50 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md group">
+                <li class="flex flex-col p-5 h-full bg-gray-50 rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md group"
+                    data-created-at="{{ keyword.created_at|date:'c' }}"
+                    data-volume="{{ keyword.volume|default:'' }}"
+                    data-competition="{{ keyword.competition|default:'' }}"
+                    data-cpc-value="{{ keyword.cpc_value|default:'' }}">
                   <div class="flex flex-col flex-1 justify-between">
                     <div>
                       <p class="text-lg font-bold text-pink-700 transition group-hover:text-pink-800">{{ keyword.keyword_text }}</p>
@@ -91,7 +108,7 @@
                               data-keyword-id="{{ keyword.id }}"
                               data-project-id="{{ project.id }}"
                               data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
-                        {% if keyword.use %}Unmark as Used{% else %}Mark as Used{% endif %}
+                        {% if keyword.use %}Unuse{% else %}Use{% endif %}
                       </button>
                     </div>
                   </div>
