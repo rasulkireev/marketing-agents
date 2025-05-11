@@ -200,6 +200,12 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class ProjectSettingsView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "project/project_settings.html"
+    context_object_name = "project"
+
+
 class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
     model = Project
     template_name = "agents/blogging-agent.html"

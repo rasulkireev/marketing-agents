@@ -586,8 +586,13 @@ class Project(BaseModel):
 
 class BlogPostTitleSuggestion(BaseModel):
     project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="blog_post_title_suggestions"
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="blog_post_title_suggestions",
     )
+
     title = models.CharField(max_length=255)
     content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
     category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
@@ -595,6 +600,7 @@ class BlogPostTitleSuggestion(BaseModel):
     prompt = models.TextField(blank=True)
     target_keywords = models.JSONField(default=list, blank=True, null=True)
     suggested_meta_description = models.TextField(blank=True)
+
     user_score = models.SmallIntegerField(
         default=0,
         choices=[
@@ -604,6 +610,9 @@ class BlogPostTitleSuggestion(BaseModel):
         ],
         help_text="User's rating of the title suggestion",
     )
+
+    archived = models.BooleanField(default=False)
+    posted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
