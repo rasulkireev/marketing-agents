@@ -13,7 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 from djstripe import models as djstripe_models
 
-from core.choices import Language, ProfileStates, ProjectPageType
+from core.choices import BlogPostStatus, Language, ProfileStates, ProjectPageType
 from core.forms import ProfileUpdateForm, ProjectScanForm
 from core.models import (
     BlogPost,
@@ -181,6 +181,9 @@ class BlogPostView(DetailView):
     model = BlogPost
     template_name = "blog/blog_post.html"
     context_object_name = "blog_post"
+
+    def get_queryset(self):
+        return BlogPost.objects.filter(status=BlogPostStatus.PUBLISHED)
 
 
 class ProjectDetailView(LoginRequiredMixin, DetailView):
