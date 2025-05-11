@@ -33,7 +33,7 @@ class DivErrorList(ErrorList):
 
 def replace_placeholders(data, blog_post):
     """
-    Recursively replace values in curly braces (e.g., '{slug}') in a dict with the corresponding attribute from blog_post.
+    Recursively replace values in curly braces (e.g., '{{ slug }}') in a dict with the corresponding attribute from blog_post.
     """
     if isinstance(data, dict):
         return {k: replace_placeholders(v, blog_post) for k, v in data.items()}
@@ -58,6 +58,7 @@ def replace_placeholders(data, blog_post):
 
 
 def submit_blog_post_to_endpoint(project_id, blog_post_id=None):
+    # TODO: Generate blog post if not provided
     """
     Submits the latest GeneratedBlogPost for the given project to the endpoint specified in AutoSubmittionSettings.
     Accepts a Project instance or project id.

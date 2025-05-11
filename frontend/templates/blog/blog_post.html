@@ -13,7 +13,13 @@
 <meta property="og:title" content="{{ blog_post.title }}" />
 <meta property="og:url" content="https://{{ request.get_host }}{{ blog_post.get_absolute_url }}" />
 <meta property="og:description" content="{{ blog_post.description }}" />
-<meta property="og:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
+{% if blog_post.image %}
+  <meta property="og:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
+{% elif blog_post.icon %}
+  <meta property="og:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.icon.url }}" />
+{% else %}
+  <meta property="og:image" content="https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+{% endif %}
 <meta property="og:locale" content="en_US" />
 
 <meta name="twitter:card" content="summary_large_image" />
@@ -21,7 +27,13 @@
 <meta name="twitter:site" content="@rasulkireev" />
 <meta name="twitter:title" content="{{ blog_post.title }}" />
 <meta name="twitter:description" content="{{ blog_post.description }}" />
-<meta name="twitter:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
+{% if blog_post.image %}
+  <meta name="twitter:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}" />
+{% elif blog_post.icon %}
+  <meta name="twitter:image" content="https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.icon.url }}" />
+{% else %}
+  <meta name="twitter:image" content="https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}" />
+{% endif %}
 {% endblock meta %}
 
 {% block content %}
@@ -43,7 +55,13 @@
     "@type": "BlogPosting",
     "headline": "{{ blog_post.title }}",
     "description": "{{ blog_post.description }}",
-    "image": "https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}",
+    {% if blog_post.image %}
+      "image": "https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.image.url }}",
+    {% elif blog_post.icon %}
+      "image": "https://osig.app/g?site=x&style=base&font=markerfelt&title={{ blog_post.title }} | Marketing Agents Blog&subtitle={{ blog_post.description }}&image_url={{ blog_post.icon.url }}",
+    {% else %}
+      "image": "https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}",
+    {% endif %}
     "url": "https://{{ request.get_host }}{{ blog_post.get_absolute_url }}",
     "datePublished": "{{ blog_post.created_at|date:'c' }}",
     "dateModified": "{{ blog_post.updated_at|date:'c' }}",
