@@ -167,7 +167,7 @@ class BlogPost(BaseModel):
     image = models.ImageField(upload_to="blog_post_images/", blank=True)
 
     status = models.CharField(
-        max_length=3,
+        max_length=20,
         choices=BlogPostStatus.choices,
         default=BlogPostStatus.DRAFT,
     )
