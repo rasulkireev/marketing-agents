@@ -32,9 +32,6 @@
         {% for post in blog_posts %}
           <a href="{{ post.get_absolute_url }}" class="block rounded-lg transition duration-150 ease-in-out hover:bg-gray-100">
             <article class="flex items-start p-4">
-              {% if post.icon %}
-                <img src="{{ post.icon.url }}" alt="{{ post.title }}" class="object-cover flex-shrink-0 mr-4 w-24 h-24 rounded-lg">
-              {% endif %}
               <div>
                 <h2 class="mb-2 text-2xl font-semibold text-gray-900">{{ post.title }}</h2>
                 <p class="text-gray-600">{{ post.description }}</p>
