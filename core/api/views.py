@@ -428,7 +428,6 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
 def submit_blog_post(request: HttpRequest, data: BlogPostIn):
     try:
         BlogPost.objects.create(
-            profile=request.auth,
             title=data.title,
             description=data.description,
             slug=data.slug,
