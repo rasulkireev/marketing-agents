@@ -424,8 +424,11 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
         return ToggleProjectKeywordUseOut(status="error", message=f"Failed to toggle use: {str(e)}")
 
 
-@api.post("/blog-posts/submit", response=BlogPostOut)
+@api.post("/blog-posts/submit", response=BlogPostOut, include_in_schema=False)
 def submit_blog_post(request: HttpRequest, data: BlogPostIn):
+    profile = getattr(request, "auth", None)
+    if not profile or not getattr(profile.user, "is_superuser", False):
+        return BlogPostOut(status="error", message="Forbidden: superuser access required."), 403
     try:
         BlogPost.objects.create(
             title=data.title,
