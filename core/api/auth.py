@@ -18,7 +18,7 @@ class MultipleAuthSchema(HttpBearer):
         # For API token authentication (when using the API directly)
         if token:
             try:
-                return Profile.objects.get(api_key=token)
+                return Profile.objects.get(key=token)
             except Profile.DoesNotExist:
                 return None
 

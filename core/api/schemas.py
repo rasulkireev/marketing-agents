@@ -2,7 +2,7 @@ from typing import Optional
 
 from ninja import Schema
 
-from core.choices import ContentType
+from core.choices import BlogPostStatus, ContentType
 
 
 class ProjectScanIn(Schema):
@@ -135,3 +135,19 @@ class ToggleProjectKeywordUseOut(Schema):
     status: str
     message: Optional[str] = None
     use: Optional[bool] = None
+
+
+class BlogPostIn(Schema):
+    title: str
+    description: str = ""
+    slug: str
+    tags: str = ""
+    content: str
+    icon: Optional[str] = None  # URL or base64 string
+    image: Optional[str] = None  # URL or base64 string
+    status: BlogPostStatus = BlogPostStatus.DRAFT
+
+
+class BlogPostOut(Schema):
+    status: str  # API response status: 'success' or 'failure'
+    message: str

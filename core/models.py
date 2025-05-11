@@ -13,6 +13,7 @@ from pydantic_ai.providers.openai import OpenAIProvider
 
 from core.base_models import BaseModel
 from core.choices import (
+    BlogPostStatus,
     Category,
     ContentType,
     KeywordDataSource,
@@ -164,6 +165,12 @@ class BlogPost(BaseModel):
     content = models.TextField()
     icon = models.ImageField(upload_to="blog_post_icons/", blank=True)
     image = models.ImageField(upload_to="blog_post_images/", blank=True)
+
+    status = models.CharField(
+        max_length=3,
+        choices=BlogPostStatus.choices,
+        default=BlogPostStatus.DRAFT,
+    )
 
     def __str__(self):
         return self.title
