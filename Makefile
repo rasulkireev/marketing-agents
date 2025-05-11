@@ -2,6 +2,9 @@ serve:
 	docker-compose up -d --build
 	docker compose logs -f backend
 
+makemigrations:
+	docker compose run --rm backend python ./manage.py makemigrations
+
 shell:
 	docker compose run --rm backend python ./manage.py shell_plus --ipython
 

@@ -1,11 +1,12 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from django_q.tasks import async_task
 from ninja import NinjaAPI
 
 from core.api.auth import MultipleAuthSchema
 from core.api.schemas import (
     AddCompetitorIn,
+    AddKeywordIn,
+    AddKeywordOut,
     AddPricingPageIn,
     CompetitorAnalysisOut,
     CreatePricingStrategyIn,
@@ -16,11 +17,12 @@ from core.api.schemas import (
     ProjectScanIn,
     ProjectScanOut,
     SubmitFeedbackIn,
+    ToggleProjectKeywordUseIn,
+    ToggleProjectKeywordUseOut,
     UpdateTitleScoreIn,
 )
 from core.choices import ContentType, ProjectPageType
-from core.models import BlogPostTitleSuggestion, Competitor, Feedback, Project, ProjectPage
-from core.tasks import schedule_project_competitor_analysis, schedule_project_page_analysis
+from core.models import BlogPostTitleSuggestion, Competitor, Feedback, Keyword, Project, ProjectKeyword, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -53,8 +55,6 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         analyzed_project = project.analyze_content()
 
         if got_content and analyzed_project:
-            async_task(schedule_project_page_analysis, project.id)
-            async_task(schedule_project_competitor_analysis, project.id, timeout=180)
             return {
                 "status": "success",
                 "project_id": project.id,
@@ -330,3 +330,84 @@ def submit_feedback(request: HttpRequest, data: SubmitFeedbackIn):
     except Exception as e:
         logger.error("Failed to submit feedback", error=str(e), profile_id=profile.id)
         return {"status": "error", "message": "Failed to submit feedback. Please try again."}
+
+
+@api.post("/keywords/add", response=AddKeywordOut)
+def add_keyword_to_project(request: HttpRequest, data: AddKeywordIn):
+    profile = request.auth
+    project = get_object_or_404(Project, id=data.project_id, profile=profile)
+
+    keyword_text_cleaned = data.keyword_text.strip().lower()
+    if not keyword_text_cleaned:
+        return {"status": "error", "message": "Keyword text cannot be empty."}
+
+    try:
+        keyword, created = Keyword.objects.get_or_create(
+            keyword_text=keyword_text_cleaned,
+        )
+
+        project_keyword, pk_created = ProjectKeyword.objects.get_or_create(project=project, keyword=keyword)
+
+        if created:
+            metrics_fetched = keyword.fetch_and_update_metrics()
+            if not metrics_fetched:
+                logger.warning(
+                    "[AddKeyword] Failed to fetch metrics for keyword.",
+                    keyword_id=keyword.id,
+                    project_id=project.id,
+                )
+                return {
+                    "status": "error",
+                    "message": "Keyword added, but metrics fetch failed/pending.",
+                }
+
+        keyword_data = {
+            "id": keyword.id,
+            "keyword_text": keyword.keyword_text,
+            "volume": keyword.volume,
+            "cpc_currency": keyword.cpc_currency,
+            "cpc_value": float(keyword.cpc_value) if keyword.cpc_value is not None else None,
+            "competition": keyword.competition,
+            "country": keyword.country,
+            "data_source": keyword.data_source,
+            "last_fetched_at": keyword.last_fetched_at.isoformat() if keyword.last_fetched_at else None,
+            "trend_data": [
+                {"value": trend.value, "month": trend.month, "year": trend.year} for trend in keyword.trends.all()
+            ],
+        }
+
+        return {
+            "status": "success",
+            "message": "Keyword added",
+            "keyword": keyword_data,
+        }
+
+    except Exception as e:
+        logger.error(
+            "[AddKeyword] Failed to add keyword to project",
+            error=str(e),
+            exc_info=True,
+            project_id=project.id,
+            keyword_text=data.keyword_text,
+        )
+        return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}
+
+
+@api.post("/keywords/toggle-use", response=ToggleProjectKeywordUseOut)
+def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordUseIn):
+    profile = request.auth
+    try:
+        project = get_object_or_404(Project, id=data.project_id, profile=profile)
+        project_keyword = get_object_or_404(ProjectKeyword, project=project, keyword_id=data.keyword_id)
+        project_keyword.use = not project_keyword.use
+        project_keyword.save(update_fields=["use"])
+        return ToggleProjectKeywordUseOut(status="success", use=project_keyword.use)
+    except Exception as e:
+        logger.error(
+            "Failed to toggle ProjectKeyword use field",
+            error=str(e),
+            project_id=data.project_id,
+            keyword_id=data.keyword_id,
+            profile_id=profile.id,
+        )
+        return ToggleProjectKeywordUseOut(status="error", message=f"Failed to toggle use: {str(e)}")

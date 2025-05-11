@@ -1,13 +1,27 @@
+from decimal import Decimal, InvalidOperation
+
+import requests
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
+from django_q.tasks import async_task
 from pydantic_ai import Agent, RunContext
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from core.base_models import BaseModel
-from core.choices import Category, ContentType, Language, ProfileStates, ProjectPageType, ProjectStyle, ProjectType
+from core.choices import (
+    Category,
+    ContentType,
+    KeywordDataSource,
+    Language,
+    ProfileStates,
+    ProjectPageType,
+    ProjectStyle,
+    ProjectType,
+)
 from core.model_utils import generate_random_key, get_html_content, get_markdown_content, run_agent_synchronously
 from core.prompts import (
     GENERATE_CONTENT_SYSTEM_PROMPTS,
@@ -30,7 +44,6 @@ from core.schemas import (
     TitleSuggestions,
     WebPageContent,
 )
-from seo_blog_bot import settings
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -185,6 +198,7 @@ class Project(BaseModel):
     links = models.TextField(blank=True)
     competitors_list = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
+    proposed_keywords = models.TextField(blank=True)
 
     def __str__(self):
         return self.name
@@ -203,6 +217,7 @@ class Project(BaseModel):
             product_usage=self.product_usage,
             links=self.links,
             language=self.language,
+            proposed_keywords=self.proposed_keywords,
         )
 
     @property
@@ -304,8 +319,13 @@ class Project(BaseModel):
         self.product_usage = result.data.product_usage
         self.links = result.data.links
         self.language = result.data.language
+        self.proposed_keywords = result.data.proposed_keywords
         self.date_analyzed = timezone.now()
         self.save()
+
+        async_task("core.tasks.process_project_keywords", self.id)
+        async_task("core.tasks.schedule_project_page_analysis", self.id)
+        async_task("core.tasks.schedule_project_competitor_analysis", self.id, timeout=180)
 
         return True
 
@@ -1122,6 +1142,195 @@ class CompetitorComparisonBlogPost(BaseModel):
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
+
+
+class Keyword(BaseModel):
+    keyword_text = models.CharField(max_length=255, help_text="The keyword string")
+    volume = models.IntegerField(null=True, blank=True, help_text="The search volume of the keyword")
+    cpc_currency = models.CharField(max_length=10, blank=True, help_text="The currency of the CPC value")
+    cpc_value = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True, help_text="The cost per click value"
+    )
+    competition = models.FloatField(null=True, blank=True, help_text="The competition metric of the keyword (0 to 1)")
+    country = models.CharField(
+        max_length=10, blank=True, default="us", help_text="The country for which metrics were fetched"
+    )
+    data_source = models.CharField(
+        max_length=3,
+        choices=KeywordDataSource.choices,
+        default=KeywordDataSource.GOOGLE_KEYWORD_PLANNER,
+        blank=True,
+        help_text="The data source for the keyword metrics",
+    )
+    last_fetched_at = models.DateTimeField(auto_now=True, help_text="Timestamp of when the data was last fetched")
+
+    class Meta:
+        unique_together = ("keyword_text", "country", "data_source")
+        verbose_name = "Keyword"
+        verbose_name_plural = "Keywords"
+
+    def __str__(self):
+        return f"{self.keyword_text} ({self.country or 'global'} - {self.data_source or 'N/A'})"
+
+    def fetch_and_update_metrics(self, currency="usd"):
+        if not hasattr(settings, "KEYWORDS_EVERYWHERE_API_KEY"):
+            logger.error("[KeywordFetch] KEYWORDS_EVERYWHERE_API_KEY not found in settings.")
+            return False
+
+        api_key = settings.KEYWORDS_EVERYWHERE_API_KEY
+        api_url = "https://api.keywordseverywhere.com/v1/get_keyword_data"
+
+        payload = {
+            "kw[]": [self.keyword_text],
+            "country": self.country,
+            "currency": currency,
+            "dataSource": self.data_source,
+        }
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {api_key}"}
+
+        try:
+            response = requests.post(api_url, data=payload, headers=headers, timeout=30)
+            response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
+
+            response_data = response.json()
+
+            if (
+                not response_data.get("data")
+                or not isinstance(response_data["data"], list)
+                or not response_data["data"][0]
+            ):
+                logger.warning(
+                    "[KeywordFetch] No data found in API response for keyword.",
+                    keyword_id=self.id,
+                    keyword_text=self.keyword_text,
+                    response_status=response.status_code,
+                    response_content=response.text[:500],  # Log a snippet of the response
+                )
+                return False
+
+            keyword_api_data = response_data["data"][0]
+
+            self.volume = keyword_api_data.get("vol")
+
+            cpc_data = keyword_api_data.get("cpc", {})
+            self.cpc_currency = cpc_data.get("currency", "")
+            try:
+                self.cpc_value = Decimal(str(cpc_data.get("value", "0.00")))
+            except InvalidOperation:
+                logger.warning(
+                    f"[KeywordFetch] Invalid CPC value for keyword {self.keyword_text}. Defaulting to 0.00.",
+                    keyword_id=self.id,
+                    cpc_value_raw=cpc_data.get("value"),
+                )
+                self.cpc_value = Decimal("0.00")
+
+            self.competition = keyword_api_data.get("competition")
+            self.last_fetched_at = timezone.now()
+
+            # Save keyword instance before handling trends to ensure FK exists
+            self.save(update_fields=["volume", "cpc_currency", "cpc_value", "competition", "last_fetched_at"])
+
+            trend_data = keyword_api_data.get("trend", [])
+            if isinstance(trend_data, list):
+                with transaction.atomic():
+                    # Get a set of existing (month, year) tuples for efficient lookup
+                    existing_trends_tuples = set(self.trends.values_list("month", "year"))
+
+                    trends_to_create = []
+                    for trend_item in trend_data:
+                        if (
+                            isinstance(trend_item, dict)
+                            and "month" in trend_item
+                            and "year" in trend_item
+                            and "value" in trend_item
+                        ):
+                            month_str = str(trend_item["month"])
+                            year_int = int(trend_item["year"])
+
+                            # Check if this month/year combo already exists
+                            if (month_str, year_int) not in existing_trends_tuples:
+                                trends_to_create.append(
+                                    KeywordTrend(
+                                        keyword=self, month=month_str, year=year_int, value=int(trend_item["value"])
+                                    )
+                                )
+                    if trends_to_create:
+                        KeywordTrend.objects.bulk_create(trends_to_create)
+
+            logger.info(
+                "[KeywordFetch] Successfully fetched and updated metrics.",
+                keyword_id=self.id,
+                keyword_text=self.keyword_text,
+            )
+            return True
+
+        except requests.exceptions.HTTPError as e:
+            logger.error(
+                "[KeywordFetch] HTTP error occurred.",
+                keyword_id=self.id,
+                keyword_text=self.keyword_text,
+                error=str(e),
+                status_code=e.response.status_code if e.response else None,
+                response_content=e.response.text[:500] if e.response else None,
+            )
+            # Specific handling for API error codes
+            if e.response is not None:
+                if e.response.status_code == 401:
+                    logger.error("[KeywordFetch] API Key is missing or invalid.")
+                elif e.response.status_code == 402:
+                    logger.error("[KeywordFetch] Insufficient credits or invalid subscription.")
+                elif e.response.status_code == 400:
+                    logger.error("[KeywordFetch] Submitted request data is invalid.")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger.error(
+                "[KeywordFetch] Request exception occurred.",
+                keyword_id=self.id,
+                keyword_text=self.keyword_text,
+                error=str(e),
+            )
+            return False
+        except Exception as e:
+            logger.error(
+                "[KeywordFetch] An unexpected error occurred.",
+                keyword_id=self.id,
+                keyword_text=self.keyword_text,
+                error=str(e),
+            )
+            return False
+
+
+class ProjectKeyword(BaseModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="project_keywords")
+    keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, related_name="keyword_projects")
+    use = models.BooleanField(default=False)
+    date_associated = models.DateTimeField(
+        auto_now_add=True, help_text="When the keyword was associated with the project"
+    )
+
+    class Meta:
+        unique_together = ("project", "keyword")
+        verbose_name = "Project Keyword"
+        verbose_name_plural = "Project Keywords"
+
+    def __str__(self):
+        return f"{self.project.name} - {self.keyword.keyword_text}"
+
+
+class KeywordTrend(BaseModel):
+    keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE, related_name="trends")
+    month = models.CharField(max_length=10, help_text="The month of this volume (e.g., May)")
+    year = models.IntegerField(help_text="The year of this volume (e.g., 2019)")
+    value = models.IntegerField(help_text="The search volume of the keyword for the given month")
+
+    class Meta:
+        unique_together = ("keyword", "month", "year")
+        verbose_name = "Keyword Trend"
+        verbose_name_plural = "Keyword Trends"
+        ordering = ["keyword", "year", "month"]
+
+    def __str__(self):
+        return f"{self.keyword.keyword_text} - {self.month} {self.year}: {self.value}"
 
 
 class Feedback(BaseModel):
