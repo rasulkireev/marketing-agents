@@ -14,8 +14,9 @@ from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 from djstripe import models as djstripe_models
 
 from core.choices import Language, ProfileStates, ProjectPageType
-from core.forms import ProfileUpdateForm, ProjectScanForm
+from core.forms import AutoSubmittionSettingsForm, ProfileUpdateForm, ProjectScanForm
 from core.models import (
+    AutoSubmittionSettings,
     BlogPost,
     Competitor,
     PricingPageUpdatesSuggestion,
@@ -196,7 +197,6 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         context["has_content_access"] = self.request.user.profile.has_active_subscription
         context["has_pricing_page"] = self.object.has_pricing_page
-        context["languages"] = Language.choices
         return context
 
 
@@ -204,6 +204,38 @@ class ProjectSettingsView(LoginRequiredMixin, DetailView):
     model = Project
     template_name = "project/project_settings.html"
     context_object_name = "project"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.object
+        # Try to get existing settings for this project
+        settings = AutoSubmittionSettings.objects.filter(project=project).first()
+        if settings:
+            form = AutoSubmittionSettingsForm(instance=settings)
+        else:
+            form = AutoSubmittionSettingsForm()
+        context["auto_submittion_settings_form"] = form
+        context["languages"] = Language.choices
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        project = self.object
+        settings = AutoSubmittionSettings.objects.filter(project=project).first()
+        if settings:
+            form = AutoSubmittionSettingsForm(request.POST, instance=settings)
+        else:
+            form = AutoSubmittionSettingsForm(request.POST)
+        if form.is_valid():
+            auto_settings = form.save(commit=False)
+            auto_settings.project = project
+            auto_settings.save()
+            messages.success(request, "Automatic submission settings saved.")
+            return redirect("project_settings", pk=project.pk)
+        else:
+            context = self.get_context_data()
+            context["auto_submittion_settings_form"] = form
+            return self.render_to_response(context)
 
 
 class BloggingAgentDetailView(LoginRequiredMixin, DetailView):

@@ -748,6 +748,25 @@ class BlogPostTitleSuggestion(BaseModel):
         )
 
 
+class AutoSubmittionSettings(BaseModel):
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="auto_submittion_settings"
+    )
+    endpoint_url = models.URLField(
+        max_length=500, blank=True, null=True, help_text="The endpoint to which posts will be automatically submitted."
+    )
+    body = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request body.")
+    header = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request headers.")
+    posts_per_day = models.PositiveIntegerField(default=1, help_text="How many posts to publish per day.")
+    preferred_timezone = models.CharField(
+        max_length=64, blank=True, null=True, help_text="Preferred timezone for publishing posts."
+    )
+    preferred_time = models.TimeField(blank=True, null=True, help_text="Preferred time of day to publish posts.")
+
+    def __str__(self):
+        return f"{self.project.name}"
+
+
 class GeneratedBlogPost(BaseModel):
     project = models.ForeignKey(
         Project, null=True, blank=True, on_delete=models.CASCADE, related_name="generated_blog_posts"

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load widget_tweaks %}
 
 {% block content %}
 <div class="py-24 bg-white sm:py-32">
@@ -269,68 +270,65 @@
         <div class="p-8 bg-white rounded-2xl border shadow-sm border-gray-200/80">
           <h2 class="mb-4 text-xl font-bold text-gray-900">Blogging Agent</h2>
           <!-- Automatic Submission Form -->
-          <form class="mt-10 space-y-8">
+          <form method="post" class="mt-10 space-y-8" data-controller="auto-submit-body">
+            {% csrf_token %}
             <h3 class="mb-4 text-lg font-semibold text-gray-900">Automatic Submission</h3>
-            <!-- Endpoint URL -->
-            <div class="space-y-2">
-              <label for="endpoint_url" class="block text-sm font-medium text-gray-700">Endpoint URL</label>
-              <input type="url" id="endpoint_url" name="endpoint_url" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="https://api.example.com/submit" />
-            </div>
-            <!-- Body Section -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">Body</label>
-              <div class="flex gap-2">
-                <input type="text" name="body_key" class="block w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="Key" />
-                <input list="body-values" name="body_value" class="block w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="Value" />
-                <datalist id="body-values">
-                  <option value="{% templatetag openvariable %} title {% templatetag closevariable %}">{% templatetag openvariable %} title {% templatetag closevariable %}</option>
-                  <option value="{% templatetag openvariable %} content_type {% templatetag closevariable %}">{% templatetag openvariable %} content_type {% templatetag closevariable %}</option>
-                  <option value="{% templatetag openvariable %} category {% templatetag closevariable %}">{% templatetag openvariable %} category {% templatetag closevariable %}</option>
-                  <option value="{% templatetag openvariable %} description {% templatetag closevariable %}">{% templatetag openvariable %} description {% templatetag closevariable %}</option>
-                  <option value="{% templatetag openvariable %} prompt {% templatetag closevariable %}">{% templatetag openvariable %} prompt {% templatetag closevariable %}</option>
-                  <option value="{% templatetag openvariable %} target_keywords {% templatetag closevariable %}">{% templatetag openvariable %} target_keywords {% templatetag closevariable %}</option>
-                  <option value="{% templatetag openvariable %} suggested_meta_description {% templatetag closevariable %}">{% templatetag openvariable %} suggested_meta_description {% templatetag closevariable %}</option>
-                </datalist>
-              </div>
-            </div>
-            <!-- Header Section -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700">Header</label>
-              <div class="flex gap-2">
-                <input type="text" name="header_key" class="block w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="Key" />
-                <input list="header-values" name="header_value" class="block w-1/2 rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="Value" />
-                <datalist id="header-values">
-                  <option value="Content-Type">Content-Type</option>
-                  <option value="Authorization">Authorization</option>
-                  <option value="Accept">Accept</option>
-                </datalist>
-              </div>
-            </div>
-            <!-- How many posts per day -->
-            <div class="space-y-2">
-              <label for="posts_per_day" class="block text-sm font-medium text-gray-700">How many posts to publish per day</label>
-              <input type="number" id="posts_per_day" name="posts_per_day" min="1" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="e.g. 3" />
-            </div>
-            <!-- Preferred Timezone and Preferred Time of Publishing (same row) -->
-            <div class="flex gap-4">
-              <div class="flex-1 space-y-2">
-                <label for="preferred_timezone" class="block text-sm font-medium text-gray-700">Preferred Timezone</label>
-                <select id="preferred_timezone" name="preferred_timezone" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm">
-                  <option value="">Select timezone...</option>
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">America/New_York</option>
-                  <option value="America/Los_Angeles">America/Los_Angeles</option>
-                  <option value="Europe/London">Europe/London</option>
-                  <option value="Europe/Paris">Europe/Paris</option>
-                  <option value="Asia/Tokyo">Asia/Tokyo</option>
-                  <option value="Asia/Kolkata">Asia/Kolkata</option>
-                  <!-- Add more as needed -->
-                </select>
-              </div>
-              <div class="flex-1 space-y-2">
-                <label for="preferred_time" class="block text-sm font-medium text-gray-700">Preferred Time of Publishing</label>
-                <input type="time" id="preferred_time" name="preferred_time" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" />
-              </div>
+            {{ auto_submittion_settings_form.non_field_errors | safe }}
+            <div class="space-y-6">
+              {% for field in auto_submittion_settings_form.visible_fields %}
+                {% if field.name == "body" %}
+                  <div
+                    data-controller="auto-submit-body"
+                    data-auto-submit-body-initial-value="{{ field.value|default:'{}' }}"
+                  >
+                    <label class="block mb-1 text-sm font-medium text-gray-700">Request Body</label>
+                    <p class="mb-1 text-xs text-gray-500">Add key-value pairs for the request body. <span class="font-semibold">Values entered without <code>{% templatetag openvariable %} {% templatetag closevariable %}</code> will be used as-is.</span> To use dynamic values (like <code>title</code> or <code>content</code>), wrap them in <code>{% templatetag openvariable %} {% templatetag closevariable %}</code>—these will be replaced dynamically. When entering a value, available dynamic options will appear in a dropdown list for your convenience.</p>
+                    <div data-auto-submit-body-target="rows" class="space-y-2"></div>
+                    <button type="button" data-action="auto-submit-body#addRow" class="px-3 py-1.5 mt-2 text-xs font-semibold text-pink-700 bg-pink-50 rounded-md border border-pink-200 hover:bg-pink-100">Add Field</button>
+                    <input type="hidden" name="body" data-auto-submit-body-target="jsonInput">
+                  </div>
+                {% elif field.name == "header" %}
+                  <div
+                    data-controller="auto-submit-header"
+                    data-auto-submit-header-initial-value="{{ field.value|default:'{}' }}"
+                  >
+                    <label class="block mb-1 text-sm font-medium text-gray-700">Request Header</label>
+                    <p class="mb-1 text-xs text-gray-500">Add key-value pairs for the request header. Values can be selected from suggestions or entered manually.</p>
+                    <div data-auto-submit-header-target="rows" class="space-y-2"></div>
+                    <button type="button" data-action="auto-submit-header#addRow" class="px-3 py-1.5 mt-2 text-xs font-semibold text-pink-700 bg-pink-50 rounded-md border border-pink-200 hover:bg-pink-100">Add Field</button>
+                    <input type="hidden" name="header" data-auto-submit-header-target="jsonInput">
+                  </div>
+                {% elif field.name == "preferred_timezone" %}
+                  <div class="flex gap-4">
+                    <div class="flex-1">
+                      {{ field.errors | safe }}
+                      <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                      {% render_field field class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                      {% if field.help_text %}
+                        <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                      {% endif %}
+                    </div>
+                {% elif field.name == "preferred_time" %}
+                    <div class="flex-1">
+                      {{ field.errors | safe }}
+                      <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                      {% render_field field type="time" class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                      {% if field.help_text %}
+                        <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% else %}
+                  <div>
+                    {{ field.errors | safe }}
+                    <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                    {% if field.help_text %}
+                      <p class="mb-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% render_field field class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                  </div>
+                {% endif %}
+              {% endfor %}
             </div>
             <div class="flex justify-end">
               <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm transition-colors duration-200 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
