@@ -29,6 +29,7 @@ export default class extends Controller {
 
       // Add project to list and update results button immediately after successful scan
       this.addProjectToList(scanData);
+      this.updateResultsButton(scanData.project_id);
     } catch (scanError) {
       this.handleScanError(scanError);
     }
