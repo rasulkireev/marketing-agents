@@ -237,6 +237,10 @@ class Project(BaseModel):
         return self.blog_post_title_suggestions.filter(user_score__lt=0).all()
 
     @property
+    def neutral_title_suggestions(self):
+        return self.blog_post_title_suggestions.filter(user_score=0).all()
+
+    @property
     def has_pricing_page(self):
         return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).exists()
 
@@ -393,12 +397,17 @@ class Project(BaseModel):
 
         @agent.system_prompt
         def add_feedback_history(ctx: RunContext[TitleSuggestionContext]) -> str:
-            # If there are no liked or disliked suggestions, don't add this section
-            if not ctx.deps.liked_suggestions and not ctx.deps.disliked_suggestions:
-                return ""
-
             # Build the feedback sections only if they exist
             feedback_sections = []
+
+            if ctx.deps.neutral_suggestions:
+                neutral = "\n".join(f"- {title}" for title in ctx.deps.neutral_suggestions)
+                feedback_sections.append(
+                    f"""
+                    Title Suggestions that users have not yet liked or disliked:
+                    {neutral}
+                """
+                )
 
             if ctx.deps.liked_suggestions:
                 liked = "\n".join(f"- {title}" for title in ctx.deps.liked_suggestions)
@@ -423,7 +432,8 @@ class Project(BaseModel):
                 feedback_sections.append(
                     """
                     Use this feedback to guide your title generation. Create titles similar to liked ones
-                    and avoid patterns seen in disliked ones.
+                    and avoid patterns seen in disliked ones. Make sure to not repeat any of the titles.
+                    Come up with some new ideas.
                 """
                 )
 
@@ -435,6 +445,7 @@ class Project(BaseModel):
             user_prompt=user_prompt,
             liked_suggestions=[suggestion.title for suggestion in self.liked_title_suggestions],
             disliked_suggestions=[suggestion.title for suggestion in self.disliked_title_suggestions],
+            neutral_suggestions=[suggestion.title for suggestion in self.neutral_title_suggestions],
         )
 
         result = run_agent_synchronously(
