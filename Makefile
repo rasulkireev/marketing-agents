@@ -2,6 +2,12 @@ serve:
 	docker-compose up -d --build
 	docker compose logs -f backend
 
+manage:
+	docker compose run --rm backend python ./manage.py $(filter-out $@,$(MAKECMDGOALS))
+
+migrate:
+	docker compose run --rm backend python ./manage.py migrate
+
 makemigrations:
 	docker compose run --rm backend python ./manage.py makemigrations
 

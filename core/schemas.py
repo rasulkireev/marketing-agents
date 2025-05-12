@@ -122,6 +122,9 @@ class TitleSuggestionContext(BaseModel):
     project_details: ProjectDetails
     num_titles: int = Field(default=3, description="Number of title suggestions to generate")
     user_prompt: Optional[str] = Field(default=None, description="Optional user-provided guidance for title generation")
+    neutral_suggestions: Optional[List[str]] = Field(
+        default_factory=list, description="Titles that users have not yet liked or disliked"
+    )
     liked_suggestions: Optional[List[str]] = Field(
         default_factory=list, description="Titles the user has previously liked"
     )
