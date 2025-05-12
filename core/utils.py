@@ -27,3 +27,29 @@ class DivErrorList(ErrorList):
               </div>
             </div>
          """
+
+
+def replace_placeholders(data, blog_post):
+    """
+    Recursively replace values in curly braces (e.g., '{{ slug }}') in a dict with the corresponding attribute from blog_post.
+    """
+    if isinstance(data, dict):
+        return {k: replace_placeholders(v, blog_post) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [replace_placeholders(item, blog_post) for item in data]
+    elif isinstance(data, str):
+        import re
+
+        def repl(match):
+            attr = match.group(1).strip()
+            # Support nested attributes (e.g., title.title)
+            value = blog_post
+            for part in attr.split("."):
+                value = getattr(value, part, match.group(0))
+                if value == match.group(0):
+                    break
+            return str(value)
+
+        return re.sub(r"\{\{\s*(.*?)\s*\}\}", repl, data)
+    else:
+        return data

@@ -109,6 +109,59 @@ export default class extends Controller {
     }
   }
 
+  async post(event) {
+    event.preventDefault();
+    const button = event.currentTarget;
+    button.disabled = true;
+    button.innerText = "Posting...";
+
+    // Find the generated_blog_post id from the dropdown
+    const dropdown = button.closest('[data-generate-content-target="dropdown"]');
+    const idInput = dropdown.querySelector('[id^="slug-"]');
+    let generatedBlogPostId = null;
+    if (idInput) {
+      // Extract the id from the input's id attribute (slug-123)
+      const match = idInput.id.match(/slug-(\d+)/);
+      if (match) {
+        generatedBlogPostId = match[1];
+      }
+    }
+
+    if (!generatedBlogPostId) {
+      showMessage("Could not determine generated post ID.", "error");
+      button.innerText = "Post";
+      button.disabled = false;
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/post-generated-blog-post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ id: generatedBlogPostId })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.status === "success") {
+        showMessage("Blog post published!", "success");
+        button.innerText = "Posted";
+        button.className = "px-4 py-2 mt-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded-md cursor-not-allowed";
+        button.disabled = true;
+      } else {
+        showMessage(data.message || "Failed to post blog.", "error");
+        button.innerText = "Post";
+        button.disabled = false;
+      }
+    } catch (error) {
+      showMessage(error.message || "Failed to post blog.", "error");
+      button.innerText = "Post";
+      button.disabled = false;
+    }
+  }
+
   createFormGroup(id, value, label, isTextarea = false, extraClasses = "") {
     const div = document.createElement("div");
     div.setAttribute("data-controller", "copy");
