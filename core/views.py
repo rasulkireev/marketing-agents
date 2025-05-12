@@ -184,7 +184,7 @@ class BlogPostView(DetailView):
     context_object_name = "blog_post"
 
     def get_queryset(self):
-        return BlogPost.objects.filter(status=BlogPostStatus.PUBLISHED)
+        return BlogPost.objects.filter(status=BlogPostStatus.PUBLISHED).order_by("-created_at")
 
 
 class ProjectDetailView(LoginRequiredMixin, DetailView):
@@ -211,6 +211,7 @@ class ProjectSettingsView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         # Ensure users can only see their own projects
         return Project.objects.filter(profile=self.request.user.profile)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         project = self.object
