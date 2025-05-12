@@ -45,6 +45,7 @@ from core.schemas import (
     TitleSuggestions,
     WebPageContent,
 )
+from core.utils import replace_placeholders
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -612,7 +613,6 @@ class BlogPostTitleSuggestion(BaseModel):
     )
 
     archived = models.BooleanField(default=False)
-    posted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
@@ -781,8 +781,29 @@ class GeneratedBlogPost(BaseModel):
     icon = models.ImageField(upload_to="blog_post_icons/", blank=True)
     image = models.ImageField(upload_to="blog_post_images/", blank=True)
 
+    posted = models.BooleanField(default=False)
+
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
+
+    def submit_blog_post_to_endpoint(self):
+        project = self.project
+        settings = AutoSubmittionSettings.objects.filter(project=project).order_by("-id").first()
+        if not settings or not settings.endpoint_url:
+            logger.warning("No AutoSubmittionSettings or endpoint_url found for project", project_id=project.id)
+            return False
+
+        url = settings.endpoint_url
+        headers = replace_placeholders(settings.header, self)
+        body = replace_placeholders(settings.body, self)
+
+        try:
+            response = requests.post(url, json=body, headers=headers, timeout=15)
+            response.raise_for_status()
+            return True
+        except requests.RequestException as e:
+            logger.error("Failed to submit blog post to endpoint", error=str(e), url=url, body=body, headers=headers)
+            return False
 
 
 class ProjectPage(BaseModel):
