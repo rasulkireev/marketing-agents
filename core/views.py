@@ -208,6 +208,9 @@ class ProjectSettingsView(LoginRequiredMixin, DetailView):
     template_name = "project/project_settings.html"
     context_object_name = "project"
 
+    def get_queryset(self):
+        # Ensure users can only see their own projects
+        return Project.objects.filter(profile=self.request.user.profile)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         project = self.object
