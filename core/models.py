@@ -748,12 +748,10 @@ class BlogPostTitleSuggestion(BaseModel):
         )
 
 
-class AutoSubmittionSettings(BaseModel):
-    project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="auto_submittion_settings"
-    )
+class AutoSubmittionSetting(BaseModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="auto_submittion_settings")
     endpoint_url = models.URLField(
-        max_length=500, blank=True, null=True, help_text="The endpoint to which posts will be automatically submitted."
+        max_length=500, help_text="The endpoint to which posts will be automatically submitted."
     )
     body = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request body.")
     header = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request headers.")
@@ -788,9 +786,9 @@ class GeneratedBlogPost(BaseModel):
 
     def submit_blog_post_to_endpoint(self):
         project = self.project
-        settings = AutoSubmittionSettings.objects.filter(project=project).order_by("-id").first()
+        settings = AutoSubmittionSetting.objects.filter(project=project).order_by("-id").first()
         if not settings or not settings.endpoint_url:
-            logger.warning("No AutoSubmittionSettings or endpoint_url found for project", project_id=project.id)
+            logger.warning("No AutoSubmittionSetting or endpoint_url found for project", project_id=project.id)
             return False
 
         url = settings.endpoint_url

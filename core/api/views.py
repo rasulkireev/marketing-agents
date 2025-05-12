@@ -458,12 +458,12 @@ def post_generated_blog_post(request: HttpRequest, data: PostGeneratedBlogPostIn
         if generated_post.project and generated_post.project.profile != profile:
             return {"status": "error", "message": "Forbidden: You do not have access to this post."}
         result = generated_post.submit_blog_post_to_endpoint()
-        if result:
+        if result is True:
             generated_post.posted = True
             generated_post.save(update_fields=["posted"])
             return {"status": "success", "message": "Blog post published!"}
         else:
-            return {"status": "error", "message": result.get("error", "Failed to post blog.")}
+            return {"status": "error", "message": "Failed to post blog."}
     except GeneratedBlogPost.DoesNotExist:
         return {"status": "error", "message": "Generated blog post not found."}
     except Exception as e:
