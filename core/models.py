@@ -724,6 +724,13 @@ class BlogPostTitleSuggestion(BaseModel):
                 Make sure the content is formatted correctly with headings, paragraphs, and lists and links.
             """
 
+        @agent.system_prompt
+        def post_structure() -> str:
+            return """
+                - Don't include blogpost title in the content.
+                - Don't start with a header or a subheader. Start with plain text as intro, then add subheaders as you see fit.
+            """
+
         project_pages = [
             ProjectPageContext(
                 url=page.url,
