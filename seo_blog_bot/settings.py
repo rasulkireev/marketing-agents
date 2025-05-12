@@ -247,6 +247,7 @@ Q_CLUSTER = {
     "workers": 4,
     "max_attempts": 2,
     "redis": env("REDIS_URL"),
+    "error_reporter": {},
 }
 
 LOGGING = {
