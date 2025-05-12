@@ -247,6 +247,7 @@ Q_CLUSTER = {
     "workers": 4,
     "max_attempts": 2,
     "redis": env("REDIS_URL"),
+    "error_reporter": {},
 }
 
 LOGGING = {
@@ -318,7 +319,8 @@ if ENVIRONMENT == "prod":
 
 SENTRY_DSN = env("SENTRY_DSN")
 if ENVIRONMENT == "prod" and SENTRY_DSN:
-    sentry_sdk.init(dsn=env("SENTRY_DSN"))
+    sentry_sdk.init(dsn=SENTRY_DSN)
+    Q_CLUSTER["error_reporter"]["sentry"] = {"dsn": SENTRY_DSN}
 
 POSTHOG_API_KEY = env("POSTHOG_API_KEY")
 BUTTONDOWN_API_KEY = env("BUTTONDOWN_API_KEY")
