@@ -13,6 +13,7 @@ urlpatterns = [
     # app
     path("api/", api.urls),
     path("project/<int:pk>/", views.ProjectDetailView.as_view(), name="project_detail"),
+    path("project/<int:pk>/settings/", views.ProjectSettingsView.as_view(), name="project_settings"),
     path("blogging-agent/<int:pk>/", views.BloggingAgentDetailView.as_view(), name="blogging_agent_detail"),
     path("pricing-agent/<int:pk>/", views.PricingAgentView.as_view(), name="pricing_agent"),
     path("keywords-agent/<int:pk>/", views.KeywordsAgentView.as_view(), name="keywords_agent"),

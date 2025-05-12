@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="py-24 bg-white sm:py-32">
+  <div class="flex px-6 mx-auto max-w-7xl lg:px-8">
+    <!-- Sidebar -->
+    <nav class="hidden mr-8 w-64 md:block">
+      <div class="sticky top-32">
+        <div>
+          <ul class="space-y-4">
+            <li>
+              <a href="#project-details" class="block px-3 py-2 font-medium text-gray-800 rounded-lg transition hover:bg-pink-50">Project Details</a>
+            </li>
+            <li>
+              <a href="#blogging-agent-settings" class="block px-3 py-2 font-medium text-gray-800 rounded-lg transition hover:bg-pink-50">Blogging Agent</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Main Content -->
+    <div class="flex-1 mx-auto max-w-4xl">
+      <div class="bg-white rounded-2xl border shadow-sm border-gray-200/80">
+        <!-- Header Section -->
+        <div class="p-6" id="project-details">
+          <div class="flex justify-between items-center">
+            <div class="flex gap-3 items-center">
+              <div>
+                <h3 class="text-2xl font-bold tracking-tight text-gray-900">Project Details</h3>
+                <p class="mt-1 text-sm text-gray-500">Configure your project settings and preferences</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Content Section -->
+        <div class="p-6">
+          <div class="overflow-hidden relative p-6 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm">
+            <!-- Decorative Elements -->
+            <div class="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 rounded-full bg-blue-100/40"></div>
+            <div class="absolute bottom-0 left-0 -mb-12 -ml-12 w-24 h-24 rounded-full bg-indigo-100/40"></div>
+            <div class="flex relative gap-4">
+              <!-- Icon Container -->
+              <div class="flex-shrink-0">
+                <div class="flex justify-center items-center w-10 h-10 bg-blue-100 rounded-full">
+                  <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <!-- Content Container -->
+              <div class="flex-1">
+                <!-- Header -->
+                <h4 class="mb-2 text-lg font-semibold text-blue-900">
+                  Pre-filled Project Details
+                </h4>
+                <!-- Main Message -->
+                <p class="text-sm leading-relaxed text-blue-800">
+                  We've pre-filled these details based on our analysis of your website. This should be good as is, but to improve content accuracy and relevancy:
+                </p>
+                <!-- Steps List -->
+                <ul class="mt-4 space-y-3">
+                  <li class="flex gap-2 items-start">
+                    <span class="flex flex-shrink-0 justify-center items-center mt-0.5 w-5 h-5 bg-blue-100 rounded-full">
+                      <span class="text-xs font-semibold text-blue-600">1</span>
+                    </span>
+                    <span class="text-sm text-blue-700">Review each field and update any information that needs correction</span>
+                  </li>
+                  <li class="flex gap-2 items-start">
+                    <span class="flex flex-shrink-0 justify-center items-center mt-0.5 w-5 h-5 bg-blue-100 rounded-full">
+                      <span class="text-xs font-semibold text-blue-600">2</span>
+                    </span>
+                    <span class="text-sm text-blue-700">Add missing details that could help better understand your project</span>
+                  </li>
+                  <li class="flex gap-2 items-start">
+                    <span class="flex flex-shrink-0 justify-center items-center mt-0.5 w-5 h-5 bg-blue-100 rounded-full">
+                      <span class="text-xs font-semibold text-blue-600">3</span>
+                    </span>
+                    <span class="text-sm text-blue-700">Click "Save Changes" after making any modifications</span>
+                  </li>
+                </ul>
+                <!-- Footer Note -->
+                <div class="p-3 mt-4 rounded-lg border bg-blue-100/50 border-blue-200/50">
+                  <p class="text-sm leading-relaxed text-blue-700">
+                    <span class="font-semibold">💡 Pro tip:</span>
+                    The more accurate and detailed this information is, the better the quality of generated content will be.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <form
+            data-controller="project-details"
+            data-project-details-project-id-value="{{ project.id }}"
+            data-action="project-details#save"
+            class="rounded-xl"
+          >
+            {% csrf_token %}
+            <div class="p-8 space-y-8">
+              <!-- Project Overview Section -->
+              <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-gray-900">Project Overview</h3>
+                <div class="grid gap-6">
+                  <div class="space-y-2">
+                    <label for="summary" class="block text-sm font-medium text-gray-700">
+                      Summary
+                      <span class="ml-1 text-xs text-gray-500">(Brief description of your project)</span>
+                    </label>
+                    <textarea
+                      id="summary"
+                      name="summary"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="Describe your project in a few sentences..."
+                    >{{ project.summary }}</textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label for="key_features" class="block text-sm font-medium text-gray-700">
+                      Key Features
+                      <span class="ml-1 text-xs text-gray-500">(Main functionalities and benefits)</span>
+                    </label>
+                    <textarea
+                      id="key_features"
+                      name="key_features"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="List your project's key features..."
+                    >{{ project.key_features }}</textarea>
+                  </div>
+                </div>
+              </div>
+              <!-- Target Audience Section -->
+              <div class="pt-6 space-y-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Audience & Usage</h3>
+                <div class="grid gap-6">
+                  <div class="space-y-2">
+                    <label for="target_audience" class="block text-sm font-medium text-gray-700">
+                      Target Audience
+                      <span class="ml-1 text-xs text-gray-500">(Who is this for?)</span>
+                    </label>
+                    <textarea
+                      id="target_audience"
+                      name="target_audience_summary"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="3"
+                      placeholder="Describe your target audience..."
+                    >{{ project.target_audience_summary }}</textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label for="pain_points" class="block text-sm font-medium text-gray-700">
+                      Pain Points Addressed
+                      <span class="ml-1 text-xs text-gray-500">(Problems solved)</span>
+                    </label>
+                    <textarea
+                      id="pain_points"
+                      name="pain_points"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="What problems does your project solve?"
+                    >{{ project.pain_points }}</textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label for="product_usage" class="block text-sm font-medium text-gray-700">
+                      Product Usage
+                      <span class="ml-1 text-xs text-gray-500">(How is it used?)</span>
+                    </label>
+                    <textarea
+                      id="product_usage"
+                      name="product_usage"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="4"
+                      placeholder="Explain how your product is used..."
+                    >{{ project.product_usage }}</textarea>
+                  </div>
+                </div>
+              </div>
+              <!-- Additional Information Section -->
+              <div class="pt-6 space-y-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Additional Information</h3>
+                <div class="grid gap-6">
+                  <div class="space-y-2">
+                    <label for="links" class="block text-sm font-medium text-gray-700">
+                      Links
+                      <span class="ml-1 text-xs text-gray-500">(Related resources)</span>
+                    </label>
+                    <textarea
+                      id="links"
+                      name="links"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="3"
+                      placeholder="Add relevant links..."
+                    >{{ project.links }}</textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label for="blog_theme" class="block text-sm font-medium text-gray-700">
+                      Blog Theme
+                      <span class="ml-1 text-xs text-gray-500">(Content direction)</span>
+                    </label>
+                    <textarea
+                      id="blog_theme"
+                      name="blog_theme"
+                      data-project-details-target="input"
+                      class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      rows="3"
+                      placeholder="Define your blog's theme..."
+                    >{{ project.blog_theme }}</textarea>
+                  </div>
+                  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="space-y-2">
+                      <label for="founders" class="block text-sm font-medium text-gray-700">
+                        Founders
+                        <span class="ml-1 text-xs text-gray-500">(Team members)</span>
+                      </label>
+                      <textarea
+                        id="founders"
+                        name="founders"
+                        data-project-details-target="input"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                        rows="2"
+                        placeholder="List project founders..."
+                      >{{ project.founders }}</textarea>
+                    </div>
+                    <div class="space-y-2">
+                      <label for="language" class="block text-sm font-medium text-gray-700">
+                        Language
+                        <span class="ml-1 text-xs text-gray-500">(Content language)</span>
+                      </label>
+                      <select
+                        id="language"
+                        name="language"
+                        data-project-details-target="input"
+                        class="block w-full rounded-lg border-gray-300 shadow-sm transition-colors duration-200 focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                      >
+                        {% for value, label in languages %}
+                          <option value="{{ value }}" {% if project.language == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Form Footer with Save Button -->
+            <div class="px-8 rounded-b-xl">
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm transition-colors duration-200 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                >
+                  <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Blogging Agent Settings Section -->
+      <div id="blogging-agent-settings" class="mt-16">
+        <div class="p-8 bg-white rounded-2xl border shadow-sm border-gray-200/80">
+          <h2 class="mb-4 text-xl font-bold text-gray-900">Blogging Agent</h2>
+          <!-- Automatic Submission Form -->
+          <form method="post" class="mt-10 space-y-8" data-controller="auto-submit-body">
+            {% csrf_token %}
+            <h3 class="mb-4 text-lg font-semibold text-gray-900">Automatic Submission</h3>
+            {{ auto_submittion_settings_form.non_field_errors | safe }}
+            <div class="space-y-6">
+              {% for field in auto_submittion_settings_form.visible_fields %}
+                {% if field.name == "body" %}
+                  <div
+                    data-controller="auto-submit-body"
+                    data-auto-submit-body-initial-value="{{ field.value|default:'{}' }}"
+                  >
+                    <label class="block mb-1 text-sm font-medium text-gray-700">Request Body</label>
+                    <p class="mb-1 text-xs text-gray-500">Add key-value pairs for the request body. <span class="font-semibold">Values entered without <code>{% templatetag openvariable %} {% templatetag closevariable %}</code> will be used as-is.</span> To use dynamic values (like <code>title</code> or <code>content</code>), wrap them in <code>{% templatetag openvariable %} {% templatetag closevariable %}</code>—these will be replaced dynamically. When entering a value, available dynamic options will appear in a dropdown list for your convenience.</p>
+                    <div data-auto-submit-body-target="rows" class="space-y-2"></div>
+                    <button type="button" data-action="auto-submit-body#addRow" class="px-3 py-1.5 mt-2 text-xs font-semibold text-pink-700 bg-pink-50 rounded-md border border-pink-200 hover:bg-pink-100">Add Field</button>
+                    <input type="hidden" name="body" data-auto-submit-body-target="jsonInput">
+                  </div>
+                {% elif field.name == "header" %}
+                  <div
+                    data-controller="auto-submit-header"
+                    data-auto-submit-header-initial-value="{{ field.value|default:'{}' }}"
+                  >
+                    <label class="block mb-1 text-sm font-medium text-gray-700">Request Header</label>
+                    <p class="mb-1 text-xs text-gray-500">Add key-value pairs for the request header. Values can be selected from suggestions or entered manually.</p>
+                    <div data-auto-submit-header-target="rows" class="space-y-2"></div>
+                    <button type="button" data-action="auto-submit-header#addRow" class="px-3 py-1.5 mt-2 text-xs font-semibold text-pink-700 bg-pink-50 rounded-md border border-pink-200 hover:bg-pink-100">Add Field</button>
+                    <input type="hidden" name="header" data-auto-submit-header-target="jsonInput">
+                  </div>
+                {% elif field.name == "preferred_timezone" %}
+                  <div class="flex gap-4">
+                    <div class="flex-1">
+                      {{ field.errors | safe }}
+                      <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                      {% render_field field class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                      {% if field.help_text %}
+                        <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                      {% endif %}
+                    </div>
+                {% elif field.name == "preferred_time" %}
+                    <div class="flex-1">
+                      {{ field.errors | safe }}
+                      <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                      {% render_field field type="time" class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                      {% if field.help_text %}
+                        <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% else %}
+                  <div>
+                    {{ field.errors | safe }}
+                    <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                    {% if field.help_text %}
+                      <p class="mb-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% render_field field class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <div class="flex justify-end">
+              <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-pink-600 rounded-lg shadow-sm transition-colors duration-200 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Save Automatic Submission
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock content %}

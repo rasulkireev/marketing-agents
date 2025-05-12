@@ -151,3 +151,12 @@ class BlogPostIn(Schema):
 class BlogPostOut(Schema):
     status: str
     message: str
+
+
+class PostGeneratedBlogPostIn(Schema):
+    id: int
+
+
+class PostGeneratedBlogPostOut(Schema):
+    status: str
+    message: str

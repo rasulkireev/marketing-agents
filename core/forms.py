@@ -1,7 +1,7 @@
 from allauth.account.forms import LoginForm, SignupForm
 from django import forms
 
-from core.models import Profile, Project
+from core.models import AutoSubmittionSetting, Profile, Project
 from core.utils import DivErrorList
 
 
@@ -49,3 +49,42 @@ class ProjectScanForm(forms.ModelForm):
     class Meta:
         model = Project
         fields = ["url"]
+
+
+class AutoSubmittionSettingForm(forms.ModelForm):
+    TIMEZONE_CHOICES = [
+        ("UTC", "UTC"),
+        ("America/New_York", "America/New_York"),
+        ("America/Chicago", "America/Chicago"),
+        ("America/Denver", "America/Denver"),
+        ("America/Los_Angeles", "America/Los_Angeles"),
+        ("Europe/London", "Europe/London"),
+        ("Europe/Paris", "Europe/Paris"),
+        ("Asia/Tokyo", "Asia/Tokyo"),
+        ("Asia/Shanghai", "Asia/Shanghai"),
+        ("Asia/Kolkata", "Asia/Kolkata"),
+        ("Australia/Sydney", "Australia/Sydney"),
+    ]
+    preferred_timezone = forms.ChoiceField(choices=TIMEZONE_CHOICES, required=False)
+
+    class Meta:
+        model = AutoSubmittionSetting
+        fields = [
+            "endpoint_url",
+            "body",
+            "header",
+            "posts_per_month",
+            "preferred_timezone",
+            "preferred_time",
+        ]
+
+    def clean_body(self):
+        import json
+
+        data = self.cleaned_data["body"]
+        if isinstance(data, dict):
+            return data
+        try:
+            return json.loads(data) if data else {}
+        except Exception:
+            raise forms.ValidationError("Invalid JSON for request body.")

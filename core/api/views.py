@@ -16,6 +16,8 @@ from core.api.schemas import (
     GenerateTitleSuggestionOut,
     GenerateTitleSuggestionsIn,
     GenerateTitleSuggestionsOut,
+    PostGeneratedBlogPostIn,
+    PostGeneratedBlogPostOut,
     ProjectScanIn,
     ProjectScanOut,
     SubmitFeedbackIn,
@@ -29,6 +31,7 @@ from core.models import (
     BlogPostTitleSuggestion,
     Competitor,
     Feedback,
+    GeneratedBlogPost,
     Keyword,
     Project,
     ProjectKeyword,
@@ -442,3 +445,27 @@ def submit_blog_post(request: HttpRequest, data: BlogPostIn):
         return BlogPostOut(status="success", message="Blog post submitted successfully.")
     except Exception as e:
         return BlogPostOut(status="error", message=f"Failed to submit blog post: {str(e)}")
+
+
+@api.post("/post-generated-blog-post", response=PostGeneratedBlogPostOut)
+def post_generated_blog_post(request: HttpRequest, data: PostGeneratedBlogPostIn):
+    profile = getattr(request, "auth", None)
+    blog_post_id = data.id
+    if not blog_post_id:
+        return {"status": "error", "message": "Missing generated blog post id."}
+    try:
+        generated_post = GeneratedBlogPost.objects.get(id=blog_post_id)
+        if generated_post.project and generated_post.project.profile != profile:
+            return {"status": "error", "message": "Forbidden: You do not have access to this post."}
+        result = generated_post.submit_blog_post_to_endpoint()
+        if result is True:
+            generated_post.posted = True
+            generated_post.save(update_fields=["posted"])
+            return {"status": "success", "message": "Blog post published!"}
+        else:
+            return {"status": "error", "message": "Failed to post blog."}
+    except GeneratedBlogPost.DoesNotExist:
+        return {"status": "error", "message": "Generated blog post not found."}
+    except Exception as e:
+        logger.error("Failed to post generated blog post", error=str(e), blog_post_id=blog_post_id)
+        return {"status": "error", "message": str(e)}

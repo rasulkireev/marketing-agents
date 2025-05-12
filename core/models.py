@@ -45,6 +45,7 @@ from core.schemas import (
     TitleSuggestions,
     WebPageContent,
 )
+from core.utils import replace_placeholders
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -597,8 +598,13 @@ class Project(BaseModel):
 
 class BlogPostTitleSuggestion(BaseModel):
     project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="blog_post_title_suggestions"
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="blog_post_title_suggestions",
     )
+
     title = models.CharField(max_length=255)
     content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
     category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
@@ -606,6 +612,7 @@ class BlogPostTitleSuggestion(BaseModel):
     prompt = models.TextField(blank=True)
     target_keywords = models.JSONField(default=list, blank=True, null=True)
     suggested_meta_description = models.TextField(blank=True)
+
     user_score = models.SmallIntegerField(
         default=0,
         choices=[
@@ -615,6 +622,8 @@ class BlogPostTitleSuggestion(BaseModel):
         ],
         help_text="User's rating of the title suggestion",
     )
+
+    archived = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.project.name}: {self.title}"
@@ -750,6 +759,23 @@ class BlogPostTitleSuggestion(BaseModel):
         )
 
 
+class AutoSubmittionSetting(BaseModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="auto_submittion_settings")
+    endpoint_url = models.URLField(
+        max_length=500, help_text="The endpoint to which posts will be automatically submitted."
+    )
+    body = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request body.")
+    header = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request headers.")
+    posts_per_month = models.PositiveIntegerField(default=1, help_text="How many posts to publish per month.")
+    preferred_timezone = models.CharField(
+        max_length=64, blank=True, null=True, help_text="Preferred timezone for publishing posts."
+    )
+    preferred_time = models.TimeField(blank=True, null=True, help_text="Preferred time of day to publish posts.")
+
+    def __str__(self):
+        return f"{self.project.name}"
+
+
 class GeneratedBlogPost(BaseModel):
     project = models.ForeignKey(
         Project, null=True, blank=True, on_delete=models.CASCADE, related_name="generated_blog_posts"
@@ -764,8 +790,29 @@ class GeneratedBlogPost(BaseModel):
     icon = models.ImageField(upload_to="blog_post_icons/", blank=True)
     image = models.ImageField(upload_to="blog_post_images/", blank=True)
 
+    posted = models.BooleanField(default=False)
+
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
+
+    def submit_blog_post_to_endpoint(self):
+        project = self.project
+        settings = AutoSubmittionSetting.objects.filter(project=project).order_by("-id").first()
+        if not settings or not settings.endpoint_url:
+            logger.warning("No AutoSubmittionSetting or endpoint_url found for project", project_id=project.id)
+            return False
+
+        url = settings.endpoint_url
+        headers = replace_placeholders(settings.header, self)
+        body = replace_placeholders(settings.body, self)
+
+        try:
+            response = requests.post(url, json=body, headers=headers, timeout=15)
+            response.raise_for_status()
+            return True
+        except requests.RequestException as e:
+            logger.error("Failed to submit blog post to endpoint", error=str(e), url=url, body=body, headers=headers)
+            return False
 
 
 class ProjectPage(BaseModel):
