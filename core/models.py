@@ -803,6 +803,10 @@ class GeneratedBlogPost(BaseModel):
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
 
+    @property
+    def post_title(self):
+        return self.title.title
+
     def submit_blog_post_to_endpoint(self):
         project = self.project
         settings = AutoSubmittionSetting.objects.filter(project=project).order_by("-id").first()

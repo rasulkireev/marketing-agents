@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const datalist = document.createElement("datalist");
     datalist.id = "body-value-suggestions";
     datalist.innerHTML = `
-      <option value="{{ title }}"></option>
+      <option value="{{ post_title }}"></option>
       <option value="{{ description }}"></option>
       <option value="{{ slug }}"></option>
       <option value="{{ tags }}"></option>
