@@ -13,7 +13,7 @@ django-anymail = {extras = ["mailgun"], version = "^12.0"}
 django-environ = "^0.11.2"
 django-extensions = "^3.2.3"
 django-ninja = "^1.3.0"
-django-q2 = "^1.7.2"
+django-q2 = {extras = ["sentry"], version = "^1.8.0"}
 django-storages = {extras = ["s3"], version = "^1.14.4"}
 django-structlog = "^8.1.0"
 django-widget-tweaks = "^1.4.12"

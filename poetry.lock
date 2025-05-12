@@ -820,6 +820,20 @@ Django = ">=4.2"
 tests = ["tox"]
 
 [[package]]
+name = "django-q-sentry"
+version = "0.1.6"
+description = "A Sentry support plugin for Django Q"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-q-sentry-0.1.6.linux-x86_64.tar.gz", hash = "sha256:bdbd9c7a48d543c2d74ae9a4c9004dfc0965cb11bc145c6cf4de3429be1b58ae"},
+    {file = "django_q_sentry-0.1.6-py3-none-any.whl", hash = "sha256:9b8b4d7fad253a7d9a47f2c2ab0d9dea83078b7ef45c8849dbb1e4176ef8d050"},
+]
+
+[package.dependencies]
+sentry-sdk = ">=1.5.5"
+
+[[package]]
 name = "django-q2"
 version = "1.8.0"
 description = "A multiprocessing distributed task queue for Django"
@@ -833,6 +847,7 @@ files = [
 [package.dependencies]
 django = ">=4.2,<6"
 django-picklefield = ">=3.1,<4.0"
+django-q-sentry = {version = ">=0.1", optional = true, markers = "extra == \"sentry\""}
 
 [package.extras]
 rollbar = ["django-q-rollbar (>=0.1)"]
@@ -3666,4 +3681,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "e1466e908793716f854b56c936d064dba7dba6b7c93d756e6c852b908161781c"
+content-hash = "ff781e457ab34e8902617741de95bd1453b54d4ad4c8d0ccd1af40d7f0e7cf77"
