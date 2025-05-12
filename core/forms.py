@@ -73,7 +73,7 @@ class AutoSubmittionSettingsForm(forms.ModelForm):
             "endpoint_url",
             "body",
             "header",
-            "posts_per_day",
+            "posts_per_month",
             "preferred_timezone",
             "preferred_time",
         ]

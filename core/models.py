@@ -757,7 +757,7 @@ class AutoSubmittionSettings(BaseModel):
     )
     body = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request body.")
     header = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request headers.")
-    posts_per_day = models.PositiveIntegerField(default=1, help_text="How many posts to publish per day.")
+    posts_per_month = models.PositiveIntegerField(default=1, help_text="How many posts to publish per month.")
     preferred_timezone = models.CharField(
         max_length=64, blank=True, null=True, help_text="Preferred timezone for publishing posts."
     )
