@@ -12,7 +12,8 @@ export default class extends Controller {
     "suggestionsCheck",
     "suggestionsCross",
     "resultsButton",
-    "projectsList"
+    "projectsList",
+    "backgroundTasks"
   ];
 
   async handleSubmit(event) {
@@ -28,23 +29,6 @@ export default class extends Controller {
 
       // Add project to list and update results button immediately after successful scan
       this.addProjectToList(scanData);
-
-      try {
-        // Start suggestions spinner
-        this.suggestionsSpinnerTarget.classList.add('animate-spin', 'border-t-pink-600');
-
-        // Generate both types of suggestions
-        await this.generateSuggestions(scanData.project_id, "SHARING");
-        await this.generateSuggestions(scanData.project_id, "SEO");
-
-        // Show check mark only after both suggestions are complete
-        this.suggestionsSpinnerTarget.classList.add('hidden');
-        this.suggestionsCheckTarget.classList.remove('hidden');
-
-        this.updateResultsButton(scanData.project_id);
-      } catch (suggestionsError) {
-        this.handleSuggestionsError(suggestionsError);
-      }
     } catch (scanError) {
       this.handleScanError(scanError);
     }
@@ -79,6 +63,15 @@ export default class extends Controller {
     // Update UI after successful scan
     this.detailsSpinnerTarget.classList.add('hidden');
     this.detailsCheckTarget.classList.remove('hidden');
+    // Show background tasks message
+    if (this.hasBackgroundTasksTarget) {
+      const el = this.backgroundTasksTarget;
+      el.classList.remove('hidden');
+      // Force reflow to ensure transition
+      void el.offsetWidth;
+      el.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+      el.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
+    }
 
     return scanData;
   }

@@ -2,7 +2,7 @@ import requests
 from django.conf import settings
 from django_q.tasks import async_task
 
-from core.choices import KeywordDataSource, ProjectPageType
+from core.choices import ContentType, KeywordDataSource, ProjectPageType
 from core.models import Competitor, Keyword, Project, ProjectKeyword, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
@@ -136,3 +136,10 @@ def process_project_keywords(project_id: int):
     result_message = f"Keyword processing for project {project.name} (ID: {project.id}): Processed {processed_count} keywords, Failed: {failed_count}."
     logger.info(result_message)
     return result_message
+
+
+def generate_blog_post_suggestions(project_id: int):
+    project = Project.objects.get(id=project_id)
+    project.generate_title_suggestions(content_type=ContentType.SHARING, num_titles=3)
+    project.generate_title_suggestions(content_type=ContentType.SEO, num_titles=3)
+    return "Blog post suggestions generated"

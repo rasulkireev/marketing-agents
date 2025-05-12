@@ -335,6 +335,7 @@ class Project(BaseModel):
         self.date_analyzed = timezone.now()
         self.save()
 
+        async_task("core.tasks.generate_blog_post_suggestions", self.id)
         async_task("core.tasks.process_project_keywords", self.id)
         async_task("core.tasks.schedule_project_page_analysis", self.id)
         async_task("core.tasks.schedule_project_competitor_analysis", self.id, timeout=180)
