@@ -121,4 +121,4 @@ def get_markdown_content(url):
             error=str(e),
             url=url,
         )
-        return ("", "", "")
+        raise e
