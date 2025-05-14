@@ -63,48 +63,41 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
             "message": "Project already exists",
         }
 
-    try:
-        project = Project.objects.create(profile=profile, url=data.url)
-        got_content = project.get_page_content()
+    project = Project.objects.create(profile=profile, url=data.url)
+
+    got_content = project.get_page_content()
+
+    analyzed_project = False
+    if got_content:
         analyzed_project = project.analyze_content()
+    else:
+        project.delete()
+        return {
+            "status": "error",
+            "message": "Failed to get page content",
+        }
 
-        if got_content and analyzed_project:
-            return {
-                "status": "success",
-                "project_id": project.id,
-                "name": project.name,
-                "type": project.get_type_display(),
-                "url": project.url,
-                "summary": project.summary,
-            }
-        else:
-            logger.error(
-                "[Scan Project] Project has no content",
-                got_content=got_content,
-                analyzed_project=analyzed_project,
-                project_id=project.id if project else None,
-                url=data.url,
-            )
-            if project:
-                project.delete()
-            return {
-                "status": "error",
-                "message": f"Failed to {'get page content' if not got_content else 'analyze project'}.",
-            }
-
-    except Exception as e:
+    if analyzed_project:
+        return {
+            "status": "success",
+            "project_id": project.id,
+            "name": project.name,
+            "type": project.get_type_display(),
+            "url": project.url,
+            "summary": project.summary,
+        }
+    else:
         logger.error(
-            "[Scan Project] Failed to scan project",
-            error=str(e),
-            exc_info=True,
+            "[Scan Project] Project has no content",
+            got_content=got_content,
+            analyzed_project=analyzed_project,
             project_id=project.id if project else None,
             url=data.url,
         )
-        if project:
-            project.delete()
+        project.delete()
         return {
             "status": "error",
-            "message": str(e),
+            "message": "Failed to analyze project",
         }
 
 
