@@ -90,6 +90,7 @@ services:
       - STRIPE_API_KEY=${STRIPE_TEST_SECRET_KEY}
       - STRIPE_DEVICE_NAME=djstripe_docker
       - DJSTRIPE_WEBHOOK_SECRET=${DJSTRIPE_WEBHOOK_SECRET}
+      - WEBHOOK_UUID=${WEBHOOK_UUID}
     dns:
       - 8.8.8.8
       - 8.8.4.4

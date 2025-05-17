@@ -123,7 +123,7 @@ class Profile(BaseModel):
 
     @property
     def has_product_or_subscription(self):
-        return self.product is not None or self.subscription is not None
+        return self.product is not None or self.subscription is not None or self.user.is_superuser
 
     @property
     def number_of_active_projects(self):
@@ -1281,7 +1281,7 @@ class Keyword(BaseModel):
                     keyword_id=self.id,
                     keyword_text=self.keyword_text,
                     response_status=response.status_code,
-                    response_content=response.text[:500],  # Log a snippet of the response
+                    response_content=response.text[:500],
                 )
                 return False
 

@@ -140,6 +140,9 @@
                         </svg>
                         <span>Dislike</span>
                       </button>
+
+                      {% include "components/post-button.html" with suggestion=suggestion %}
+
                     </div>
                   </div>
 
@@ -296,25 +299,6 @@
                             Copy
                           </button>
                         </div>
-
-                        <div class="flex justify-end">
-                          {% if generated_post %}
-                            {% if not generated_post.posted %}
-                              <button
-                              data-action="generate-content#post"
-                              class="px-4 py-2 mt-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                              Post
-                            </button>
-                          {% else %}
-                            <button
-                              class="px-4 py-2 mt-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded-md cursor-not-allowed"
-                              disabled>
-                              Posted
-                            </button>
-                          {% endif %}
-                        {% endif %}
-                        </div>
-
                       </div>
                     {% endif %}
                   {% endwith %}
