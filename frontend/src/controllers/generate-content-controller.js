@@ -123,6 +123,8 @@ export default class extends Controller {
 
   _appendPostButton(container, generatedPostId) {
     container.innerHTML = '';
+    // on freshly generate content this won't work correctly. need to unify the frontend and backend logic
+    // https://app.todoist.com/app/task/unify-the-data-on-the-frontend-basically-on-every-page-open-a-script-should-get-6c3hhgFHpq3VmrmR
     const link = this.hasProSubscriptionValue ? `${this.projectSettingsUrlValue}#blogging-agent-settings` : this.pricingUrlValue;
     console.log('link', link);
     console.log('this.hasProSubscriptionValue', this.hasProSubscriptionValue);
