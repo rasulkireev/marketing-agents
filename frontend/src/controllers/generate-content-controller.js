@@ -4,10 +4,20 @@ export default class extends Controller {
   static values = {
     url: String,
     suggestionId: Number,
-    expanded: Boolean
+    hasProSubscription: Boolean,
+    hasAutoSubmissionSetting: Boolean,
+    pricingUrl: String,
+    projectSettingsUrl: String
   };
 
-  static targets = ["status", "content", "buttonContainer", "dropdown", "chevron"];
+  static targets = [
+    "status",
+    "content",
+    "buttonContainer",
+    "dropdown",
+    "chevron",
+    "postButtonContainer"
+  ];
 
   connect() {
     this.expandedValue = false;
@@ -92,6 +102,12 @@ export default class extends Controller {
       const contentDiv = this.createFormGroup("content", data.content, "Content", true, "h-96 font-mono");
       contentContainer.appendChild(contentDiv);
 
+      console.log('data', data);
+      console.log('this.postButtonContainerTarget', this.postButtonContainerTarget);
+      if (data.id) {
+        this._appendPostButton(this.postButtonContainerTarget, data.id);
+      }
+
       this.contentTarget.innerHTML = "";
       this.contentTarget.appendChild(contentContainer);
 
@@ -107,6 +123,30 @@ export default class extends Controller {
       `;
       this.statusTarget.innerHTML = "";
     }
+  }
+
+  _appendPostButton(container, generatedPostId) {
+    container.innerHTML = ''; // Clear previous button content
+    const link = this.hasProSubscriptionValue ? `${this.projectSettingsUrlValue}#blogging-agent-settings` : this.pricingUrlValue;
+    const title = this.hasProSubscriptionValue
+      ? 'This feature is available for Pro subscribers only.'
+      : 'You need to setup the API endpoint for automatic posting in project settings.';
+    const buttonHtml = `
+      <a
+        href="${link}"
+        class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
+        title="${title}"
+      >
+        Post
+      </a>
+    `;
+
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.setAttribute('data-controller', 'post-button');
+    wrapperDiv.setAttribute('data-post-button-generated-post-id-value', generatedPostId);
+    wrapperDiv.innerHTML = buttonHtml.trim();
+
+    container.appendChild(wrapperDiv);
   }
 
   createFormGroup(id, value, label, isTextarea = false, extraClasses = "") {

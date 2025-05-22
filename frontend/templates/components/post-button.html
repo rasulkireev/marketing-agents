@@ -11,7 +11,7 @@
         </a>
       {% elif not has_auto_submittion_setting %}
         <a
-          href="{% url 'project_settings' generated_post.project.id %}"
+          href="{% url 'project_settings' generated_post.project.id %}#blogging-agent-settings"
           class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
           title="You need to setup the API endpoint for automatic posting in project settings."
         >

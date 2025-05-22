@@ -141,7 +141,15 @@
                         <span>Dislike</span>
                       </button>
 
-                      {% include "components/post-button.html" with suggestion=suggestion %}
+                      <div
+                        data-generate-content-target="postButtonContainer"
+                        data-has-pro-subscription="{{ has_pro_subscription }}"
+                        data-has-auto-submission-setting="{{ has_auto_submission_setting }}"
+                        data-pricing-url="{% url 'pricing' %}"
+                        data-project-settings-url="{% url 'project_settings' suggestion.project.id %}"
+                      >
+                        {% include "components/post-button.html" with suggestion=suggestion %}
+                      </div>
 
                     </div>
                   </div>

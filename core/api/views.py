@@ -188,6 +188,7 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
 
         return {
             "status": "success",
+            "id": blog_post.id,
             "content": blog_post.content,
             "slug": blog_post.slug,
             "tags": blog_post.tags,
