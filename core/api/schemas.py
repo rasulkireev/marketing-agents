@@ -54,6 +54,7 @@ class GeneratedContentOut(Schema):
     slug: Optional[str] = None
     tags: Optional[str] = None
     description: Optional[str] = None
+    id: Optional[int] = None
 
 
 class UpdateTitleScoreIn(Schema):

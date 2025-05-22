@@ -250,6 +250,12 @@ class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
     template_name = "agents/blogging-agent.html"
     context_object_name = "project"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.object
+        context["has_auto_submittion_setting"] = AutoSubmittionSetting.objects.filter(project=project).exists()
+        return context
+
 
 class KeywordsAgentView(LoginRequiredMixin, DetailView):
     model = Project

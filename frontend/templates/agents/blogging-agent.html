@@ -140,6 +140,17 @@
                         </svg>
                         <span>Dislike</span>
                       </button>
+
+                      <div
+                        data-generate-content-target="postButtonContainer"
+                        data-has-pro-subscription="{{ has_pro_subscription }}"
+                        data-has-auto-submission-setting="{{ has_auto_submission_setting }}"
+                        data-pricing-url="{% url 'pricing' %}"
+                        data-project-settings-url="{% url 'project_settings' suggestion.project.id %}"
+                      >
+                        {% include "components/post-button.html" with suggestion=suggestion %}
+                      </div>
+
                     </div>
                   </div>
 
@@ -296,25 +307,6 @@
                             Copy
                           </button>
                         </div>
-
-                        <div class="flex justify-end">
-                          {% if generated_post %}
-                            {% if not generated_post.posted %}
-                              <button
-                              data-action="generate-content#post"
-                              class="px-4 py-2 mt-2 text-sm font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                              Post
-                            </button>
-                          {% else %}
-                            <button
-                              class="px-4 py-2 mt-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded-md cursor-not-allowed"
-                              disabled>
-                              Posted
-                            </button>
-                          {% endif %}
-                        {% endif %}
-                        </div>
-
                       </div>
                     {% endif %}
                   {% endwith %}

@@ -4,10 +4,20 @@ export default class extends Controller {
   static values = {
     url: String,
     suggestionId: Number,
-    expanded: Boolean
+    hasProSubscription: Boolean,
+    hasAutoSubmissionSetting: Boolean,
+    pricingUrl: String,
+    projectSettingsUrl: String
   };
 
-  static targets = ["status", "content", "buttonContainer", "dropdown", "chevron"];
+  static targets = [
+    "status",
+    "content",
+    "buttonContainer",
+    "dropdown",
+    "chevron",
+    "postButtonContainer"
+  ];
 
   connect() {
     this.expandedValue = false;
@@ -92,6 +102,12 @@ export default class extends Controller {
       const contentDiv = this.createFormGroup("content", data.content, "Content", true, "h-96 font-mono");
       contentContainer.appendChild(contentDiv);
 
+      console.log('data', data);
+      console.log('this.postButtonContainerTarget', this.postButtonContainerTarget);
+      if (data.id) {
+        this._appendPostButton(this.postButtonContainerTarget, data.id);
+      }
+
       this.contentTarget.innerHTML = "";
       this.contentTarget.appendChild(contentContainer);
 
@@ -109,57 +125,28 @@ export default class extends Controller {
     }
   }
 
-  async post(event) {
-    event.preventDefault();
-    const button = event.currentTarget;
-    button.disabled = true;
-    button.innerText = "Posting...";
+  _appendPostButton(container, generatedPostId) {
+    container.innerHTML = ''; // Clear previous button content
+    const link = this.hasProSubscriptionValue ? `${this.projectSettingsUrlValue}#blogging-agent-settings` : this.pricingUrlValue;
+    const title = this.hasProSubscriptionValue
+      ? 'This feature is available for Pro subscribers only.'
+      : 'You need to setup the API endpoint for automatic posting in project settings.';
+    const buttonHtml = `
+      <a
+        href="${link}"
+        class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
+        title="${title}"
+      >
+        Post
+      </a>
+    `;
 
-    // Find the generated_blog_post id from the dropdown
-    const dropdown = button.closest('[data-generate-content-target="dropdown"]');
-    const idInput = dropdown.querySelector('[id^="slug-"]');
-    let generatedBlogPostId = null;
-    if (idInput) {
-      // Extract the id from the input's id attribute (slug-123)
-      const match = idInput.id.match(/slug-(\d+)/);
-      if (match) {
-        generatedBlogPostId = match[1];
-      }
-    }
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.setAttribute('data-controller', 'post-button');
+    wrapperDiv.setAttribute('data-post-button-generated-post-id-value', generatedPostId);
+    wrapperDiv.innerHTML = buttonHtml.trim();
 
-    if (!generatedBlogPostId) {
-      showMessage("Could not determine generated post ID.", "error");
-      button.innerText = "Post";
-      button.disabled = false;
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/post-generated-blog-post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify({ id: generatedBlogPostId })
-      });
-
-      const data = await response.json();
-      if (response.ok && data.status === "success") {
-        showMessage("Blog post published!", "success");
-        button.innerText = "Posted";
-        button.className = "px-4 py-2 mt-2 text-sm font-semibold text-gray-400 bg-gray-200 rounded-md cursor-not-allowed";
-        button.disabled = true;
-      } else {
-        showMessage(data.message || "Failed to post blog.", "error");
-        button.innerText = "Post";
-        button.disabled = false;
-      }
-    } catch (error) {
-      showMessage(error.message || "Failed to post blog.", "error");
-      button.innerText = "Post";
-      button.disabled = false;
-    }
+    container.appendChild(wrapperDiv);
   }
 
   createFormGroup(id, value, label, isTextarea = false, extraClasses = "") {

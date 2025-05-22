@@ -1,0 +1,33 @@
+{% with generated_post=suggestion.generated_blog_posts.first %}
+  {% if generated_post %}
+    <div data-controller="post-button" data-post-button-generated-post-id-value="{{ generated_post.id }}">
+      {% if not has_pro_subscription %}
+        <a
+          href="{% url 'pricing' %}"
+          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
+          title="This feature is available for Pro subscribers only."
+        >
+          Post
+        </a>
+      {% elif not has_auto_submittion_setting %}
+        <a
+          href="{% url 'project_settings' generated_post.project.id %}#blogging-agent-settings"
+          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
+          title="You need to setup the API endpoint for automatic posting in project settings."
+        >
+          Post
+        </a>
+      {% elif not generated_post.posted %}
+        <button
+          data-action="post-button#post"
+          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md border-2 border border-blue-600 transition-colors duration-200 hover:border-blue-700 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          Post
+        </button>
+      {% else %}
+        <button class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200" disabled>
+          Posted
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endwith %}
