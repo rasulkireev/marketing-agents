@@ -5,7 +5,9 @@
         <a
           href="{% url 'pricing' %}"
           class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
-          title="This feature is available for Pro subscribers only."
+          data-controller="tooltip"
+          data-tooltip-message-value="This feature is available for Pro subscribers only."
+          data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
         >
           Post
         </a>
@@ -13,7 +15,9 @@
         <a
           href="{% url 'project_settings' generated_post.project.id %}#blogging-agent-settings"
           class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
-          title="You need to setup the API endpoint for automatic posting in project settings."
+          data-controller="tooltip"
+          data-tooltip-message-value="You need to setup the API endpoint for automatic posting in project settings."
+          data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
         >
           Post
         </a>

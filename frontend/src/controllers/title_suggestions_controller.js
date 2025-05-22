@@ -134,6 +134,14 @@ export default class extends Controller {
                   </svg>
                   <span>Dislike</span>
                 </button>
+
+                <div
+                  data-generate-content-target="postButtonContainer"
+                  data-has-pro-subscription="{{ has_pro_subscription }}"
+                  data-has-auto-submission-setting="{{ has_auto_submission_setting }}"
+                  data-pricing-url="{% url 'pricing' %}"
+                  data-project-settings-url="{% url 'project_settings' suggestion.project.id %}"
+                ></div>
               </div>
             </div>
 
