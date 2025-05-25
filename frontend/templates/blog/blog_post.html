@@ -78,6 +78,7 @@
         "url": "https://{{ request.get_host }}{% static 'vendors/images/logo.png' %}"
       }
     },
+    "articleBody": "{{ blog_post.content|replace_quotes|safe }}",
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "https://{{ request.get_host }}{{ blog_post.get_absolute_url }}"
