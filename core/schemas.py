@@ -34,8 +34,7 @@ class ProjectDetails(BaseModel):
     pain_points: str = Field(description="List of target audience challenges in markdown list format")
     product_usage: str = Field(description="List of common use cases in markdown list format")
     proposed_keywords: str = Field(
-        description="""Comma separated list of 10 long-tail and 10 short-tail
-        keywords you think this site would rank well for"""
+        description="""Comma separated list of 20 short-tail keywords you think this site would rank well for"""
     )
     links: str = Field(
         description="""List of relevant URLs in markdown list format.
