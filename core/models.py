@@ -287,7 +287,7 @@ class Project(BaseModel):
         """
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=ProjectDetails,
+            output_type=ProjectDetails,
             deps_type=WebPageContent,
             system_prompt=(
                 "You are an expert content analyzer. Based on the web page content provided, "
@@ -345,7 +345,7 @@ class Project(BaseModel):
     def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=TitleSuggestions,
+            output_type=TitleSuggestions,
             deps_type=TitleSuggestionContext,
             system_prompt=TITLE_SUGGESTION_SYSTEM_PROMPTS[content_type],
             retries=2,
@@ -477,7 +477,7 @@ class Project(BaseModel):
     def get_a_list_of_links(self):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=list[str],
+            output_type=list[str],
             system_prompt="You are an expert link extractor. Extract all the links from the text provided.",
             retries=2,
         )
@@ -507,7 +507,7 @@ class Project(BaseModel):
         agent = Agent(
             model,
             deps_type=ProjectDetails,
-            result_type=str,
+            output_type=str,
             system_prompt="You are a helpful assistant that helps me find competitors for my project.",
             retries=2,
         )
@@ -564,7 +564,7 @@ class Project(BaseModel):
     def get_and_save_list_of_competitors(self):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=list[CompetitorDetails],
+            output_type=list[CompetitorDetails],
             system_prompt="You are an expert data extractor. Extract all the data from the text provided.",
             retries=2,
         )
@@ -651,7 +651,7 @@ class BlogPostTitleSuggestion(BaseModel):
         """
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=BlogPostContent,
+            output_type=BlogPostContent,
             deps_type=BlogPostGenerationContext,
             system_prompt=GENERATE_CONTENT_SYSTEM_PROMPTS[content_type],
             retries=2,
@@ -895,7 +895,7 @@ class ProjectPage(BaseModel):
         """
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=ProjectPageDetails,
+            output_type=ProjectPageDetails,
             deps_type=WebPageContent,
             system_prompt=(
                 "You are an expert content analyzer. Based on the web page content provided, "
@@ -948,7 +948,7 @@ class ProjectPage(BaseModel):
     def create_new_pricing_strategy(self, strategy_name: str = "Alex Hormozi", user_prompt: str = ""):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=PricingPageStrategySuggestion,
+            output_type=PricingPageStrategySuggestion,
             deps_type=PricingPageStrategyContext,
             system_prompt=PRICING_PAGE_STRATEGY_SYSTEM_PROMPT[strategy_name],
             retries=2,
@@ -1097,7 +1097,7 @@ class Competitor(BaseModel):
     def populate_name_description(self):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=CompetitorDetails,
+            output_type=CompetitorDetails,
             deps_type=WebPageContent,
             system_prompt=(
                 "You are an expert marketer. Based on the competitor details and homepage content provided, "
@@ -1133,7 +1133,7 @@ class Competitor(BaseModel):
     def analyze_competitor(self):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
-            result_type=CompetitorAnalysis,
+            output_type=CompetitorAnalysis,
             deps_type=CompetitorAnalysisContext,
             system_prompt=(
                 "You are an expert marketer. Based on the competitor details and homepage content provided, "
