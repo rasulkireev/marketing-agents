@@ -10,7 +10,7 @@ export default class extends Controller {
     this.renderAllGraphs();
     // Default sort on connect
     if (this.hasSortTarget) {
-      this.sortTarget.value = "created_desc";
+      this.sortTarget.value = "volume_desc";
       this.sortKeywords();
     }
   }
