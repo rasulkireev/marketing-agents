@@ -1,0 +1,78 @@
+<context>
+# Overview
+Our product is an AI-powered marketing automation platform designed for established online businesses. It helps these businesses significantly reduce marketing costs and streamline operations by automating tasks traditionally handled by expensive marketing agencies. We provide a comprehensive suite of tools to manage and optimize marketing campaigns, content creation, and customer engagement, delivering measurable results and a strong ROI.
+
+# Core Features
+- **Automated Campaign Management:** AI-driven tools to create, manage, and optimize marketing campaigns across various channels (social media, email, SEO, paid ads). This replaces the manual effort and high costs associated with agency campaign managers.
+- **AI Content Generation & Optimization:** Generate high-quality marketing copy, blog posts, social media updates, and ad creatives. Optimize existing content for better performance and SEO. Reduces reliance on agency content writers and strategists.
+- **Advanced Analytics & Reporting:** Provide in-depth analytics on campaign performance, customer behavior, and marketing ROI. Customizable dashboards and automated reports offer insights that businesses typically pay agencies for.
+- **Personalized Customer Journey Automation:** Tools to map and automate personalized customer journeys, from lead nurturing to post-purchase engagement. Increases conversion rates and customer lifetime value without agency fees.
+- **Integration Hub:** Seamlessly integrate with existing business tools (CRM, e-commerce platforms, analytics services) to ensure data-driven marketing automation.
+
+# User Experience
+- **User Personas:**
+    - Marketing Managers at established e-commerce businesses (e.g., $5M+ ARR).
+    - VPs of Marketing in mid-to-large sized online service companies.
+    - Business Owners of scaled online enterprises seeking to optimize marketing spend.
+- **Key User Flows:**
+    - Onboarding: Easy setup and integration with existing marketing stack.
+    - Campaign Creation: Intuitive interface for setting up complex, multi-channel campaigns with AI assistance.
+    - Performance Monitoring: Real-time dashboards and actionable insights.
+    - Content Studio: AI-assisted creation and scheduling of marketing content.
+- **UI/UX Considerations:**
+    - Homepage Design: A "pleasantly busy" design, inspired by icon.com, showcasing the breadth and depth of features immediately. Dynamic elements, clear calls-to-action, and visually engaging sections that highlight automation capabilities and cost savings.
+    - Platform Interface: Clean, professional, and data-rich, but user-friendly. Focus on dashboards that clearly demonstrate value and ROI. Customizable to user roles and needs.
+    - Emphasis on Automation: Throughout the UX, highlight how tasks are being automated and how much time/money is being saved compared to manual/agency work.
+</context>
+<PRD>
+# Technical Architecture
+- **System Components:** Modular microservices architecture for scalability and resilience. Core services include: Campaign Engine, Content AI, Analytics Engine, Personalization Engine, Integration Layer.
+- **Data Models:** Robust data models for user accounts, campaign data, customer segments, content assets, and performance metrics.
+- **APIs and Integrations:** RESTful APIs for all core services. Pre-built integrations for major CRMs (Salesforce, HubSpot), e-commerce platforms (Shopify, Magento), analytics tools (Google Analytics), and advertising platforms (Google Ads, Facebook Ads).
+- **Infrastructure Requirements:** Cloud-native deployment (e.g., AWS or GCP), leveraging managed services for databases (PostgreSQL), messaging queues (Kafka/RabbitMQ), and container orchestration (Kubernetes).
+
+# Development Roadmap
+- **MVP - Phase 1: Homepage Redesign & Core Automation Foundation**
+    - Implement the new "pleasantly busy" homepage design inspired by icon.com, focusing on the rebranding towards larger businesses.
+    - Develop the core AI-driven campaign management for one primary channel (e.g., Email Marketing or Google Ads).
+    - Basic AI content generation for that channel.
+    - Initial analytics dashboard showing key performance indicators for the selected channel.
+    - Secure user authentication and basic account management.
+- **Phase 2: Expanding Automation & Integration**
+    - Add support for 2-3 additional marketing channels.
+    - Enhance AI content generation with more formats and deeper optimization capabilities.
+    - Develop the personalized customer journey automation tools (basic flows).
+    - Implement key CRM and e-commerce platform integrations.
+    - Advanced reporting and customizable dashboards.
+- **Future Enhancements:**
+    - Predictive analytics and AI-driven strategy recommendations.
+    - A/B testing automation for campaigns and content.
+    - Deeper integrations with a wider range of business tools.
+    - Community features and knowledge sharing for users.
+    - Multi-user collaboration and team management features.
+
+# Logical Dependency Chain
+1.  **Branding & Homepage:** Finalize new branding and implement the new homepage design. This is critical for communicating the shift in target audience and value proposition.
+2.  **Core User & Account System:** Establish secure user registration, login, and basic account management.
+3.  **MVP Channel Automation:** Build out the end-to-end automation for the first selected marketing channel (e.g., AI-assisted email campaign creation, sending, and basic analytics).
+4.  **Content AI (MVP):** Integrate the initial AI content generation specific to the MVP channel.
+5.  **Analytics (MVP):** Display basic performance metrics for the MVP channel.
+6.  **Integrations (Initial):** Develop the first key integration necessary for the MVP channel to function (e.g., email service provider API).
+7.  **Expand Channels & Features:** Iteratively add more channels, enhance AI, build out personalization, and add more integrations.
+
+# Risks and Mitigations
+- **Technical Challenges:**
+    - Building a truly effective AI for marketing automation is complex. Mitigation: Start with focused AI capabilities, leverage pre-trained models where possible, and iterate based on user feedback.
+    - Integrating with a diverse set of third-party APIs can be challenging. Mitigation: Prioritize key integrations, build a robust integration framework, and provide clear documentation.
+- **Market Adoption by Larger Businesses:**
+    - Larger businesses may be hesitant to switch from established agencies or complex enterprise tools. Mitigation: Clearly demonstrate ROI, offer robust security and compliance features, provide excellent customer support and onboarding, and use case studies from early adopters.
+- **Achieving a "Pleasantly Busy" but Usable Design:**
+    - Balancing information density with clarity and ease of use can be difficult. Mitigation: User testing throughout the design process, focus on clear information hierarchy, and ensure intuitive navigation despite the visual richness.
+- **Competition:**
+    - The marketing automation space is competitive. Mitigation: Differentiate through a focus on significant cost reduction for established businesses, superior AI capabilities, and a user experience tailored to their specific needs of replacing agency overhead.
+
+# Appendix
+- **Inspiration:** icon.com (for homepage design aesthetic)
+- **Target Audience Research:** [Link to detailed research on pain points of larger businesses with marketing agencies and their automation needs]
+- **Competitive Analysis:** [Link to analysis of existing marketing automation tools and agency offerings]
+</PRD>
