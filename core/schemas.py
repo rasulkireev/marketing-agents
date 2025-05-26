@@ -47,6 +47,12 @@ class ProjectDetails(BaseModel):
             f"One of the following options: {', '.join([choice[0] for choice in Language.choices])}"
         )
     )
+    location: str = Field(
+        description="""Location of the target audience. Most of online businesses will be 'Global',
+        meaning anyone in the world can use. But in case of a local business, it will be the country or region.
+        So, if the business is local, please specify the country or region. Otherwise, use 'Global'.
+    """
+    )
 
     @field_validator("type")
     @classmethod

@@ -206,6 +206,7 @@ class Project(BaseModel):
     competitors_list = models.TextField(blank=True)
     style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
     proposed_keywords = models.TextField(blank=True)
+    location = models.CharField(max_length=50, default="Global")
 
     def __str__(self):
         return self.name
@@ -225,6 +226,7 @@ class Project(BaseModel):
             links=self.links,
             language=self.language,
             proposed_keywords=self.proposed_keywords,
+            location=self.location,
         )
 
     @property
@@ -310,6 +312,7 @@ class Project(BaseModel):
         self.links = result.data.links
         self.language = result.data.language
         self.proposed_keywords = result.data.proposed_keywords
+        self.location = result.data.location
         self.date_analyzed = timezone.now()
         self.save()
 
@@ -518,13 +521,18 @@ class Project(BaseModel):
 
         @agent.system_prompt
         def number_of_competitors() -> str:
-            return "Give me a list of at least 15 competitors."
+            return "Give me a list of at least 20 competitors."
 
         @agent.system_prompt
-        def language_specification() -> str:
-            return (
-                f"IMPORTANT: Be mindful that competitors are likely to be in {self.project_details.language} language."
-            )
+        def language_specification(ctx: RunContext[ProjectDetails]) -> str:
+            project = ctx.deps
+            return f"IMPORTANT: Be mindful that competitors are likely to be in {project.language} language."
+
+        @agent.system_prompt
+        def location_specification(ctx: RunContext[ProjectDetails]) -> str:
+            project = ctx.deps
+            if project.location != "Global":
+                return f"IMPORTANT: Only return competitors whose target audience is in {project.location}."
 
         result = run_agent_synchronously(
             agent,
