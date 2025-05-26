@@ -82,7 +82,15 @@ def get_html_content(url):
         html_content = html_response.text
     except requests.exceptions.RequestException as e:
         logger.warning(
-            "Could not fetch HTML content",
+            "[Get HTML Content] Could not fetch HTML content",
+            exc_info=e,
+            error=str(e),
+            url=url,
+        )
+    except Exception as e:
+        logger.warning(
+            "[Get HTML Content] Unexpected error",
+            exc_info=e,
             error=str(e),
             url=url,
         )

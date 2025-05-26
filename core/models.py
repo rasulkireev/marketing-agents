@@ -192,7 +192,6 @@ class Project(BaseModel):
     title = models.CharField(max_length=500, blank=True, default="")
     description = models.TextField(blank=True, default="")
     markdown_content = models.TextField(blank=True, default="")
-    html_content = models.TextField(blank=True, default="")
 
     # AI Content
     date_analyzed = models.DateTimeField(null=True, blank=True)
@@ -249,7 +248,6 @@ class Project(BaseModel):
         Fetch page content using Jina Reader API and update the project.
         Returns the content if successful, raises ValueError otherwise.
         """
-        html_content = get_html_content(self.url)
         title, description, markdown_content = get_markdown_content(self.url)
 
         if not markdown_content:
@@ -266,7 +264,6 @@ class Project(BaseModel):
         self.title = title
         self.description = description
         self.markdown_content = markdown_content
-        self.html_content = html_content
 
         self.save(
             update_fields=[
@@ -274,7 +271,6 @@ class Project(BaseModel):
                 "title",
                 "description",
                 "markdown_content",
-                "html_content",
             ]
         )
 
@@ -287,6 +283,8 @@ class Project(BaseModel):
         """
         from core.agents.analyze_project_agent import analyze_project_agent
 
+        html_content = get_html_content(self.url)
+
         result = run_agent_synchronously(
             analyze_project_agent,
             "Please analyze this web page content and extract the key information.",
@@ -294,7 +292,7 @@ class Project(BaseModel):
                 title=self.title,
                 description=self.description,
                 markdown_content=self.markdown_content,
-                html_content=self.html_content,
+                html_content=html_content,
             ),
             function_name="analyze_content",
             model_name="Project",
@@ -811,7 +809,6 @@ class ProjectPage(BaseModel):
     project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="project_pages")
 
     url = models.URLField(max_length=200)
-    html_content = models.TextField(blank=True, default="")
 
     # Content from Jina Reader
     date_scraped = models.DateTimeField(null=True, blank=True)
@@ -844,7 +841,6 @@ class ProjectPage(BaseModel):
         Fetch page content using Jina Reader API and update the project.
         Returns the content if successful, raises ValueError otherwise.
         """
-        html_content = get_html_content(self.url)
         title, description, markdown_content = get_markdown_content(self.url)
 
         if not title or not description or not markdown_content:
@@ -854,7 +850,6 @@ class ProjectPage(BaseModel):
         self.title = title
         self.description = description
         self.markdown_content = markdown_content
-        self.html_content = html_content
 
         self.save(
             update_fields=[
@@ -862,7 +857,6 @@ class ProjectPage(BaseModel):
                 "title",
                 "description",
                 "markdown_content",
-                "html_content",
             ]
         )
 
@@ -894,6 +888,7 @@ class ProjectPage(BaseModel):
                 f"Content: {ctx.deps.markdown_content}"
             )
 
+        html_content = get_html_content(self.url)
         result = run_agent_synchronously(
             agent,
             "Please analyze this web page.",
@@ -901,7 +896,7 @@ class ProjectPage(BaseModel):
                 title=self.title,
                 description=self.description,
                 markdown_content=self.markdown_content,
-                html_content=self.html_content,
+                html_content=html_content,
             ),
             function_name="analyze_content",
             model_name="ProjectPage",
