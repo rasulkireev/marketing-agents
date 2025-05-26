@@ -285,30 +285,10 @@ class Project(BaseModel):
         Analyze the page content using PydanticAI and update project details.
         Should be called after get_page_content().
         """
-        agent = Agent(
-            "google-gla:gemini-2.5-flash-preview-04-17",
-            output_type=ProjectDetails,
-            deps_type=WebPageContent,
-            system_prompt=(
-                "You are an expert content analyzer. Based on the web page content provided, "
-                "extract and infer the requested information. Make reasonable inferences based "
-                "on available content, context, and industry knowledge."
-            ),
-            retries=2,
-        )
-
-        @agent.system_prompt
-        def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
-            return (
-                "Web page content:"
-                f"Title: {ctx.deps.title}"
-                f"Description: {ctx.deps.description}"
-                f"Content: {ctx.deps.markdown_content}"
-                f"HTML Content: {ctx.deps.html_content}"
-            )
+        from core.agents.analyze_project_agent import analyze_project_agent
 
         result = run_agent_synchronously(
-            agent,
+            analyze_project_agent,
             "Please analyze this web page content and extract the key information.",
             deps=WebPageContent(
                 title=self.title,
