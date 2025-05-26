@@ -27,7 +27,6 @@ mkdocstrings = "^0.20.0"
 pillow = "^10.4.0"
 posthog = "^3.6.6"
 psycopg2 = "^2.9.9"
-pydantic-ai = "^0.0.43"
 pytest = "^8.3.3"
 pytest-django = "^4.9.0"
 python-webpack-boilerplate = "^1.0.0"
@@ -37,6 +36,7 @@ stripe = "^11.6.0"
 structlog = "^24.4.0"
 structlog-sentry = "^2.2.1"
 whitenoise = "^6.7.0"
+pydantic-ai = "^0.2.9"
 
 
 [tool.poetry.dev-dependencies]
