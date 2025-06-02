@@ -1,6 +1,6 @@
 ---
-description: Frontend related rule (HTML Template and Stimulus.js)
-globs: *.js, *.html
+description:
+globs:
 alwaysApply: false
 ---
 ## Frontend Development

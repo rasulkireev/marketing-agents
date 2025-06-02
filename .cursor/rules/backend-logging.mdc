@@ -1,0 +1,14 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+- Use Python's logging module (structlog) extensively
+- Implement comprehensive logging
+- Include context in log messages:
+logger.warning(
+    "Error occurred during profile update",
+    error=str(e),
+    profile_id=profile.id
+)
+- Use appropriate log levels (INFO, WARNING, ERROR)

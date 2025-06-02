@@ -1,7 +1,7 @@
 ---
-description: This rule explains the project's tech stack and code conventions
+description:
 globs:
-alwaysApply: true
+alwaysApply: false
 ---
 This rule serves as high-level documentation for how the codebase is structured.
 

@@ -1,0 +1,6 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+- Use try-except blocks for specific erros, try to avoid excepting Exception

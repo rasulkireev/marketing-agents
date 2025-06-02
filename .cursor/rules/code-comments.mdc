@@ -3,7 +3,6 @@ description:
 globs:
 alwaysApply: true
 ---
-## Comments
 - Add comments only to complex code that requires explanation
 - Comments should answer "why" questions rather than describing what the code does
 - Focus on explaining the reasoning behind implementation choices, business rules, or non-obvious design decisions

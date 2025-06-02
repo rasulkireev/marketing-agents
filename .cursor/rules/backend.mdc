@@ -1,6 +1,6 @@
 ---
-description: Rules for working with the Backend (Django in this case)
-globs: *.py
+description:
+globs:
 alwaysApply: false
 ---
 ## Key Principles
@@ -11,8 +11,6 @@ alwaysApply: false
 - Use Django templates for HTML, django-ninja for APIs
 - Keep business logic in models/forms
 - Keep views focused on request handling
-- Implement comprehensive logging
-- Use double quotes instead of single quotes
 
 ## Django/Python
 - Use CBVs for complex views; FBVs for simpler logic
@@ -21,18 +19,6 @@ alwaysApply: false
 - Utilize Django form/model form classes
 - Follow MVT pattern strictly
 
-## Logging and Error Handling
-- Use Python's logging module (structlog) extensively
-- Include context in log messages:
-logger.warning(
-    "Error occurred during profile update",
-    error=str(e),
-    profile_id=profile.id
-)
-- Use appropriate log levels (INFO, WARNING, ERROR)
-- Use Django's validation framework
-- Use try-except blocks for specific erros, try to avoid excepting Exception
-- Customize error pages (404, 500)
 
 ## API Development
 - Use django-ninja instead of DRF
