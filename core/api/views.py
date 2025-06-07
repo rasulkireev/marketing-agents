@@ -377,8 +377,7 @@ def user_settings(request: HttpRequest, project_id: int):
         data = {"profile": profile_data, "project": project_data}
 
         return data
-    except Project.DoesNotExist:
-        raise HttpError(404, "Project not found")
+    except Exception as e:
     except Exception as e:
         logger.error(
             "Error fetching user settings",
