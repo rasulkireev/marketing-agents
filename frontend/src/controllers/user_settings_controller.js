@@ -15,7 +15,11 @@ export default class extends Controller {
     }
 
     try {
-      const response = await fetch(`/api/user/settings?project_id=${this.projectIdValue}`);
+      const response = await fetch(
+        `/api/user/settings?project_id=${this.projectIdValue}`, {
+          credentials: 'same-origin'
+        }
+      );
       if (!response.ok) {
         // This is a background task, so just log errors, don't alert the user.
         console.error("Failed to fetch user settings in the background.");
