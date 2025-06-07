@@ -61,6 +61,10 @@ class UpdateTitleScoreIn(Schema):
     score: int
 
 
+class UpdateArchiveStatusIn(Schema):
+    archived: bool
+
+
 class AddPricingPageIn(Schema):
     project_id: int
     url: str

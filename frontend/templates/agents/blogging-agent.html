@@ -99,223 +99,45 @@
       </div>
 
       <div class="mt-6 space-y-8" data-title-suggestions-target="suggestionsList">
-        {% for suggestion in project.blog_post_title_suggestions.all %}
-            <div
-              class="pl-4 border-l-4 border-pink-600"
-              data-controller="generate-content"
-              data-generate-content-suggestion-id-value="{{ suggestion.id }}"
-              data-suggestion-type="{{ suggestion.content_type }}"
-            >
-              <!-- Header section with toggle and actions -->
-              <div class="flex gap-x-4 justify-between items-start">
-                <div class="flex-1 p-6">
-                  <!-- Title and voting section -->
-                  <div class="space-y-4">
-                    <h4 class="text-xl font-bold tracking-tight text-gray-900">
-                      {{ suggestion.title }}
-                    </h4>
-
-                    <!-- Like/Dislike Buttons -->
-                    <div class="flex items-center space-x-4"
-                          data-controller="title-score"
-                          data-title-score-suggestion-id-value="{{ suggestion.id }}"
-                          data-current-score="{{ suggestion.user_score }}">
-
-                      <!-- Like button -->
-                      <button data-title-score-target="likeButton"
-                              data-action="title-score#updateScore"
-                              class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 like hover:bg-green-50">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                        </svg>
-                        <span>Like</span>
-                      </button>
-
-                      <!-- Dislike button -->
-                      <button data-title-score-target="dislikeButton"
-                              data-action="title-score#updateScore"
-                              class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 dislike hover:bg-red-50">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                        </svg>
-                        <span>Dislike</span>
-                      </button>
-
-                      <div
-                        data-generate-content-target="postButtonContainer"
-                        data-has-pro-subscription="{{ has_pro_subscription }}"
-                        data-has-auto-submission-setting="{{ has_auto_submission_setting }}"
-                        data-pricing-url="{% url 'pricing' %}"
-                        data-project-settings-url="{% url 'project_settings' suggestion.project.id %}"
-                      >
-                        {% include "components/post-button.html" with suggestion=suggestion %}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <!-- Main Description -->
-                  <p class="mt-3 leading-relaxed text-gray-700">
-                    {{ suggestion.description }}
-                  </p>
-
-                  <!-- Category Badge -->
-                  <div class="mt-4">
-                    <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-800 bg-blue-100 rounded-full">
-                      Category: {{ suggestion.category }}
-                    </span>
-                  </div>
-
-                  <!-- Keywords Section -->
-                  {% if suggestion.target_keywords %}
-                    <div class="mt-4">
-                      <div class="flex flex-wrap gap-2">
-                        {% for keyword in suggestion.target_keywords %}
-                          <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full transition-colors duration-200 hover:bg-gray-200">
-                            {{ keyword }}
-                          </span>
-                        {% endfor %}
-                      </div>
-                    </div>
-                  {% endif %}
-
-                  <!-- Meta Description Section -->
-                  {% if suggestion.suggested_meta_description %}
-                    <div class="p-4 mt-4 bg-gray-50 rounded-md">
-                      <span class="block mb-2 text-sm font-semibold text-gray-700">
-                        Meta Description
-                      </span>
-                      <p class="text-sm leading-relaxed text-gray-600">
-                        {{ suggestion.suggested_meta_description }}
-                      </p>
-                    </div>
-                  {% endif %}
-                </div>
-
-                <div class="flex gap-x-3 items-center">
-                  <div data-generate-content-target="status">
-                    {% with generated_post=suggestion.generated_blog_posts.first %}
-                      {% if generated_post %}
-                        {% if generated_post.content %}
-                          <div class="flex gap-x-2 items-center">
-                            <div class="text-green-500">
-                              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                              </svg>
-                            </div>
-                            <button data-action="generate-content#toggle" class="flex items-center text-gray-500 hover:text-gray-700">
-                              <svg data-generate-content-target="chevron" class="w-5 h-5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
-                          </div>
-                        {% else %}
-                          <div class="w-5 h-5 rounded-full border-2 animate-spin border-t-pink-600"></div>
-                        {% endif %}
-                      {% endif %}
-                    {% endwith %}
-                  </div>
-                  <div data-generate-content-target="buttonContainer">
-                    {% with generated_post=suggestion.generated_blog_posts.first %}
-                      {% if not generated_post %}
-                        <button
-                          data-action="generate-content#generate"
-                          class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
-                          Generate
-                        </button>
-                      {% endif %}
-                    {% endwith %}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Dropdown content -->
-              <div data-generate-content-target="dropdown" class="hidden mt-4">
-                <div data-generate-content-target="content">
-                  {% with generated_post=suggestion.generated_blog_posts.first %}
-                    {% if generated_post and generated_post.content %}
-                      <div class="space-y-4">
-                        <div data-controller="copy" class="relative">
-                          <label for="slug-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Slug</label>
-                          <input
-                            type="text"
-                            id="slug-{{ generated_post.id }}"
-                            value="{{ generated_post.slug }}"
-                            data-copy-target="source"
-                            class="block pr-20 mt-1 w-full h-10 font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                            readonly
-                          >
-                          <button
-                            data-action="copy#copy"
-                            data-copy-target="button"
-                            class="absolute right-2 top-[30px] px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                          >
-                            Copy
-                          </button>
-                        </div>
-
-                        <div data-controller="copy" class="relative">
-                          <label for="tags-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Tags</label>
-                          <input
-                            type="text"
-                            id="tags-{{ generated_post.id }}"
-                            value="{{ generated_post.tags }}"
-                            data-copy-target="source"
-                            class="block pr-20 mt-1 w-full h-10 font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                            readonly
-                          >
-                          <button
-                            data-action="copy#copy"
-                            data-copy-target="button"
-                            class="absolute right-2 top-[30px] px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                          >
-                            Copy
-                          </button>
-                        </div>
-
-                        <div data-controller="copy" class="relative">
-                          <label for="description-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Description</label>
-                          <textarea
-                            id="description-{{ generated_post.id }}"
-                            data-copy-target="source"
-                            class="block pr-20 mt-1 w-full font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-                            rows="3"
-                            readonly
-                          >{{ generated_post.description }}</textarea>
-                          <button
-                            data-action="copy#copy"
-                            data-copy-target="button"
-                            class="absolute right-2 bottom-2 px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                          >
-                            Copy
-                          </button>
-                        </div>
-
-                        <div data-controller="copy" class="relative mb-4">
-                          <label for="content-{{ generated_post.id }}" class="block text-sm font-medium text-gray-700">Content</label>
-                          <textarea
-                            id="content-{{ generated_post.id }}"
-                            data-copy-target="source"
-                            class="block pr-20 mt-1 mb-2 w-full h-96 font-mono text-sm rounded-md border focus:border-pink-500 focus:ring-pink-500"
-                            readonly
-                          >{{ generated_post.content }}</textarea>
-                          <button
-                            data-action="copy#copy"
-                            data-copy-target="button"
-                            class="absolute right-2 bottom-2 px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700"
-                          >
-                            Copy
-                          </button>
-                        </div>
-                      </div>
-                    {% endif %}
-                  {% endwith %}
-                </div>
-              </div>
+        <!-- Active Suggestions -->
+        <div id="active-suggestions-list" data-controller="archived-list" class="archived-list" data-archived-list-name-value="active">
+            <h4 class="flex items-center text-lg font-semibold text-gray-800 cursor-pointer" data-action="click->archived-list#toggle">
+                Active Suggestions
+                <svg class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h4>
+            <div data-archived-list-target="list" class="mt-4 space-y-8" data-title-suggestions-target="activeSuggestionsList">
+                {% for suggestion in active_suggestions %}
+                    {% include "components/blog_suggestion.html" with suggestion=suggestion %}
+                {% endfor %}
             </div>
-        {% endfor %}
-      </div>
+        </div>
 
+        <!-- Posted Suggestions -->
+        <div data-controller="archived-list" class="mt-8 archived-list" data-archived-list-name-value="posted">
+            <h4 class="flex items-center text-lg font-semibold text-gray-800 cursor-pointer" data-action="click->archived-list#toggle">
+                Posted Suggestions
+                <svg class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h4>
+            <div data-archived-list-target="list" class="hidden mt-4 space-y-8">
+                {% for suggestion in posted_suggestions %}
+                    {% include "components/blog_suggestion.html" with suggestion=suggestion %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Archived Suggestions -->
+        <div id="archived-suggestions-list" data-controller="archived-list" class="mt-8 archived-list" data-archived-list-name-value="archived">
+            <h4 class="flex items-center text-lg font-semibold text-gray-800 cursor-pointer" data-action="click->archived-list#toggle">
+                Archived Suggestions
+                <svg class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </h4>
+            <div data-archived-list-target="list" class="hidden mt-4 space-y-8">
+                {% for suggestion in archived_suggestions %}
+                    {% include "components/blog_suggestion.html" with suggestion=suggestion %}
+                {% endfor %}
+            </div>
+        </div>
+      </div>
     </div>
 </div>
 

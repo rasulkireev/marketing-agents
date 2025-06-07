@@ -7,7 +7,7 @@ export default class extends Controller {
     currentTab: String
   };
 
-  static targets = ["suggestionsList", "suggestionsContainer"];
+  static targets = ["suggestionsList", "suggestionsContainer", "activeSuggestionsList"];
 
   connect() {
     // Get the last selected tab from localStorage, default to "SHARING" if none exists
@@ -226,7 +226,7 @@ export default class extends Controller {
       this.suggestionsContainerTarget.classList.remove('hidden');
       suggestions.forEach(suggestion => {
         const suggestionHtml = this.createSuggestionHTML(suggestion, this.currentTabValue);
-        this.suggestionsListTarget.insertAdjacentHTML('beforeend', suggestionHtml);
+        this.activeSuggestionsListTarget.insertAdjacentHTML('beforeend', suggestionHtml);
       });
 
       // Restore button state

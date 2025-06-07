@@ -250,10 +250,28 @@ class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
     template_name = "agents/blogging-agent.html"
     context_object_name = "project"
 
+    def get_queryset(self):
+        # Ensure users can only see their own projects
+        return Project.objects.filter(profile=self.request.user.profile)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         project = self.object
-        context["has_auto_submittion_setting"] = AutoSubmittionSetting.objects.filter(project=project).exists()
+
+        all_suggestions = project.blog_post_title_suggestions.all().prefetch_related("generated_blog_posts")
+
+        posted_suggestions_ids = {s.id for s in all_suggestions if s.generated_blog_posts.filter(posted=True).exists()}
+
+        context["posted_suggestions"] = [s for s in all_suggestions if s.id in posted_suggestions_ids]
+        context["archived_suggestions"] = [
+            s for s in all_suggestions if s.archived and s.id not in posted_suggestions_ids
+        ]
+        context["active_suggestions"] = [
+            s for s in all_suggestions if not s.archived and s.id not in posted_suggestions_ids
+        ]
+
+        context["has_pro_subscription"] = self.request.user.profile.has_active_subscription
+        context["has_auto_submission_setting"] = AutoSubmittionSetting.objects.filter(project=project).exists()
         return context
 
 
