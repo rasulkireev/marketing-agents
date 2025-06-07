@@ -4,7 +4,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_DB=seo_blog_bot
       - POSTGRES_USER=seo_blog_bot
@@ -19,7 +19,7 @@ services:
     image: redis:7-alpine
     command: redis-server --requirepass seo_blog_bot
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     environment:
@@ -34,7 +34,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "8009:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -78,6 +78,7 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    restart: unless-stopped
 
   stripe:
     image: stripe/stripe-cli:latest

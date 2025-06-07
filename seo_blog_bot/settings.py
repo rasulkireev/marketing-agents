@@ -291,6 +291,11 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
+        "django-q": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+            "propagate": False,
+        },
     },
 }
 
@@ -313,10 +318,13 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 
+log_level = env("DJANGO_LOG_LEVEL", default="INFO")
 if ENVIRONMENT == "prod":
-    LOGGING["loggers"]["seo_blog_bot"]["level"] = env("DJANGO_LOG_LEVEL", default="INFO")
-    LOGGING["loggers"]["seo_blog_bot"]["handlers"] = ["json_console"]
     LOGGING["loggers"]["django_structlog"]["handlers"] = ["json_console"]
+    LOGGING["loggers"]["seo_blog_bot"]["level"] = log_level
+    LOGGING["loggers"]["seo_blog_bot"]["handlers"] = ["json_console"]
+    LOGGING["loggers"]["django-q"]["handlers"] = ["json_console"]
+    LOGGING["loggers"]["django-q"]["level"] = log_level
 
 SENTRY_DSN = env("SENTRY_DSN")
 if ENVIRONMENT == "prod" and SENTRY_DSN:

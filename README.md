@@ -22,10 +22,10 @@ To start you'll need to run these commands:
 
 
 ### Next steps
-- When everything is running, go to http://localhost:8000/ to check if the backend is running.
+- When everything is running, go to http://localhost:8009/ to check if the backend is running.
 - You can sign up via regular signup. The first user will be made admin and superuser.
-- Go to http://localhost:8000/admin/ and update Site info (http://localhost:8000/admin/sites/site/1/change/) to
-  - localhost:8000 (if you are developing locally, and real domain when you are in prod)
+- Go to http://localhost:8009/admin/ and update Site info (http://localhost:8009/admin/sites/site/1/change/) to
+  - localhost:8009 (if you are developing locally, and real domain when you are in prod)
   - Your project name
 
 
@@ -35,7 +35,7 @@ Looks at the logs for this container and at the top you will see a webhook secre
 Copy this and add it to your `.env` file.
 
 The following notes are applicable only after you got the app running locally via `make serve`:
-- Add Test and Prod Secret keys in the admin panel: http://localhost:8000/admin/djstripe/apikey/
+- Add Test and Prod Secret keys in the admin panel: http://localhost:8009/admin/djstripe/apikey/
 (djstripe will figure out if they are live or test keys automatically)
 - Create a webhook in Django admin panel: /admin/djstripe/webhookendpoint/
   - you can't use localhost as the domain for the webhook, so use something like `https://statushen.com/` or a real one if you have it. It doesn't matter for local.
