@@ -5,6 +5,7 @@ export default class extends Controller {
   static values = {
     suggestionId: Number,
   };
+  static targets = ["archiveButton", "unarchiveButton"];
 
   archive(event) {
     event.preventDefault();
@@ -32,8 +33,13 @@ export default class extends Controller {
       .then((response) => response.json())
       .then((data) => {
         if (data.status === "success") {
-          const message = archived ? "Suggestion archived successfully." : "Suggestion unarchived successfully.";
+          const message = archived
+            ? "Suggestion archived successfully."
+            : "Suggestion unarchived successfully.";
           showMessage(message, "success");
+
+          this.archiveButtonTarget.classList.toggle("hidden", archived);
+          this.unarchiveButtonTarget.classList.toggle("hidden", !archived);
 
           const destination = archived ? "archived" : "active";
           const moveEvent = new CustomEvent("suggestion:move", {
@@ -47,7 +53,10 @@ export default class extends Controller {
       })
       .catch((error) => {
         console.error("Error:", error);
-        showMessage(error.message || `Failed to ${action} suggestion.`, "error");
+        showMessage(
+          error.message || `Failed to ${action} suggestion.`,
+          "error"
+        );
       });
   }
 }

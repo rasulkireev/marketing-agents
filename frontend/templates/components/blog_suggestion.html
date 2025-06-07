@@ -42,24 +42,23 @@
           </button>
 
           <!-- Archive/Unarchive button -->
-          {% if not suggestion.archived %}
           <button data-action="archive-suggestion#archive"
-                  class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 archive hover:bg-gray-200">
+                  data-archive-suggestion-target="archiveButton"
+                  class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 archive hover:bg-gray-200 {% if suggestion.archived %}hidden{% endif %}">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"></path>
                   <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"></path>
               </svg>
               <span>Archive</span>
           </button>
-          {% else %}
-            <button data-action="archive-suggestion#unarchive"
-                    class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 unarchive hover:bg-gray-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2H5zm3 8a1 1 0 00-1 1v2a1 1 0 102 0v-2a1 1 0 00-1-1zm3 0a1 1 0 00-1 1v2a1 1 0 102 0v-2a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-                <span>Unarchive</span>
-            </button>
-          {% endif %}
+          <button data-action="archive-suggestion#unarchive"
+                  data-archive-suggestion-target="unarchiveButton"
+                  class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium rounded-md border-2 border border-gray-900 transition-colors duration-200 unarchive hover:bg-gray-200 {% if not suggestion.archived %}hidden{% endif %}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5 2a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2H5zm3 8a1 1 0 00-1 1v2a1 1 0 102 0v-2a1 1 0 00-1-1zm3 0a1 1 0 00-1 1v2a1 1 0 102 0v-2a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+              <span>Unarchive</span>
+          </button>
 
           <div
             data-generate-content-target="postButtonContainer"
