@@ -1,23 +1,17 @@
+{% load webpack_loader static %}
+
 <!-- Hero Section -->
-<div class="relative">
-  <!-- Background decoration -->
-  <div class="overflow-hidden absolute inset-x-0 blur-3xl transform-gpu -z-10">
-    <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-pink-100 to-pink-300 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
-  </div>
-
-  <!-- Main content -->
-  <div class="px-6 mx-auto max-w-7xl">
-    <div class="mx-auto max-w-2xl text-center">
-      <h1 class="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-        For Founders Who <br><span class="text-pink-600">Suck at Marketing</span>
+<div class="relative bg-white">
+  <div class="px-6 py-16 mx-auto max-w-7xl sm:py-20">
+    <div class="mx-auto max-w-3xl text-center">
+      <h1 class="mb-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+        Your Automated AI Marketing Team
       </h1>
-
-      <p class="mt-6 text-lg leading-8 text-gray-600">
-        Let AI marketing agents handle your content strategy, SEO, and social media. Focus on building your product while our automated agents create, optimize, and distribute your marketing content.
+      <p class="mt-4 text-lg leading-8 text-gray-600">
+        Generate blog posts, analyze competitors, find keywords, and optimize pricing—all on one platform. Stop guessing, start growing.
       </p>
-
-      <div class="flex gap-x-6 justify-center items-center mt-10">
-        <a href="{% url 'account_signup' %}" class="px-6 py-3 text-lg font-semibold text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+      <div class="flex gap-x-6 justify-center items-center mt-8">
+        <a href="{% url 'account_signup' %}" class="px-8 py-3 text-base font-semibold text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
           Get Started
         </a>
       </div>
@@ -25,140 +19,201 @@
   </div>
 </div>
 
-<!-- Features Section -->
-<div class="px-6 mx-auto mt-24 max-w-7xl">
-  <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-base font-semibold leading-7 text-pink-600">Your AI Marketing Team</h2>
-    <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Marketing on autopilot with custom AI agents</p>
-  </div>
-
-  <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-    <dl class="grid grid-cols-1 gap-x-8 gap-y-16 max-w-xl lg:max-w-none lg:grid-cols-3">
-      <!-- Agent 1 -->
-      <div class="flex flex-col">
-        <dt class="flex gap-x-3 items-center text-base font-semibold leading-7 text-gray-900">
-          <div class="flex justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </div>
-          Content Agent
-        </dt>
-        <dd class="flex flex-col flex-auto mt-4 text-base leading-7 text-gray-600">
-          <p class="flex-auto">Automatically generates SEO-optimized blog posts, analyzes your competitors, and maintains your content calendar.</p>
-        </dd>
-      </div>
-
-      <!-- Agent 2 -->
-      <div class="flex flex-col">
-        <dt class="flex gap-x-3 items-center text-base font-semibold leading-7 text-gray-900">
-          <div class="flex justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          Tools Agent
-        </dt>
-        <dd class="flex flex-col flex-auto mt-4 text-base leading-7 text-gray-600">
-          <p class="flex-auto">Suggests viral-worthy online tools that rank well on Google, with implementation guidance and code snippets for quick deployment.</p>
-        </dd>
-      </div>
-
-      <!-- Agent 3 -->
-      <div class="flex flex-col">
-        <dt class="flex gap-x-3 items-center text-base font-semibold leading-7 text-gray-900">
-          <div class="flex justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          Pricing Agent
-        </dt>
-        <dd class="flex flex-col flex-auto mt-4 text-base leading-7 text-gray-600">
-          <p class="flex-auto">Creates optimized pricing strategies and compelling offers that convert, backed by market research and competitor analysis.</p>
-        </dd>
-      </div>
-    </dl>
-  </div>
-</div>
-
-<!-- Benefits Section -->
-<div class="px-6 mx-auto mt-24 max-w-7xl sm:mt-32">
-  <div class="mx-auto max-w-2xl lg:text-center">
-    <h2 class="text-base font-semibold leading-7 text-pink-600">Why Founders Love Us</h2>
-    <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Marketing that works while you sleep</p>
-  </div>
-
-  <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
-    <div class="grid grid-cols-1 gap-x-8 gap-y-10 max-w-xl lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-      <!-- Benefit 1 -->
-      <div class="relative pl-16">
-        <dt class="text-base font-semibold leading-7 text-gray-900">
-          <div class="flex absolute top-0 left-0 justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-          Save 20+ Hours Weekly
-        </dt>
-        <dd class="mt-2 text-base leading-7 text-gray-600">Eliminate manual content creation and social media management. Our AI agents handle everything from ideation to publication.</dd>
-      </div>
-
-      <!-- Benefit 2 -->
-      <div class="relative pl-16">
-        <dt class="text-base font-semibold leading-7 text-gray-900">
-          <div class="flex absolute top-0 left-0 justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 5.25l-7.5 7.5-7.5-7.5m15 6l-7.5 7.5-7.5-7.5" />
-            </svg>
-          </div>
-          Consistent Growth
-        </dt>
-        <dd class="mt-2 text-base leading-7 text-gray-600">Never miss a post or marketing opportunity. Our agents maintain a steady flow of optimized content that drives traffic and leads.</dd>
-      </div>
-
-      <!-- Benefit 3 -->
-      <div class="relative pl-16">
-        <dt class="text-base font-semibold leading-7 text-gray-900">
-          <div class="flex absolute top-0 left-0 justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-          Data-Driven Results
-        </dt>
-        <dd class="mt-2 text-base leading-7 text-gray-600">Our AI continuously learns from performance data to optimize your content strategy and maximize ROI.</dd>
-      </div>
-
-      <!-- Benefit 4 -->
-      <div class="relative pl-16">
-        <dt class="text-base font-semibold leading-7 text-gray-900">
-          <div class="flex absolute top-0 left-0 justify-center items-center w-10 h-10 bg-pink-600 rounded-lg">
-            <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          </div>
-          Full Marketing Stack
-        </dt>
-        <dd class="mt-2 text-base leading-7 text-gray-600">From content creation to social media management and analytics - everything you need in one platform.</dd>
-      </div>
+<!-- Logo Cloud / Social Proof -->
+<div class="py-12 bg-white sm:py-16">
+  <div class="px-6 mx-auto max-w-7xl lg:px-8">
+    <h2 class="text-base font-semibold leading-8 text-center text-gray-600">
+      Powering marketing for top-tier newsletters and indie businesses
+    </h2>
+    <div class="grid grid-cols-2 gap-x-8 gap-y-12 mx-auto mt-10 max-w-lg sm:grid-cols-3 lg:max-w-5xl lg:grid-cols-4">
+        <div class="flex flex-col col-span-1 gap-y-3 items-center text-center">
+          <a class="w-auto h-24" href="https://isitketo.org">
+              <img
+                  class="pt-2"
+                  src="{% static 'vendors/images/isitketo.png' %}"
+                  alt="Is It Keto"
+                >
+            </a>
+            <a href="https://isitketo.org" class="text-sm font-semibold text-gray-900 hover:text-blue-600">Is It Keto</a>
+        </div>
+        <div class="flex flex-col col-span-1 gap-y-3 items-center text-center">
+            <a href="https://builtwithdjango.com">
+                <img class="object-cover w-24 h-24 bg-gray-100 rounded-full" src="{% static 'vendors/images/bwd.png' %}" alt="Built with Django">
+            </a>
+            <a href="https://builtwithdjango.com" class="text-sm font-semibold text-gray-900 hover:text-blue-600">Built with Django</a>
+        </div>
+        <div class="flex flex-col col-span-1 gap-y-3 items-center text-center">
+            <a href="https://gettjalerts.com">
+                <img src="{% static 'vendors/images/gettjalerts.png' %}" alt="Tech Job Alerts">
+            </a>
+            <a href="https://gettjalerts.com" class="text-sm font-semibold text-gray-900 hover:text-blue-600">Tech Job Alerts</a>
+        </div>
+        <div class="flex flex-col col-span-1 gap-y-3 items-center text-center">
+            <a href="https://porkalpine.org/" class="">
+                <div class="flex justify-center items-center w-24 h-24 bg-gray-100 rounded-full">
+                    <img
+                      class="p-1 w-16 h-16"
+                      src="{% static 'vendors/images/porkalpine.png' %}"
+                      alt="PorkAlpine"
+                    />
+                </div>
+            </a>
+            <a href="https://porkalpine.org/" class="text-sm font-semibold text-gray-900 hover:text-blue-600">
+              PorkAlpine
+            </a>
+        </div>
     </div>
   </div>
 </div>
 
+<!-- Features Section -->
+<div class="px-6 py-12 mx-auto max-w-7xl sm:py-16">
+    <div class="mx-auto max-w-3xl text-center">
+        <h2 class="text-base font-semibold leading-7 text-blue-600">All-In-One Platform</h2>
+        <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Marketing That Gets Results</p>
+        <p class="mt-4 text-lg leading-8 text-gray-600">
+            Replace your expensive marketing stack with a suite of AI agents that deliver measurable outcomes.
+        </p>
+    </div>
+
+    <div class="grid gap-8 mt-12 text-left md:grid-cols-2">
+        <!-- Feature 1: Content Generation -->
+        <div class="p-6 bg-gray-50 rounded-lg">
+            <h3 class="text-xl font-bold tracking-tight text-gray-900">Automate Your Content Pipeline</h3>
+            <ul class="mt-4 space-y-3 text-base text-gray-600">
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>AI-powered title suggestions.</span>
+                </li>
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Full blog post generation.</span>
+                </li>
+                 <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Automatic CMS submission.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Feature 2: Competitor Analysis -->
+        <div class="p-6 bg-gray-50 rounded-lg">
+            <h3 class="text-xl font-bold tracking-tight text-gray-900">Uncover Competitor Strategies</h3>
+            <ul class="mt-4 space-y-3 text-base text-gray-600">
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Detailed SWOT analysis.</span>
+                </li>
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Feature & benefit breakdown.</span>
+                </li>
+                 <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Side-by-side comparisons.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Feature 3: Keyword Research -->
+        <div class="p-6 bg-gray-50 rounded-lg">
+            <h3 class="text-xl font-bold tracking-tight text-gray-900">Win at SEO with Data</h3>
+            <ul class="mt-4 space-y-3 text-base text-gray-600">
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Keyword search volume & CPC.</span>
+                </li>
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Competition level analysis.</span>
+                </li>
+                 <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Historical search volume trends.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Feature 4: Cost Savings -->
+        <div class="p-6 bg-gray-50 rounded-lg">
+            <h3 class="text-xl font-bold tracking-tight text-gray-900">Slash Your Marketing Budget</h3>
+            <ul class="mt-4 space-y-3 text-base text-gray-600">
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Reduce expensive agency fees.</span>
+                </li>
+                <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Consolidate marketing tools.</span>
+                </li>
+                 <li class="flex gap-x-3">
+                    <svg class="flex-none mt-1 w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <span>Maximize ROI with data-driven automation.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Features Section -->
+<div class="px-6 py-12 bg-gray-50 sm:py-16">
+    <div class="mx-auto max-w-5xl">
+        <div class="text-center">
+            <h2 class="text-base font-semibold leading-7 text-blue-600">Always Innovating</h2>
+            <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">What's Coming Next</p>
+            <p class="mt-4 text-lg leading-8 text-gray-600">
+                We're constantly building new tools to automate your marketing. As a paying user, you get the highest priority for feature requests.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 gap-6 mt-12 text-left sm:grid-cols-2 lg:grid-cols-3">
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">Automated Social Media</h4>
+                <p class="mt-1 text-gray-600">Post to X, LinkedIn, Reddit, and more.</p>
+            </div>
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">Social Media Monitoring</h4>
+                <p class="mt-1 text-gray-600">Find keywords and automate replies.</p>
+            </div>
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">Viral Site Generator</h4>
+                <p class="mt-1 text-gray-600">Get ideas & builds for viral one-page sites.</p>
+            </div>
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">Automated Outreach</h4>
+                <p class="mt-1 text-gray-600">Find blogs and draft outreach campaigns.</p>
+            </div>
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">AI-Generated Ad Copy</h4>
+                <p class="mt-1 text-gray-600">Get ad copy and submit to Google Ads.</p>
+            </div>
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">Launch Copy Agent</h4>
+                <p class="mt-1 text-gray-600">Prepare all the copy for your next launch.</p>
+            </div>
+            <div class="p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-gray-900">AI Design Suggestions</h4>
+                <p class="mt-1 text-gray-600">Get copy & design updates for your audience.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- CTA Section -->
-<div class="mx-auto mt-24 max-w-7xl sm:mt-32 sm:px-6 lg:px-8">
-  <div class="isolate overflow-hidden relative px-6 py-24 bg-pink-600 shadow-2xl sm:rounded-3xl sm:px-24">
-    <h2 class="mx-auto max-w-2xl text-3xl font-bold tracking-tight text-center text-white sm:text-4xl">
-      Stop struggling with marketing
-    </h2>
-    <p class="mx-auto mt-6 max-w-xl text-lg leading-8 text-center text-gray-300">
-      Join hundreds of founders who've automated their marketing with AI. Start your free trial today.
-    </p>
-    <div class="flex justify-center mt-10">
-      <a href="{% url 'account_signup' %}" class="px-6 py-3 text-lg font-semibold text-pink-600 bg-white rounded-md shadow-sm hover:bg-gray-100">
-        Get Started Free
-      </a>
+<div class="bg-white" id="contact-sales">
+  <div class="px-6 py-16 mx-auto max-w-7xl sm:py-20 lg:px-8">
+    <div class="isolate overflow-hidden relative px-6 pt-16 bg-gray-900 shadow-2xl sm:rounded-3xl sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
+      <div class="mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-24 lg:text-left">
+        <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">Ready to Elevate Your Marketing?</h2>
+        <p class="mt-6 text-lg leading-8 text-gray-300">
+          Stop struggling with marketing and let our AI agents do the heavy lifting. Get started today.
+        </p>
+        <div class="flex gap-x-6 justify-center items-center mt-10 lg:justify-start">
+          <a href="{% url 'account_signup' %}" class="px-6 py-3 text-lg font-semibold text-white bg-blue-600 rounded-md shadow-sm hover:bg-blue-500">
+            Get Started
+          </a>
+          <a href="{% url 'pricing' %}" class="text-lg font-semibold leading-6 text-white">View Pricing <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
