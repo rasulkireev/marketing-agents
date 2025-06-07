@@ -119,8 +119,7 @@ class PricingView(TemplateView):
 def create_checkout_session(request, pk, plan):
     user = request.user
 
-    product = djstripe_models.Product.objects.get(name=plan)
-    price = product.prices.filter(active=True).first()
+    price = djstripe_models.Price.objects.get(nickname=plan)
     customer, _ = djstripe_models.Customer.get_or_create(subscriber=user)
 
     profile = user.profile

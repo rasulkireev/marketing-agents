@@ -24,245 +24,98 @@
 {% endblock meta %}
 
 {% block content %}
-<div class="py-24 bg-white sm:py-32">
+<div class="py-24 bg-white sm:py-32" data-controller="pricing-toggle">
   <div class="px-6 mx-auto max-w-7xl lg:px-8">
     <div class="mx-auto max-w-4xl sm:text-center">
       <h2 class="text-base font-semibold leading-7 text-pink-600">Pricing</h2>
-      <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Free to use and self-host</p>
+      <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Simple, transparent pricing.</p>
     </div>
-    <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 sm:text-center">Our app is completely free to use for anyone and can be <a href="https://github.com/rasulkireev/marketing-agents" class="underline">self-hosted</a>. For additional features and support, check out our paid plans below.</p>
+    <p class="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600 sm:text-center">Unlock all features with our Pro plan. Choose a billing cycle that works for you. Our app is also <a href="https://github.com/rasulkireev/marketing-agents" class="underline">open-source and self-hostable</a>.</p>
 
-    <div class="mt-10">
-      <div class="grid isolate grid-cols-1 gap-x-6 gap-y-16 mx-4 sm:mx-auto lg:-mx-8 lg:mt-0 lg:grid-cols-2">
-
-        <!-- Free Plan -->
-        <div class="p-10 rounded-lg border border-gray-100 shadow-lg">
-          <h3 id="tier-free" class="text-base font-semibold leading-7 text-gray-900">Free</h3>
-          <p class="flex gap-x-1 items-baseline mt-6">
-            <span class="text-5xl font-bold tracking-tight text-gray-900">$0</span>
-            <span class="text-sm font-semibold leading-6 text-gray-600">/forever</span>
-          </p>
-          {% if user.is_authenticated %}
-            <a href="#" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-pink-600 bg-white rounded-md ring-1 ring-inset ring-pink-200 shadow-sm hover:ring-pink-300">Current plan</a>
-          {% else %}
-            <a href="{% url 'account_signup' %}" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-pink-600 bg-white rounded-md ring-1 ring-inset ring-pink-200 shadow-sm hover:ring-pink-300">Get started</a>
-          {% endif %}
-          <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
-            <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-              </svg>
-              15 blog post suggestions
-            </li>
-            <li class="flex gap-x-3">
-              <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-              </svg>
-              5 full blog posts
-            </li>
-          </ul>
+    <div class="flex justify-center mt-16">
+      <fieldset aria-label="Payment frequency" data-action="change->pricing-toggle#switch">
+        <div class="grid grid-cols-2 gap-x-1 p-1 font-semibold text-center rounded-full ring-1 ring-inset ring-gray-200 text-xs/5">
+          <label data-pricing-toggle-target="monthlyLabel" class="px-2.5 py-1 rounded-full cursor-pointer">
+            <input type="radio" name="frequency" value="monthly" class="sr-only" checked>
+            <span>Monthly</span>
+          </label>
+          <label data-pricing-toggle-target="yearlyLabel" class="px-2.5 py-1 rounded-full cursor-pointer">
+            <input type="radio" name="frequency" value="annually" class="sr-only">
+            <span>Annually</span>
+          </label>
         </div>
+      </fieldset>
+    </div>
 
-        <!-- Early Bird Plan -->
-        <div class="relative p-10 rounded-lg border border-gray-100 shadow-lg">
-          <div class="absolute inset-0 bg-gradient-to-b to-transparent rounded-lg from-pink-50/50" style="z-index: 0;"></div>
-
-          <div class="relative" style="z-index: 1;">
-            <div class="relative">
-              <h3 id="tier-early-bird" class="text-base font-semibold leading-7 text-gray-900">Early Bird PRO</h3>
-              <div class="absolute top-0 -right-4 px-3 py-1 text-xs font-medium text-white bg-pink-600 rounded-full">Limited Time</div>
+    <div class="flex justify-center mt-10">
+        <div class="p-8 rounded-3xl ring-2 ring-pink-600 xl:p-10 lg:w-1/2">
+            <div class="flex gap-x-4 justify-between items-center">
+              <h3 id="tier-pro" class="font-semibold text-pink-600 text-lg/8">Pro Plan</h3>
             </div>
-
-            <div class="flex justify-center items-center mt-4">
-              <div class="px-4 py-2 text-center bg-pink-50 rounded-lg border border-pink-200">
-                <span class="font-semibold text-pink-700">Only {{ early_bird_spots_left }}/20 spots left!</span>
-                <p class="mt-1 text-xs text-pink-600">Get lifetime access before prices go up</p>
-              </div>
+            <p class="mt-4 text-gray-600 text-sm/6">A plan that scales with your rapidly growing business.</p>
+            <div data-pricing-toggle-target="monthlyPriceDisplay">
+              <p class="flex gap-x-1 items-baseline mt-6">
+                <span class="text-4xl font-semibold tracking-tight text-gray-900">$100</span>
+                <span class="font-semibold text-gray-600 text-sm/6">/month</span>
+              </p>
             </div>
-
-            <p class="flex gap-x-1 items-baseline mt-6">
-              <span class="text-5xl font-bold tracking-tight text-gray-900">$5</span>
-              <span class="text-sm font-semibold leading-6 text-gray-600">/forever</span>
-            </p>
-
-            <p class="mt-2 text-xs italic text-gray-500">Regular price will be $10/month</p>
+            <div data-pricing-toggle-target="yearlyPriceDisplay" class="hidden">
+              <p class="flex gap-x-1 items-baseline mt-6">
+                <span class="text-4xl font-semibold tracking-tight text-gray-900">$1000</span>
+                <span class="font-semibold text-gray-600 text-sm/6">/year</span>
+              </p>
+            </div>
 
             {% if user.is_authenticated %}
               {% if has_pro_subscription %}
-                <a href="#" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
+                <a href="#" aria-describedby="tier-pro" class="block px-3 py-2 mt-6 font-semibold text-center text-white bg-pink-600 rounded-md text-sm/6 shadow-xs hover:bg-pink-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a Pro!</a>
               {% else %}
-                <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time-cheap' %}" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
-                  Secure your spot now
-                </a>
+                <div data-pricing-toggle-target="monthlyCheckout">
+                    <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly-june-2025' %}" aria-describedby="tier-pro" class="block px-3 py-2 mt-6 font-semibold text-center text-white bg-pink-600 rounded-md text-sm/6 shadow-xs hover:bg-pink-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
+                </div>
+                <div data-pricing-toggle-target="yearlyCheckout" class="hidden">
+                    <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly-june-2025' %}" aria-describedby="tier-pro" class="block px-3 py-2 mt-6 font-semibold text-center text-white bg-pink-600 rounded-md text-sm/6 shadow-xs hover:bg-pink-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
+                </div>
               {% endif %}
             {% else %}
-              <a href="{% url 'account_signup' %}" aria-describedby="tier-early-bird" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
-                Secure your spot now
-              </a>
+              <a href="{% url 'account_signup' %}" aria-describedby="tier-pro" class="block px-3 py-2 mt-6 font-semibold text-center text-white bg-pink-600 rounded-md text-sm/6 shadow-xs hover:bg-pink-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Sign up to get Pro</a>
             {% endif %}
 
-            <p class="flex gap-1 justify-center items-center mt-2 text-xs text-center text-gray-500">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              Limited time offer - Don't miss out!
-            </p>
-
-             <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
-
+            <ul role="list" class="mt-8 space-y-4 text-gray-600 text-sm/6 xl:mt-10">
               <li class="flex gap-x-3">
-                <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                </svg>
-                Unlimited blog suggestions
+                  <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                  <div>
+                    <strong class="text-gray-900">Content Pipeline Automation</strong>
+                    <p class="text-gray-500">AI-powered title suggestions, blog post generation, and CMS submission.</p>
+                  </div>
               </li>
               <li class="flex gap-x-3">
-                <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                </svg>
-                Unlimited full blog posts
+                  <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                  <div>
+                      <strong class="text-gray-900">Competitor Strategy Analysis</strong>
+                      <p class="text-gray-500">SWOT analysis, feature & benefit breakdowns, and side-by-side comparisons.</p>
+                  </div>
               </li>
               <li class="flex gap-x-3">
-                <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                </svg>
-                <span class="flex items-center">
-                  Suggest blog post idea
-                </span>
+                  <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                  <div>
+                      <strong class="text-gray-900">Data-Driven SEO Insights</strong>
+                      <p class="text-gray-500">Keyword volume, CPC, competition analysis, and historical trends.</p>
+                  </div>
               </li>
-
+              <li class="flex gap-x-3">
+                  <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                  <div>
+                      <strong class="text-gray-900">Pricing Strategy Agent</strong>
+                      <p class="text-gray-500">AI-powered suggestions to optimize your pricing page.</p>
+                  </div>
+              </li>
+              <li class="flex gap-x-3">
+                  <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" /></svg>
+                  Access to all upcoming features.
+              </li>
             </ul>
-          </div>
         </div>
-
-      </div>
-    </div>
-
-    <!-- Paid Plan -->
-    <div class="flow-root mt-20">
-      <div class="opacity-50 pointer-events-none">
-          <div class="grid isolate grid-cols-1 gap-y-16 -mt-16 max-w-sm divide-y divide-gray-100 sm:mx-auto lg:-mx-8 lg:mt-0 lg:max-w-none lg:grid-cols-3 lg:divide-x lg:divide-y-0 xl:-mx-4">
-              <!-- Monthly Plan -->
-              <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
-                <h3 id="tier-monthly" class="text-base font-semibold leading-7 text-gray-900">Monthly</h3>
-                <p class="flex gap-x-1 items-baseline mt-6">
-                  <span class="text-5xl font-bold tracking-tight text-gray-900">$10</span>
-                  <span class="text-sm font-semibold leading-6 text-gray-600">/month</span>
-                </p>
-                {% if user.is_authenticated %}
-                  {% if has_pro_subscription %}
-                    <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
-                  {% else %}
-                    <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
-                  {% endif %}
-                {% else %}
-                  <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
-                {% endif %}
-                <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Unlimited blog suggestions
-                  </li>
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Unlimited full blog posts
-                  </li>
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="flex items-center">
-                      Suggest blog post idea
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Annual -->
-              <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
-                <h3 id="tier-essential" class="text-base font-semibold leading-7 text-gray-900">Annual</h3>
-                <p class="flex gap-x-1 items-baseline mt-6">
-                  <span class="text-5xl font-bold tracking-tight text-gray-900">$100</span>
-                  <span class="text-sm font-semibold leading-6 text-gray-600">/year</span>
-                </p>
-                {% if user.is_authenticated %}
-                  {% if has_pro_subscription %}
-                    <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
-                  {% else %}
-                    <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
-                  {% endif %}
-                {% else %}
-                  <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
-                {% endif %}
-                <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Unlimited blog suggestions
-                  </li>
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Unlimited full blog posts
-                  </li>
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="flex items-center">
-                      Suggest blog post ideas
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <!-- One-time -->
-              <div class="pt-16 lg:px-8 lg:pt-0 xl:px-14">
-                <h3 id="tier-growth" class="text-base font-semibold leading-7 text-gray-900">One-time</h3>
-                <p class="flex gap-x-1 items-baseline mt-6">
-                  <span class="text-5xl font-bold tracking-tight text-gray-900">$500</span>
-                </p>
-                {% if user.is_authenticated %}
-                  {% if has_pro_subscription %}
-                    <a href="#" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">You are a pro!</a>
-                  {% else %}
-                    <a href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
-                  {% endif %}
-                {% else %}
-                  <a href="{% url 'account_signup' %}" aria-describedby="tier-basic" class="block px-3 py-2 mt-10 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">Buy plan</a>
-                {% endif %}
-                <ul role="list" class="mt-6 space-y-3 text-sm leading-6 text-gray-600">
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Unlimited blog suggestions
-                  </li>
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    Unlimited full blog posts
-                  </li>
-                  <li class="flex gap-x-3">
-                    <svg class="flex-none w-5 h-6 text-pink-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="flex items-center">
-                      Suggest blog post ideas
-                    </span>
-                  </li>
-                </ul>
-              </div>
-          </div>
-      </div>
-
     </div>
   </div>
 </div>
