@@ -23,7 +23,8 @@ export default class extends Controller {
       }
       const data = await response.json();
 
-      localStorage.setItem(`userSettings:${this.projectIdValue}`, JSON.stringify(data));
+      localStorage.setItem("userProfileSettings", JSON.stringify(data.profile));
+      localStorage.setItem(`projectSettings:${this.projectIdValue}`, JSON.stringify(data.project));
 
       // Dispatch an event to notify other controllers that settings are loaded
       const event = new CustomEvent("settings:loaded", {
