@@ -1,12 +1,12 @@
 {
   "meta": {
-    "generatedAt": "2025-06-07T15:33:48.813Z",
-    "tasksAnalyzed": 18,
-    "totalTasks": 47,
-    "analysisCount": 20,
+    "generatedAt": "2025-06-07T19:42:50.626Z",
+    "tasksAnalyzed": 1,
+    "totalTasks": 61,
+    "analysisCount": 33,
     "thresholdScore": 5,
     "projectName": "Taskmaster",
-    "usedResearch": true
+    "usedResearch": false
   },
   "complexityAnalysis": [
     {
@@ -168,6 +168,110 @@
       "recommendedSubtasks": 10,
       "expansionPrompt": "Expand to include subtasks for chaos testing, incident response documentation, user feedback collection, and continuous monitoring improvements.",
       "reasoning": "Comprehensive error handling and recovery spans the entire application, requiring global exception management, retries, graceful degradation, recovery workflows, and extensive testing. This is a critical, high-complexity task."
+    },
+    {
+      "taskId": 54,
+      "taskTitle": "Migrate Pre-commit Configuration to Use Ruff Only",
+      "complexityScore": 7,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Generate a list of subtasks to migrate pre-commit configuration to use Ruff only, based on the detailed steps provided in the task description, including updating configuration files, applying changes, addressing manual fixes, updating documentation, and thorough testing.",
+      "reasoning": "This task involves modifying core development tooling and configuration, applying changes across the entire codebase, configuring detailed rule sets, and requires extensive testing and potential manual fixes. The complexity arises from the potential for conflicts, the need for careful configuration, and the impact on the developer workflow. Breaking it down into subtasks based on the detailed steps ensures each phase is managed effectively."
+    },
+    {
+      "taskId": 55,
+      "taskTitle": "Implement Project Rescan Functionality",
+      "complexityScore": 7,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Break down the task of implementing project rescan functionality into subtasks covering: adding the UI button and status display on the project settings page, creating the backend API endpoint, implementing the asynchronous background job logic to re-analyze and update data, setting up status tracking and UI polling, adding error handling and user feedback, implementing rate limiting, and comprehensive testing.",
+      "reasoning": "This task involves full-stack development (frontend UI, backend API, background tasks), asynchronous processing, real-time UI updates (polling), database modifications, and requires implementing error handling and rate limiting, making it moderately complex."
+    },
+    {
+      "taskId": 56,
+      "taskTitle": "Implement Individual Project Parameter Rescanning",
+      "complexityScore": 8,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Break down the task of implementing individual project parameter rescanning into subtasks covering: extending the backend API to accept parameter types, modifying the analysis service for parameter-specific updates, adding individual UI controls (buttons) for each parameter section, implementing parameter-specific background task queuing, adding validation for parameter types, implementing rescan history tracking, adding error handling and rate limiting, and comprehensive testing.",
+      "reasoning": "This task builds upon the full rescan, adding complexity by requiring granular logic in the analysis service, more detailed UI controls, parameter validation, and history tracking, making it more complex than the base rescan."
+    },
+    {
+      "taskId": 57,
+      "taskTitle": "Implement Project Deletion Functionality",
+      "complexityScore": 7,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Break down the task of implementing project deletion functionality into subtasks covering: adding delete buttons to the home page project list, adding a delete section and button to the project settings page, implementing the confirmation dialog with name validation, creating the backend DELETE endpoint with authorization, implementing cascade deletion logic for all related models, integrating frontend AJAX calls and UI updates/redirects, adding error handling, and comprehensive testing including data cleanup verification.",
+      "reasoning": "This task involves implementing UI in multiple locations, a specific interactive confirmation dialog, critical backend logic for cascade deletion across several models, and requires careful testing to prevent data loss, making it moderately complex."
+    },
+    {
+      "taskId": 58,
+      "taskTitle": "Implement Sitemap Submission and Validation System",
+      "complexityScore": 8,
+      "recommendedSubtasks": 9,
+      "expansionPrompt": "Break down the task of implementing the sitemap system into subtasks covering: designing and creating the Sitemap and SitemapPage database models, creating backend API endpoints for submission and retrieval, implementing the SitemapValidationService for fetching and parsing XML, implementing the domain validation logic, implementing the page extraction and storage logic, handling sitemap index files, adding frontend form fields and validation feedback, implementing asynchronous processing for large sitemaps, adding error handling, and comprehensive testing.",
+      "reasoning": "This task is complex as it involves designing new data models, interacting with external data (fetching/parsing XML), implementing complex validation logic, handling asynchronous processing for potentially large datasets, and requires full-stack implementation."
+    },
+    {
+      "taskId": 59,
+      "taskTitle": "Update Pricing Page with Current Features and New Pricing Tiers",
+      "complexityScore": 8,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Break down the pricing page update into subtasks covering: feature content update, pricing structure implementation (frontend and backend), feature-to-plan mapping, UI/UX enhancements, backend integration for billing, cross-browser and payment flow testing, and SEO/analytics updates.",
+      "reasoning": "This task involves significant cross-functional work: updating content, implementing new pricing logic in both frontend and backend, ensuring billing and subscription management are correct, and enhancing UI/UX to justify premium pricing. It also requires careful testing for accuracy, user experience, and SEO. The complexity is high due to the need for coordination across design, engineering, and product, as well as the risk of impacting revenue and customer experience if not executed correctly.[1][3][4]"
+    },
+    {
+      "taskId": 60,
+      "taskTitle": "Redesign Landing Page for High-Value Enterprise Customers",
+      "complexityScore": 7,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Expand the landing page redesign into subtasks for: content strategy overhaul, visual design updates, persona-driven messaging, social proof/trust signal integration, pricing integration with enterprise focus, and call-to-action optimization.",
+      "reasoning": "This task requires a strategic overhaul of both content and design to target a new, demanding audience (enterprise buyers). It involves deep alignment with personas, new visual assets, integration of trust signals, and coordination with pricing updates. The complexity is moderate-high due to the need for cross-team collaboration, high standards for professionalism, and the importance of conversion optimization for a high-value segment.[3][4][5]"
+    },
+    {
+      "taskId": 61,
+      "taskTitle": "Implement Keyword-Focused Blog Post Generation",
+      "complexityScore": 8,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Decompose the blog post generation task into subtasks for: keyword selection integration, keyword analysis/prioritization, outline generation with keyword mapping, content section generation, keyword density optimization, meta tag generation, and analytics/tracking implementation.",
+      "reasoning": "This task requires extending AI content generation with advanced keyword logic, integrating with existing keyword management, and ensuring both technical (density, analytics) and qualitative (readability, coherence) requirements are met. It touches multiple system components and requires careful testing for edge cases, making it complex and multi-faceted."
+    },
+    {
+      "taskId": 62,
+      "taskTitle": "Implement Language-Aware Scanning and Analysis",
+      "complexityScore": 9,
+      "recommendedSubtasks": 8,
+      "expansionPrompt": "Expand language-aware scanning into subtasks for: homepage language detection, language persistence/storage, scanning pipeline updates for language, competitor analysis adaptation, keyword research adaptation, content generation adaptation, manual override UI, and validation/testing for multi-language scenarios.",
+      "reasoning": "This task introduces language detection and propagation across all major analysis and generation workflows, requiring updates to data models, UI, and multiple backend services. It also involves user override logic and robust validation for multilingual and edge cases. The complexity is high due to the breadth of impact and the need for consistency and correctness across the platform."
+    },
+    {
+      "taskId": 63,
+      "taskTitle": "Remove Placeholder Content from Blog Post Generation",
+      "complexityScore": 7,
+      "recommendedSubtasks": 6,
+      "expansionPrompt": "Break down placeholder removal into subtasks for: prompt/logic update, post-processing validation, content completion logic, quality assurance filters, error handling/retry logic, and user feedback integration.",
+      "reasoning": "This task requires both improvements to AI prompting and robust post-processing to ensure production-ready content. It involves detection, correction, and user-facing error handling, as well as integration with existing and new content generation features. The complexity is moderate-high due to the need for reliable automation and quality control."
+    },
+    {
+      "taskId": 64,
+      "taskTitle": "Implement Social Media Agent Prototype",
+      "complexityScore": 8,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Expand the social media agent prototype into subtasks for: Django app/model setup, tabbed interface UI implementation, tweet generation service, scheduled task setup, share button integration, analytics/tracking, and user preference management.",
+      "reasoning": "This task spans backend (Django app, scheduled jobs, database models), frontend (tabbed UI, sharing functionality), and integration with external services (Web Share API, platform URLs). It also requires analytics and user preference management. The complexity is high due to the breadth of technical domains and the need for robust, user-friendly implementation."
+    },
+    {
+      "taskId": 53,
+      "taskTitle": "Generate Unique Blog Post Titles",
+      "complexityScore": 7,
+      "recommendedSubtasks": 7,
+      "expansionPrompt": "Break down the implementation steps for generating unique blog post titles using an AI model. Include steps for preparing the input (existing titles), calling the AI API, processing the AI output, implementing the uniqueness check against the input list, and integrating this functionality.",
+      "reasoning": "Complexity arises from integrating with an AI model and the specific requirement to ensure generated titles are unique and not variations of existing ones, which may require careful prompting or post-processing."
+    },
+    {
+      "taskId": 65,
+      "taskTitle": "Implement Blog Title Category Generation System",
+      "complexityScore": 8,
+      "recommendedSubtasks": 9,
+      "expansionPrompt": "Break down the task 'Implement Blog Title Category Generation System' into 9 detailed subtasks. Include steps for backend implementation (category definition, generation logic, batching, filtering), database schema updates, prompt engineering for each category, UI enhancements (display, filtering), and comprehensive testing (unit, integration, UI, content quality, performance, UAT). Ensure subtasks cover all aspects mentioned in the task description and details.",
+      "reasoning": "This task involves significant changes across multiple layers: backend logic (generation, batching, filtering), database schema updates, complex prompt engineering for distinct categories, and substantial UI work for display and filtering. It requires careful coordination between different components and thorough testing across various dimensions, indicating high complexity."
     }
   ]
 }

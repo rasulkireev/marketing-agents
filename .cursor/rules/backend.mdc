@@ -18,7 +18,8 @@ alwaysApply: false
 - Use Django's built-in user model and authentication
 - Utilize Django form/model form classes
 - Follow MVT pattern strictly
-
+- Migrations can be ran via `make manage "makemigrations"`
+- New dependencies can be installed by running `poetry add {}`, then `poetry export -f requirements.txt --output requirements.txt --without-hashes`, then restarting the server via `make serve`.
 
 ## API Development
 - Use django-ninja instead of DRF
