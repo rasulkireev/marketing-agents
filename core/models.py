@@ -245,6 +245,10 @@ class Project(BaseModel):
     def has_pricing_page(self):
         return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).exists()
 
+    @property
+    def has_auto_submission_setting(self):
+        return self.auto_submittion_settings.exists()
+
     def get_page_content(self):
         """
         Fetch page content using Jina Reader API and update the project.

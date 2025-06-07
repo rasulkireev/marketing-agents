@@ -3,8 +3,36 @@ import { showMessage } from "../utils/messages";
 
 export default class extends Controller {
   static values = {
-    generatedPostId: Number
+    generatedPostId: Number,
+    projectId: Number,
   };
+
+  connect() {
+    this.boundApplySettings = this.applySettings.bind(this);
+    this.applySettings(); // Check storage immediately
+    window.addEventListener("settings:loaded", this.boundApplySettings);
+  }
+
+  disconnect() {
+    window.removeEventListener("settings:loaded", this.boundApplySettings);
+  }
+
+  applySettings(event) {
+    // If an event is passed, check if it's for the correct project
+    if (event && event.detail.projectId !== this.projectIdValue) {
+      return;
+    }
+
+    const settingsJSON = localStorage.getItem(`userSettings:${this.projectIdValue}`);
+    if (settingsJSON) {
+      const settings = JSON.parse(settingsJSON);
+      if (settings.project && settings.project.has_auto_submission_setting) {
+        this.element.disabled = true;
+        this.element.innerText = "Auto-posting enabled";
+        this.element.className = "inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border-gray-200 transition-colors duration-200 cursor-not-allowed";
+      }
+    }
+  }
 
   async post(event) {
     event.preventDefault();

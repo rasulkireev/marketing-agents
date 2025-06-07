@@ -1,6 +1,7 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
 from ninja import NinjaAPI
+from ninja.errors import HttpError
 
 from core.api.auth import MultipleAuthSchema
 from core.api.schemas import (
@@ -25,6 +26,7 @@ from core.api.schemas import (
     ToggleProjectKeywordUseOut,
     UpdateArchiveStatusIn,
     UpdateTitleScoreIn,
+    UserSettingsOut,
 )
 from core.choices import ContentType, ProjectPageType
 from core.models import (
@@ -352,12 +354,40 @@ def add_competitor(request: HttpRequest, data: AddCompetitorIn):
 @api.post("/submit-feedback")
 def submit_feedback(request: HttpRequest, data: SubmitFeedbackIn):
     profile = request.auth
+    Feedback.objects.create(profile=profile, feedback=data.feedback, page=data.page)
+    return {"status": "success"}
+
+
+@api.get("/user/settings", response=UserSettingsOut)
+def user_settings(request: HttpRequest, project_id: int):
+    profile = request.auth
     try:
-        Feedback.objects.create(profile=profile, feedback=data.feedback, page=data.page)
-        return {"status": "success", "message": "Feedback submitted successfully"}
+        project = get_object_or_404(Project, id=project_id, profile=profile)
+
+        profile_data = {
+            "has_pro_subscription": profile.has_active_subscription,
+            "reached_content_generation_limit": profile.reached_content_generation_limit,
+            "reached_title_generation_limit": profile.reached_title_generation_limit,
+        }
+        project_data = {
+            "name": project.name,
+            "url": project.url,
+            "has_auto_submission_setting": project.has_auto_submission_setting,
+        }
+        data = {"profile": profile_data, "project": project_data}
+
+        return data
+    except Project.DoesNotExist:
+        raise HttpError(404, "Project not found")
     except Exception as e:
-        logger.error("Failed to submit feedback", error=str(e), profile_id=profile.id)
-        return {"status": "error", "message": "Failed to submit feedback. Please try again."}
+        logger.error(
+            "Error fetching user settings",
+            error=str(e),
+            project_id=project_id,
+            profile_id=profile.id,
+            exc_info=True,
+        )
+        raise HttpError(500, "An unexpected error occurred.")
 
 
 @api.post("/keywords/add", response=AddKeywordOut)

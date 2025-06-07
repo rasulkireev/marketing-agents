@@ -5,6 +5,23 @@ from ninja import Schema
 from core.choices import BlogPostStatus, ContentType
 
 
+class ProfileSettingsOut(Schema):
+    has_pro_subscription: bool
+    reached_content_generation_limit: bool
+    reached_title_generation_limit: bool
+
+
+class ProjectSettingsOut(Schema):
+    name: str
+    url: str
+    has_auto_submission_setting: bool
+
+
+class UserSettingsOut(Schema):
+    profile: ProfileSettingsOut
+    project: ProjectSettingsOut
+
+
 class ProjectScanIn(Schema):
     url: str
 
