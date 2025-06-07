@@ -378,7 +378,6 @@ def user_settings(request: HttpRequest, project_id: int):
 
         return data
     except Exception as e:
-    except Exception as e:
         logger.error(
             "Error fetching user settings",
             error=str(e),
