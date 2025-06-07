@@ -1,6 +1,6 @@
 ---
-description: This file describes Marketing Agent's design system and how views should be styled
-globs: *.html, views.py, *.js, *.css
+description:
+globs:
 alwaysApply: false
 ---
 Use this rule whenever you are writing html, css, or even styles in Stimulus controllers that use D3.js.
