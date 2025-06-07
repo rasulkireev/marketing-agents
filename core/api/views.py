@@ -23,6 +23,7 @@ from core.api.schemas import (
     SubmitFeedbackIn,
     ToggleProjectKeywordUseIn,
     ToggleProjectKeywordUseOut,
+    UpdateArchiveStatusIn,
     UpdateTitleScoreIn,
 )
 from core.choices import ContentType, ProjectPageType
@@ -249,6 +250,25 @@ def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTit
     except Exception as e:
         logger.error("Failed to update title score", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id)
         return {"status": "error", "message": f"Failed to update score: {str(e)}"}
+
+
+@api.post("/suggestions/{suggestion_id}/archive-status", response={200: dict})
+def update_archive_status(request: HttpRequest, suggestion_id: int, data: UpdateArchiveStatusIn):
+    profile = request.auth
+    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+
+    try:
+        suggestion.archived = data.archived
+        suggestion.save(update_fields=["archived"])
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(
+            "Failed to update suggestion archive status",
+            error=str(e),
+            suggestion_id=suggestion_id,
+            profile_id=profile.id,
+        )
+        return {"status": "error", "message": str(e)}
 
 
 @api.post("/add-pricing-page")

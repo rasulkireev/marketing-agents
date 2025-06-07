@@ -36,6 +36,14 @@ export default class extends Controller {
         // Consider making these classes a static value or target if they need to be consistent
         button.className = "inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200 cursor-not-allowed";
         button.disabled = true; // Redundant due to class change but good for clarity
+        const suggestionElement = this.element.closest('[data-controller~="archive-suggestion"]');
+        if (suggestionElement) {
+          const moveEvent = new CustomEvent("suggestion:move", {
+            bubbles: true,
+            detail: { element: suggestionElement, destination: "posted" },
+          });
+          suggestionElement.dispatchEvent(moveEvent);
+        }
       } else {
         showMessage(data.message || "Failed to post blog.", "error");
         button.innerText = "Post";

@@ -1,16 +1,11 @@
 ---
 description:
-globs:
+globs: *.js,*.html
 alwaysApply: false
 ---
-## Frontend Development
 - Prefer Stimulus JS for adding interactivity to Django templates instead of raw script elements
 - Use Stimulus controllers to encapsulate JavaScript behavior and keep it separate from HTML structure
 - Leverage Stimulus data attributes to connect HTML elements with JavaScript functionality
 - Utilize Stimulus targets to reference specific elements within a controller
 - Employ Stimulus actions to handle user interactions and events
-- New controllers shold be created in `frontend/src/controllers` directory
-
-## Stimulusjs Specific Guidelines
-- Add semicolons at the end of statements
-- Use double quotes instead of single quotes
+- New controllers should be created in `frontend/src/controllers` directory
