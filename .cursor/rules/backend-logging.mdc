@@ -1,5 +1,5 @@
 ---
-description:
+description: Enforce consistent logging practices using structlog with proper context and log levels
 globs:
 alwaysApply: true
 ---
