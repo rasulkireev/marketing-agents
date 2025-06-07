@@ -417,10 +417,12 @@ class Project(BaseModel):
             if feedback_sections:
                 feedback_sections.append(
                     """
-                    Use this feedback to guide your title generation. Create titles similar to liked ones
-                    and avoid patterns seen in disliked ones. Make sure to not repeat any of the titles.
-                    Come up with some new ideas.
-                """
+                    Use this feedback to guide your title generation. Create titles that are thematically similar to the "Liked" titles,
+                    and avoid any stylistic or thematic patterns from the "Disliked" titles.
+
+                    IMPORTANT: You must generate completely new and unique titles. Do not repeat or create minor variations of any
+                    titles listed above in the "Previously Generated", "Liked", or "Disliked" sections. Your primary goal is originality.
+                    """
                 )
 
             return "\n".join(feedback_sections)
