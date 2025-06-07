@@ -245,6 +245,10 @@ class Project(BaseModel):
     def has_pricing_page(self):
         return ProjectPage.objects.filter(project=self, type=ProjectPageType.PRICING).exists()
 
+    @property
+    def has_auto_submission_setting(self):
+        return self.auto_submission_settings.exists()
+
     def get_page_content(self):
         """
         Fetch page content using Jina Reader API and update the project.
@@ -753,8 +757,8 @@ class BlogPostTitleSuggestion(BaseModel):
         )
 
 
-class AutoSubmittionSetting(BaseModel):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="auto_submittion_settings")
+class AutoSubmissionSetting(BaseModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="auto_submission_settings")
     endpoint_url = models.URLField(
         max_length=500, help_text="The endpoint to which posts will be automatically submitted."
     )
@@ -795,9 +799,9 @@ class GeneratedBlogPost(BaseModel):
 
     def submit_blog_post_to_endpoint(self):
         project = self.project
-        settings = AutoSubmittionSetting.objects.filter(project=project).order_by("-id").first()
+        settings = AutoSubmissionSetting.objects.filter(project=project).order_by("-id").first()
         if not settings or not settings.endpoint_url:
-            logger.warning("No AutoSubmittionSetting or endpoint_url found for project", project_id=project.id)
+            logger.warning("No AutoSubmissionSetting or endpoint_url found for project", project_id=project.id)
             return False
 
         url = settings.endpoint_url

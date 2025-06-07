@@ -1,7 +1,7 @@
 from allauth.account.forms import LoginForm, SignupForm
 from django import forms
 
-from core.models import AutoSubmittionSetting, Profile, Project
+from core.models import AutoSubmissionSetting, Profile, Project
 from core.utils import DivErrorList
 
 
@@ -51,7 +51,7 @@ class ProjectScanForm(forms.ModelForm):
         fields = ["url"]
 
 
-class AutoSubmittionSettingForm(forms.ModelForm):
+class AutoSubmissionSettingForm(forms.ModelForm):
     TIMEZONE_CHOICES = [
         ("UTC", "UTC"),
         ("America/New_York", "America/New_York"),
@@ -68,7 +68,7 @@ class AutoSubmittionSettingForm(forms.ModelForm):
     preferred_timezone = forms.ChoiceField(choices=TIMEZONE_CHOICES, required=False)
 
     class Meta:
-        model = AutoSubmittionSetting
+        model = AutoSubmissionSetting
         fields = [
             "endpoint_url",
             "body",

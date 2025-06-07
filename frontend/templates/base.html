@@ -47,7 +47,7 @@
   {% javascript_pack 'index' attrs='defer' %}
 </head>
 
-<body>
+<body {% if request.user.is_authenticated and project %}data-controller="user-settings" data-user-settings-project-id-value="{{ project.id }}"{% endif %}>
   {% block default_messages %}
     {% include 'components/messages.html' with messages=messages %}
   {% endblock default_messages %}

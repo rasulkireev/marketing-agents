@@ -4,6 +4,7 @@ export default class extends Controller {
   static values = {
     url: String,
     suggestionId: Number,
+    projectId: Number,
     hasProSubscription: Boolean,
     hasAutoSubmissionSetting: Boolean,
     pricingUrl: String,
@@ -123,31 +124,60 @@ export default class extends Controller {
 
   _appendPostButton(container, generatedPostId) {
     container.innerHTML = '';
-    // on freshly generate content this won't work correctly. need to unify the frontend and backend logic
-    // https://app.todoist.com/app/task/unify-the-data-on-the-frontend-basically-on-every-page-open-a-script-should-get-6c3hhgFHpq3VmrmR
-    const link = this.hasProSubscriptionValue ? `${this.projectSettingsUrlValue}#blogging-agent-settings` : this.pricingUrlValue;
-    console.log('link', link);
-    console.log('this.hasProSubscriptionValue', this.hasProSubscriptionValue);
-    console.log('this.projectSettingsUrlValue', this.projectSettingsUrlValue);
-    console.log('this.pricingUrlValue', this.pricingUrlValue);
-    const title = this.hasProSubscriptionValue
-      ? 'This feature is available for Pro subscribers only.'
-      : 'You need to setup the API endpoint for automatic posting in project settings.';
-    const buttonHtml = `
-      <a
-        href="${link}"
-        class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border border-gray-200 transition-colors duration-200"
-        data-controller="tooltip"
-        data-tooltip-message-value="${title}"
-        data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
-      >
-        Post
-      </a>
-    `;
+
+    const profileSettingsJSON = localStorage.getItem("userProfileSettings");
+    const projectSettingsJSON = localStorage.getItem(`projectSettings:${this.projectIdValue}`);
+
+    const profileSettings = profileSettingsJSON ? JSON.parse(profileSettingsJSON) : {};
+    const projectSettings = projectSettingsJSON ? JSON.parse(projectSettingsJSON) : {};
+
+    const hasPro = profileSettings.has_pro_subscription || false;
+    const hasAutoSubmit = projectSettings.has_auto_submission_setting || false;
+
+    let buttonHtml;
+
+    if (hasPro && hasAutoSubmit) {
+      // Pro user with settings: Enabled Post button
+      buttonHtml = `
+        <button
+          data-action="post-button#post"
+          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border-2 border-pink-600 hover:bg-pink-700 transition-colors duration-200"
+        >
+          Post
+        </button>
+      `;
+    } else if (hasPro && !hasAutoSubmit) {
+      // Pro user without settings: Disabled link to settings
+      buttonHtml = `
+        <a
+          href="${this.projectSettingsUrlValue}#blogging-agent-settings"
+          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border-gray-200 transition-colors duration-200 cursor-not-allowed"
+          data-controller="tooltip"
+          data-tooltip-message-value="You need to set up the API endpoint for automatic posting in your project settings."
+          data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
+        >
+          Post
+        </a>
+      `;
+    } else {
+      // Not a pro user: Disabled link to pricing
+      buttonHtml = `
+        <a
+          href="${this.pricingUrlValue}"
+          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border-gray-200 transition-colors duration-200 cursor-not-allowed"
+          data-controller="tooltip"
+          data-tooltip-message-value="This feature is available for Pro subscribers only."
+          data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
+        >
+          Post
+        </a>
+      `;
+    }
 
     const wrapperDiv = document.createElement('div');
     wrapperDiv.setAttribute('data-controller', 'post-button');
     wrapperDiv.setAttribute('data-post-button-generated-post-id-value', generatedPostId);
+    wrapperDiv.setAttribute('data-post-button-project-id-value', this.projectIdValue);
     wrapperDiv.innerHTML = buttonHtml.trim();
 
     container.appendChild(wrapperDiv);

@@ -273,9 +273,9 @@
           <form method="post" class="mt-10 space-y-8" data-controller="auto-submit-body">
             {% csrf_token %}
             <h3 class="mb-4 text-lg font-semibold text-gray-900">Automatic Submission</h3>
-            {{ auto_submittion_settings_form.non_field_errors | safe }}
+            {{ auto_submission_settings_form.non_field_errors | safe }}
             <div class="space-y-6">
-              {% for field in auto_submittion_settings_form.visible_fields %}
+              {% for field in auto_submission_settings_form.visible_fields %}
                 {% if field.name == "body" %}
                   <div
                     data-controller="auto-submit-body"
