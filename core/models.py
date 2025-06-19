@@ -483,12 +483,6 @@ class Project(BaseModel):
         return result.data
 
     def find_competitors(self):
-        logger.info(
-            "[Project - find_competitors] Finding competitors for project",
-            project_id=self.id,
-            project_name=self.name,
-        )
-
         model = OpenAIModel(
             "sonar",
             provider=OpenAIProvider(
