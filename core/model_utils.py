@@ -41,7 +41,7 @@ def run_agent_synchronously(agent, input_string, deps=None, function_name="", mo
     with capture_run_messages() as messages:
         try:
             logger.info(
-                "[Run Agent Synchronously] Running agent",
+                f"[Run Agent Synchronously - {function_name}] Running agent",
                 messages=messages,
                 input_string=input_string,
                 deps=deps,
