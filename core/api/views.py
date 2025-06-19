@@ -40,6 +40,7 @@ from core.models import (
     ProjectKeyword,
     ProjectPage,
 )
+from core.utils import get_or_create_project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -51,6 +52,7 @@ api = NinjaAPI(auth=MultipleAuthSchema(), csrf=False)
 def scan_project(request: HttpRequest, data: ProjectScanIn):
     profile = request.auth
 
+    # TODO(Rasul): Why do we need this?
     project = Project.objects.filter(profile=profile, url=data.url).first()
     if project:
         return {
@@ -66,7 +68,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
             "message": "Project already exists",
         }
 
-    project = Project.objects.create(profile=profile, url=data.url)
+    project = get_or_create_project(profile.id, data.url, source="scan_project")
 
     got_content = project.get_page_content()
 
