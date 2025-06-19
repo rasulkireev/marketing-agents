@@ -531,13 +531,15 @@ class Project(BaseModel):
         @agent.system_prompt
         def language_specification(ctx: RunContext[ProjectDetails]) -> str:
             project = ctx.deps
-            return f"IMPORTANT: Be mindful that competitors are likely to be in {project.language} language."
+            return f"IMPORTANT: Be mindful that competitors are likely to speak in {project.language} language."
 
         @agent.system_prompt
         def location_specification(ctx: RunContext[ProjectDetails]) -> str:
             project = ctx.deps
             if project.location != "Global":
                 return f"IMPORTANT: Only return competitors whose target audience is in {project.location}."
+            else:
+                return "IMPORTANT: Return competitors from all over the world."
 
         result = run_agent_synchronously(
             agent,
