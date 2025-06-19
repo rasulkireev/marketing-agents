@@ -57,9 +57,9 @@ def replace_placeholders(data, blog_post):
         return data
 
 
-def create_project(profile_id, url, source=None):
+def get_or_create_project(profile_id, url, source=None):
     profile = Profile.objects.get(id=profile_id)
-    project = Project.objects.create(profile=profile, url=url)
+    project, created = Project.objects.get_or_create(profile=profile, url=url)
 
     project_metadata = {
         "project_id": project.id,
@@ -69,7 +69,10 @@ def create_project(profile_id, url, source=None):
         "profile_email": profile.user.email,
     }
 
-    posthog.capture(profile.user.email, "project_created", project_metadata)
-    logger.info("Project created", **project_metadata)
+    if created:
+        posthog.capture(profile.user.email, "project_created", project_metadata)
+        logger.info("[get_or_create_project] Project created", **project_metadata)
+    else:
+        logger.info("[get_or_create_project] Got existing project", **project_metadata)
 
     return project
