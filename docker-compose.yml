@@ -70,15 +70,15 @@ services:
     ports:
       - "9091:9091"
 
-  # mailhog:
-  #   image: mailhog/mailhog
-  #   expose:
-  #     - 1025
-  #     - 8025
-  #   ports:
-  #     - "1025:1025"
-  #     - "8025:8025"
-  #   restart: unless-stopped
+  mailhog:
+    image: mailhog/mailhog
+    expose:
+      - 1025
+      - 8025
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: unless-stopped
 
   stripe:
     image: stripe/stripe-cli:latest
