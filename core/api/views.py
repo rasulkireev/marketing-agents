@@ -40,7 +40,7 @@ from core.models import (
     ProjectKeyword,
     ProjectPage,
 )
-from core.utils import create_project
+from core.utils import get_or_create_project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -68,7 +68,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
             "message": "Project already exists",
         }
 
-    project = create_project(profile.id, data.url, source="scan_project")
+    project = get_or_create_project(profile.id, data.url, source="scan_project")
 
     got_content = project.get_page_content()
 

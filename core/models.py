@@ -45,7 +45,6 @@ from core.schemas import (
     TitleSuggestions,
     WebPageContent,
 )
-from core.utils import replace_placeholders
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -800,6 +799,8 @@ class GeneratedBlogPost(BaseModel):
         return self.title.title
 
     def submit_blog_post_to_endpoint(self):
+        from core.utils import replace_placeholders
+
         project = self.project
         settings = AutoSubmissionSetting.objects.filter(project=project).order_by("-id").first()
         if not settings or not settings.endpoint_url:
