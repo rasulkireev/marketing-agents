@@ -1,9 +1,9 @@
 import json
 from urllib.parse import unquote
 
+import posthog
 from django.conf import settings
 
-from seo_blog_bot.settings import posthog
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -11,11 +11,9 @@ logger = get_seo_blog_bot_logger(__name__)
 
 class PostHogMiddleware:
     def __init__(self, get_response):
-        logger.debug("PostHogMiddleware initialized")
         self.get_response = get_response
 
     def __call__(self, request):
-        logger.debug("PostHogMiddleware called")
         try:
             if request.user.is_authenticated and hasattr(request.user, "email"):
                 posthog_cookie = request.COOKIES.get(f"ph_{settings.POSTHOG_API_KEY}_posthog")

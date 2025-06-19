@@ -20,4 +20,3 @@ class CoreConfig(AppConfig):
 
         if settings.ENVIRONMENT == "dev":
             posthog.debug = True
-            posthog.capture("test_user", "app_is_ready")
