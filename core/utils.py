@@ -1,5 +1,7 @@
+import posthog
 from django.forms.utils import ErrorList
 
+from core.models import Profile, Project
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -53,3 +55,21 @@ def replace_placeholders(data, blog_post):
         return re.sub(r"\{\{\s*(.*?)\s*\}\}", repl, data)
     else:
         return data
+
+
+def create_project(profile_id, url, source=None):
+    profile = Profile.objects.get(id=profile_id)
+    project = Project.objects.create(profile=profile, url=url)
+
+    project_metadata = {
+        "project_id": project.id,
+        "url": url,
+        "source": source,
+        "profile_id": profile_id,
+        "profile_email": profile.user.email,
+    }
+
+    posthog.capture(profile.user.email, "project_created", project_metadata)
+    logger.info("Project created", **project_metadata)
+
+    return project
