@@ -106,6 +106,15 @@ class AccountSignupView(SignupView):
                 profile_id=profile.id,
             )
 
+        posthog.capture(
+            profile.user.email,
+            event="user_signed_up",
+            properties={
+                "profile_id": profile.id,
+                "$set": {"email": profile.user.email},
+            },
+        )
+
         return response
 
 
