@@ -52,7 +52,9 @@ class HomeView(TemplateView):
 
         # Add projects to context for authenticated users
         if self.request.user.is_authenticated:
-            projects = Project.objects.filter(profile=self.request.user.profile).order_by("-created_at")
+            projects = Project.objects.filter(profile=self.request.user.profile).order_by(
+                "-created_at"
+            )
 
             # Annotate projects with counts
             projects_with_stats = []
@@ -111,7 +113,10 @@ class AccountSignupView(SignupView):
             event="user_signed_up",
             properties={
                 "profile_id": profile.id,
-                "$set": {"email": profile.user.email},
+                "$set": {
+                    "email": profile.user.email,
+                    "username": profile.user.username,
+                },
             },
         )
 
@@ -311,11 +316,17 @@ class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         project = self.object
 
-        all_suggestions = project.blog_post_title_suggestions.all().prefetch_related("generated_blog_posts")
+        all_suggestions = project.blog_post_title_suggestions.all().prefetch_related(
+            "generated_blog_posts"
+        )
 
-        posted_suggestions_ids = {s.id for s in all_suggestions if s.generated_blog_posts.filter(posted=True).exists()}
+        posted_suggestions_ids = {
+            s.id for s in all_suggestions if s.generated_blog_posts.filter(posted=True).exists()
+        }
 
-        context["posted_suggestions"] = [s for s in all_suggestions if s.id in posted_suggestions_ids]
+        context["posted_suggestions"] = [
+            s for s in all_suggestions if s.id in posted_suggestions_ids
+        ]
         context["archived_suggestions"] = [
             s for s in all_suggestions if s.archived and s.id not in posted_suggestions_ids
         ]
@@ -324,7 +335,9 @@ class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
         ]
 
         context["has_pro_subscription"] = self.request.user.profile.has_active_subscription
-        context["has_auto_submission_setting"] = AutoSubmissionSetting.objects.filter(project=project).exists()
+        context["has_auto_submission_setting"] = AutoSubmissionSetting.objects.filter(
+            project=project
+        ).exists()
         return context
 
 
@@ -349,7 +362,8 @@ class KeywordsAgentView(LoginRequiredMixin, DetailView):
             keyword_obj = pk.keyword
             # Extract the 'value', 'month', and 'year' from each trend object.
             keyword_obj.trend_data = [
-                {"value": trend.value, "month": trend.month, "year": trend.year} for trend in keyword_obj.trends.all()
+                {"value": trend.value, "month": trend.month, "year": trend.year}
+                for trend in keyword_obj.trends.all()
             ]
             # Attach the 'use' field from ProjectKeyword
             keyword_obj.use = pk.use
@@ -366,7 +380,9 @@ class PricingAgentView(LoginRequiredMixin, DetailView):
     context_object_name = "project"
 
     def get_context_data(self, **kwargs):
-        pricing_pages = ProjectPage.objects.filter(project=self.object, type=ProjectPageType.PRICING)
+        pricing_pages = ProjectPage.objects.filter(
+            project=self.object, type=ProjectPageType.PRICING
+        )
         pricing_suggestions = PricingPageUpdatesSuggestion.objects.filter(
             project=self.object,
         )
