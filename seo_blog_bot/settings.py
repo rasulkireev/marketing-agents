@@ -79,7 +79,6 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_structlog.middlewares.RequestMiddleware",  # adds log for each request
-    "core.middleware.PostHogMiddleware",
 ]
 
 ROOT_URLCONF = "seo_blog_bot.urls"

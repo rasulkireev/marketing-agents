@@ -70,7 +70,11 @@ def get_or_create_project(profile_id, url, source=None):
     }
 
     if created:
-        posthog.capture(profile.user.email, "project_created", project_metadata)
+        posthog.capture(
+            profile.user.email,
+            event="project_created",
+            properties=project_metadata,
+        )
         logger.info("[get_or_create_project] Project created", **project_metadata)
     else:
         logger.info("[get_or_create_project] Got existing project", **project_metadata)
