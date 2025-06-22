@@ -18,10 +18,12 @@ from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
 from django.views.generic import TemplateView
 
+from core.views import AccountSignupView
 from seo_blog_bot.sitemaps import sitemaps
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/signup/", AccountSignupView.as_view(), name="account_signup"),
     path("accounts/", include("allauth.urls")),
     path("anymail/", include("anymail.urls")),
     path("uses", TemplateView.as_view(template_name="pages/uses.html"), name="uses"),

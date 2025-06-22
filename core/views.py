@@ -1,8 +1,11 @@
-from urllib.parse import urlencode
+import json
+from urllib.parse import unquote, urlencode
 
+import posthog
 import stripe
 from allauth.account.models import EmailAddress
 from allauth.account.utils import send_email_confirmation
+from allauth.account.views import SignupView
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -62,6 +65,48 @@ class HomeView(TemplateView):
             context["projects"] = projects_with_stats
 
         return context
+
+
+class AccountSignupView(SignupView):
+    template_name = "account/signup.html"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        user = self.user
+        profile = user.profile
+
+        logger.info(
+            "[AccountSignupView - form_valid] Running after user signup",
+            user=user,
+            user_id=user.id,
+            profile_id=profile.id,
+            email=user.email,
+        )
+
+        posthog_cookie = self.request.COOKIES.get(f"ph_{settings.POSTHOG_API_KEY}_posthog")
+        if posthog_cookie:
+            logger.info(
+                "[set_posthog_alias] Setting PostHog alias",
+                profile_id=profile.id,
+                email=profile.user.email,
+            )
+
+            cookie_dict = json.loads(unquote(posthog_cookie))
+            frontend_distinct_id = cookie_dict.get("distinct_id")
+
+            posthog.alias(frontend_distinct_id, profile.user.email)
+            posthog.alias(frontend_distinct_id, profile.id)
+
+        else:
+            logger.warning(
+                "[AccountSignupView - form_valid] No PostHog cookie found",
+                user=user,
+                user_id=user.id,
+                profile_id=profile.id,
+            )
+
+        return response
 
 
 class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
