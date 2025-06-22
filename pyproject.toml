@@ -21,9 +21,6 @@ gunicorn = "^23.0.0"
 ipython = "^8.27.0"
 logfire = "^3.6.4"
 markdown = "^3.7"
-mkdocs = "^1.4.2"
-mkdocs-material = "^9.0.12"
-mkdocstrings = "^0.20.0"
 pillow = "^10.4.0"
 psycopg2 = "^2.9.9"
 pytest = "^8.3.3"
@@ -38,35 +35,38 @@ whitenoise = "^6.7.0"
 pydantic-ai = "^0.2.9"
 posthog = "^5.3.0"
 
-
 [tool.poetry.dev-dependencies]
 
-
 [tool.poetry.group.dev.dependencies]
-pylint = "^2.17.1"
-pylint-django = "^2.5.3"
 pre-commit = "^3.2.1"
-mkdocs = "^1.6.0"
-mkdocs-material = "^9.5.23"
+djlint = "^1.36.4"
+ruff = "^0.12.0"
+ty = "^0.0.1a11"
 
-[tool.isort]
-profile = "django"
-combine_as_imports = true
-include_trailing_comma = true
-line_length = 120
-multi_line_output = 3
+[tool.ruff]
+line-length = 100
+target-version = "py311"
 
-[tool.black]
-line-length = 120
-target-version = ['py39']
-include = '\.pyi?$'
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "B",    # flake8-bugbear
+    "I",    # isort
+    "DJ",   # django-specific rules
+    "UP",   # pyupgrade
+    "C90",  # mccabe complexity
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["E501", "F401", "F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.djlint]
 profile="django"
 ignore = "H031,H006,H023,H021,H011,T002"
-
-[tool.ruff]
-line-length = 120
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
