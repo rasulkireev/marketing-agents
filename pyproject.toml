@@ -35,23 +35,17 @@ whitenoise = "^6.7.0"
 pydantic-ai = "^0.2.9"
 posthog = "^5.3.0"
 
-
 [tool.poetry.dev-dependencies]
 
-
 [tool.poetry.group.dev.dependencies]
-pylint = "^2.17.1"
-pylint-django = "^2.5.3"
 pre-commit = "^3.2.1"
 djlint = "^1.36.4"
 ruff = "^0.12.0"
 ty = "^0.0.1a11"
 
-
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-
 
 [tool.ruff.lint]
 select = [
@@ -64,19 +58,15 @@ select = [
     "C90",  # mccabe complexity
 ]
 
-
 [tool.ruff.lint.per-file-ignores]
 "**/migrations/*.py" = ["E501", "F401", "F403", "F405"]
-
 
 [tool.ruff.format]
 quote-style = "double"
 
-
 [tool.djlint]
 profile="django"
 ignore = "H031,H006,H023,H021,H011,T002"
-
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

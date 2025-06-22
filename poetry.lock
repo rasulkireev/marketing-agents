@@ -110,22 +110,6 @@ files = [
 tests = ["mypy (>=0.800)", "pytest", "pytest-asyncio"]
 
 [[package]]
-name = "astroid"
-version = "2.15.8"
-description = "An abstract syntax tree for Python with inference support."
-optional = false
-python-versions = ">=3.7.2"
-groups = ["dev"]
-files = [
-    {file = "astroid-2.15.8-py3-none-any.whl", hash = "sha256:1aa149fc5c6589e3d0ece885b4491acd80af4f087baafa3fb5203b113e68cd3c"},
-    {file = "astroid-2.15.8.tar.gz", hash = "sha256:6c107453dffee9055899705de3c9ead36e74119cee151e5a9aaf7f0b0e020a6a"},
-]
-
-[package.dependencies]
-lazy-object-proxy = ">=1.4.0"
-wrapt = {version = ">=1.14,<2", markers = "python_version >= \"3.11\""}
-
-[[package]]
 name = "asttokens"
 version = "3.0.0"
 description = "Annotate AST trees with source code positions"
@@ -631,22 +615,6 @@ wrapt = ">=1.10,<2"
 
 [package.extras]
 dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "setuptools ; python_version >= \"3.12\"", "tox"]
-
-[[package]]
-name = "dill"
-version = "0.4.0"
-description = "serialize all of Python"
-optional = false
-python-versions = ">=3.8"
-groups = ["dev"]
-files = [
-    {file = "dill-0.4.0-py3-none-any.whl", hash = "sha256:44f54bf6412c2c8464c14e8243eb163690a9800dbe2c367330883b19c7561049"},
-    {file = "dill-0.4.0.tar.gz", hash = "sha256:0633f1d2df477324f53a895b02c901fb961bdbf65a17122586ea7019292cbcf0"},
-]
-
-[package.extras]
-graph = ["objgraph (>=1.7.2)"]
-profile = ["gprof2dot (>=2022.7.29)"]
 
 [[package]]
 name = "distlib"
@@ -1522,21 +1490,6 @@ test = ["packaging", "pickleshare", "pytest", "pytest-asyncio (<0.22)", "testpat
 test-extra = ["curio", "ipython[test]", "jupyter_ai", "matplotlib (!=3.2.0)", "nbformat", "numpy (>=1.23)", "pandas", "trio"]
 
 [[package]]
-name = "isort"
-version = "5.13.2"
-description = "A Python utility / library to sort Python imports."
-optional = false
-python-versions = ">=3.8.0"
-groups = ["dev"]
-files = [
-    {file = "isort-5.13.2-py3-none-any.whl", hash = "sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6"},
-    {file = "isort-5.13.2.tar.gz", hash = "sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109"},
-]
-
-[package.extras]
-colors = ["colorama (>=0.4.6)"]
-
-[[package]]
 name = "jedi"
 version = "0.19.2"
 description = "An autocompletion tool for Python that can be used for text editors."
@@ -1703,30 +1656,6 @@ files = [
 
 [package.extras]
 dev = ["build (==1.2.2.post1)", "coverage (==7.5.4) ; python_version < \"3.9\"", "coverage (==7.8.0) ; python_version >= \"3.9\"", "mypy (==1.14.1) ; python_version < \"3.9\"", "mypy (==1.15.0) ; python_version >= \"3.9\"", "pip (==25.0.1)", "pylint (==3.2.7) ; python_version < \"3.9\"", "pylint (==3.3.6) ; python_version >= \"3.9\"", "ruff (==0.11.2)", "twine (==6.1.0)", "uv (==0.6.11)"]
-
-[[package]]
-name = "lazy-object-proxy"
-version = "1.11.0"
-description = "A fast and thorough lazy object proxy."
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "lazy_object_proxy-1.11.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:132bc8a34f2f2d662a851acfd1b93df769992ed1b81e2b1fda7db3e73b0d5a18"},
-    {file = "lazy_object_proxy-1.11.0-cp310-cp310-win_amd64.whl", hash = "sha256:01261a3afd8621a1accb5682df2593dc7ec7d21d38f411011a5712dcd418fbed"},
-    {file = "lazy_object_proxy-1.11.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:090935756cc041e191f22f4f9c7fd4fe9a454717067adf5b1bbd2ce3046b556e"},
-    {file = "lazy_object_proxy-1.11.0-cp311-cp311-win_amd64.whl", hash = "sha256:76ec715017f06410f57df442c1a8d66e6b5f7035077785b129817f5ae58810a4"},
-    {file = "lazy_object_proxy-1.11.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:9a9f39098e93a63618a79eef2889ae3cf0605f676cd4797fdfd49fcd7ddc318b"},
-    {file = "lazy_object_proxy-1.11.0-cp312-cp312-win_amd64.whl", hash = "sha256:ee13f67f4fcd044ef27bfccb1c93d39c100046fec1fad6e9a1fcdfd17492aeb3"},
-    {file = "lazy_object_proxy-1.11.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:fd4c84eafd8dd15ea16f7d580758bc5c2ce1f752faec877bb2b1f9f827c329cd"},
-    {file = "lazy_object_proxy-1.11.0-cp313-cp313-win_amd64.whl", hash = "sha256:d2503427bda552d3aefcac92f81d9e7ca631e680a2268cbe62cd6a58de6409b7"},
-    {file = "lazy_object_proxy-1.11.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:0613116156801ab3fccb9e2b05ed83b08ea08c2517fdc6c6bc0d4697a1a376e3"},
-    {file = "lazy_object_proxy-1.11.0-cp313-cp313t-win_amd64.whl", hash = "sha256:bb03c507d96b65f617a6337dedd604399d35face2cdf01526b913fb50c4cb6e8"},
-    {file = "lazy_object_proxy-1.11.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:28c174db37946f94b97a97b579932ff88f07b8d73a46b6b93322b9ac06794a3b"},
-    {file = "lazy_object_proxy-1.11.0-cp39-cp39-win_amd64.whl", hash = "sha256:d662f0669e27704495ff1f647070eb8816931231c44e583f4d0701b7adf6272f"},
-    {file = "lazy_object_proxy-1.11.0-py3-none-any.whl", hash = "sha256:a56a5093d433341ff7da0e89f9b486031ccd222ec8e52ec84d0ec1cdc819674b"},
-    {file = "lazy_object_proxy-1.11.0.tar.gz", hash = "sha256:18874411864c9fbbbaa47f9fc1dd7aea754c86cfde21278ef427639d1dd78e9c"},
-]
 
 [[package]]
 name = "logfire"
@@ -1909,18 +1838,6 @@ files = [
 
 [package.dependencies]
 traitlets = "*"
-
-[[package]]
-name = "mccabe"
-version = "0.7.0"
-description = "McCabe checker, plugin for flake8"
-optional = false
-python-versions = ">=3.6"
-groups = ["dev"]
-files = [
-    {file = "mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e"},
-    {file = "mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325"},
-]
 
 [[package]]
 name = "mcp"
@@ -2821,65 +2738,6 @@ docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
 tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
-name = "pylint"
-version = "2.17.7"
-description = "python code static checker"
-optional = false
-python-versions = ">=3.7.2"
-groups = ["dev"]
-files = [
-    {file = "pylint-2.17.7-py3-none-any.whl", hash = "sha256:27a8d4c7ddc8c2f8c18aa0050148f89ffc09838142193fdbe98f172781a3ff87"},
-    {file = "pylint-2.17.7.tar.gz", hash = "sha256:f4fcac7ae74cfe36bc8451e931d8438e4a476c20314b1101c458ad0f05191fad"},
-]
-
-[package.dependencies]
-astroid = ">=2.15.8,<=2.17.0-dev0"
-colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
-dill = {version = ">=0.3.6", markers = "python_version >= \"3.11\""}
-isort = ">=4.2.5,<6"
-mccabe = ">=0.6,<0.8"
-platformdirs = ">=2.2.0"
-tomlkit = ">=0.10.1"
-
-[package.extras]
-spelling = ["pyenchant (>=3.2,<4.0)"]
-testutils = ["gitpython (>3)"]
-
-[[package]]
-name = "pylint-django"
-version = "2.5.5"
-description = "A Pylint plugin to help Pylint understand the Django web framework"
-optional = false
-python-versions = ">=3.7,<4.0"
-groups = ["dev"]
-files = [
-    {file = "pylint_django-2.5.5-py3-none-any.whl", hash = "sha256:5abd5c2228e0e5e2a4cb6d0b4fc1d1cef1e773d0be911412f4dd4fc1a1a440b7"},
-    {file = "pylint_django-2.5.5.tar.gz", hash = "sha256:2f339e4bf55776958283395c5139c37700c91bd5ef1d8251ef6ac88b5abbba9b"},
-]
-
-[package.dependencies]
-pylint = ">=2.0,<4"
-pylint-plugin-utils = ">=0.8"
-
-[package.extras]
-with-django = ["Django (>=2.2)"]
-
-[[package]]
-name = "pylint-plugin-utils"
-version = "0.8.2"
-description = "Utilities and helpers for writing Pylint plugins"
-optional = false
-python-versions = ">=3.7,<4.0"
-groups = ["dev"]
-files = [
-    {file = "pylint_plugin_utils-0.8.2-py3-none-any.whl", hash = "sha256:ae11664737aa2effbf26f973a9e0b6779ab7106ec0adc5fe104b0907ca04e507"},
-    {file = "pylint_plugin_utils-0.8.2.tar.gz", hash = "sha256:d3cebf68a38ba3fba23a873809155562571386d4c1b03e5b4c4cc26c3eee93e4"},
-]
-
-[package.dependencies]
-pylint = ">=1.7"
-
-[[package]]
 name = "pytest"
 version = "8.4.0"
 description = "pytest: simple powerful testing with Python"
@@ -3572,18 +3430,6 @@ docs = ["setuptools-rust", "sphinx", "sphinx-rtd-theme"]
 testing = ["black (==22.3)", "datasets", "numpy", "pytest", "requests", "ruff"]
 
 [[package]]
-name = "tomlkit"
-version = "0.13.2"
-description = "Style preserving TOML library"
-optional = false
-python-versions = ">=3.8"
-groups = ["dev"]
-files = [
-    {file = "tomlkit-0.13.2-py3-none-any.whl", hash = "sha256:7a974427f6e119197f670fbbbeae7bef749a6c14e793db934baefc1b5f03efde"},
-    {file = "tomlkit-0.13.2.tar.gz", hash = "sha256:fff5fe59a87295b278abd31bec92c15d9bc4a06885ab12bcea52c71119392e79"},
-]
-
-[[package]]
 name = "tqdm"
 version = "4.67.1"
 description = "Fast, Extensible Progress Meter"
@@ -3888,7 +3734,7 @@ version = "1.17.2"
 description = "Module for decorators, wrappers and monkey patching."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev"]
+groups = ["main"]
 files = [
     {file = "wrapt-1.17.2-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3d57c572081fed831ad2d26fd430d565b76aa277ed1d30ff4d40670b1c0dd984"},
     {file = "wrapt-1.17.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b5e251054542ae57ac7f3fba5d10bfff615b6c2fb09abeb37d2f1463f841ae22"},
@@ -3994,4 +3840,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "ca383a72dd39aa2e115acec5dc4ccdad46916239b7f24926c4de3fe49098d470"
+content-hash = "234a4e4f5d4fb559f6111f2b40b8bf62cb36b2158f313fa85a3bc89c7c8a3ad0"
