@@ -1,9 +1,13 @@
+import json
+from urllib.parse import unquote
+
+import posthog
 import requests
 from django.conf import settings
 from django_q.tasks import async_task
 
 from core.choices import ContentType, KeywordDataSource, ProjectPageType
-from core.models import Competitor, Keyword, Project, ProjectKeyword, ProjectPage
+from core.models import Competitor, Keyword, Profile, Project, ProjectKeyword, ProjectPage
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -93,7 +97,9 @@ def process_project_keywords(project_id: int):
         return f"Project with id {project_id} not found."
 
     if not project.proposed_keywords:
-        logger.info(f"[KeywordProcessing] No proposed keywords for project {project.id} ({project.name}).")
+        logger.info(
+            f"[KeywordProcessing] No proposed keywords for project {project.id} ({project.name})."
+        )
         return f"No proposed keywords for project {project.name}."
 
     keyword_strings = [kw.strip() for kw in project.proposed_keywords.split(",") if kw.strip()]
@@ -110,15 +116,22 @@ def process_project_keywords(project_id: int):
     for keyword_str in keyword_strings:
         try:
             keyword_obj, created = Keyword.objects.get_or_create(
-                keyword_text=keyword_str, country=country_code, data_source=KeywordDataSource.GOOGLE_KEYWORD_PLANNER
+                keyword_text=keyword_str,
+                country=country_code,
+                data_source=KeywordDataSource.GOOGLE_KEYWORD_PLANNER,
             )
             if created:
-                logger.info("[KeywordProcessing] Created new keyword", keyword_text=keyword_str)
+                logger.info(
+                    "[KeywordProcessing] Created new keyword",
+                    keyword_text=keyword_str,
+                )
 
             metrics_fetched = keyword_obj.fetch_and_update_metrics()
             if not metrics_fetched:
                 logger.warning(
-                    f"[KeywordProcessing] Failed to fetch metrics for keyword: {keyword_obj.id} ('{keyword_str}')."
+                    "[KeywordProcessing] Failed to fetch metrics for keyword",
+                    keyword_id=keyword_obj.id,
+                    keyword_text=keyword_str,
                 )
 
             # Associate with project
@@ -127,13 +140,17 @@ def process_project_keywords(project_id: int):
         except Exception as e:
             failed_count += 1
             logger.error(
-                f"[KeywordProcessing] Error processing keyword '{keyword_str}' for project {project.id}.",
+                "[KeywordProcessing] Error processing keyword",
                 error=str(e),
                 project_id=project.id,
                 keyword_text=keyword_str,
             )
 
-    result_message = f"Keyword processing for project {project.name} (ID: {project.id}): Processed {processed_count} keywords, Failed: {failed_count}."
+    result_message = f"""
+    Keyword processing for project {project.name} (ID: {project.id})
+    Processed {processed_count} keywords
+    Failed: {failed_count}
+    """
     logger.info(result_message)
     return result_message
 
@@ -143,3 +160,55 @@ def generate_blog_post_suggestions(project_id: int):
     project.generate_title_suggestions(content_type=ContentType.SHARING, num_titles=3)
     project.generate_title_suggestions(content_type=ContentType.SEO, num_titles=3)
     return "Blog post suggestions generated"
+
+
+def try_create_posthog_alias(
+    profile_id: int, posthog_cookie: str, source_function: str = None
+) -> None:
+    try:
+        profile = Profile.objects.get(id=profile_id)
+    except Profile.DoesNotExist:
+        logger.error("[Try Create Posthog Alias] Profile not found.", profile_id=profile_id)
+        return f"Profile with id {profile_id} not found."
+
+    logger.info(
+        "Setting PostHog alias",
+        profile_id=profile_id,
+        email=profile.user.email,
+        source_function=source_function,
+    )
+
+    cookie_dict = json.loads(unquote(posthog_cookie))
+    frontend_distinct_id = cookie_dict.get("distinct_id")
+
+    if frontend_distinct_id:
+        posthog.alias(frontend_distinct_id, profile.user.email)
+        posthog.alias(frontend_distinct_id, profile.id)
+
+
+def track_event(
+    profile_id: int, event_name: str, properties: dict, source_function: str = None
+) -> None:
+    base_log_data = {
+        "profile_id": profile_id,
+        "event_name": event_name,
+        "properties": properties,
+        "source_function": source_function,
+    }
+
+    try:
+        profile = Profile.objects.get(id=profile_id)
+    except Profile.DoesNotExist:
+        logger.error("[TrackEvent] Profile not found.", **base_log_data)
+        return f"Profile with id {profile_id} not found."
+
+    posthog.capture(
+        profile.user.email,
+        event=event_name,
+        properties={
+            "profile_id": profile.id,
+            **properties,
+        },
+    )
+
+    logger.info("[TrackEvent] Tracked event", **base_log_data)

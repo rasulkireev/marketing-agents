@@ -1,7 +1,5 @@
-import json
-from urllib.parse import unquote, urlencode
+from urllib.parse import urlencode
 
-import posthog
 import stripe
 from allauth.account.models import EmailAddress
 from allauth.account.utils import send_email_confirmation
@@ -14,6 +12,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
+from django_q.tasks import async_task
 from djstripe import models as djstripe_models
 
 from core.choices import BlogPostStatus, Language, ProfileStates, ProjectPageType
@@ -28,6 +27,7 @@ from core.models import (
     ProjectKeyword,
     ProjectPage,
 )
+from core.tasks import track_event, try_create_posthog_alias
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -77,29 +77,16 @@ class AccountSignupView(SignupView):
 
         user = self.user
         profile = user.profile
-
-        logger.info(
-            "[AccountSignupView - form_valid] Running after user signup",
-            user=user,
-            user_id=user.id,
-            profile_id=profile.id,
-            email=user.email,
-        )
-
         posthog_cookie = self.request.COOKIES.get(f"ph_{settings.POSTHOG_API_KEY}_posthog")
+
         if posthog_cookie:
-            logger.info(
-                "[set_posthog_alias] Setting PostHog alias",
+            async_task(
+                try_create_posthog_alias,
                 profile_id=profile.id,
-                email=profile.user.email,
+                posthog_cookie=posthog_cookie,
+                source_function="AccountSignupView - form_valid",
+                group="Create Posthog Alias",
             )
-
-            cookie_dict = json.loads(unquote(posthog_cookie))
-            frontend_distinct_id = cookie_dict.get("distinct_id")
-
-            posthog.alias(frontend_distinct_id, profile.user.email)
-            posthog.alias(frontend_distinct_id, profile.id)
-
         else:
             logger.warning(
                 "[AccountSignupView - form_valid] No PostHog cookie found",
@@ -108,16 +95,18 @@ class AccountSignupView(SignupView):
                 profile_id=profile.id,
             )
 
-        posthog.capture(
-            profile.user.email,
-            event="user_signed_up",
+        async_task(
+            track_event,
+            profile_id=profile.id,
+            event_name="user_signed_up",
             properties={
-                "profile_id": profile.id,
                 "$set": {
                     "email": profile.user.email,
                     "username": profile.user.username,
                 },
             },
+            source_function="AccountSignupView - form_valid",
+            group="Track Event",
         )
 
         return response
