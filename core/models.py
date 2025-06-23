@@ -23,7 +23,12 @@ from core.choices import (
     ProjectStyle,
     ProjectType,
 )
-from core.model_utils import generate_random_key, get_html_content, get_markdown_content, run_agent_synchronously
+from core.model_utils import (
+    generate_random_key,
+    get_html_content,
+    get_markdown_content,
+    run_agent_synchronously,
+)
 from core.prompts import (
     GENERATE_CONTENT_SYSTEM_PROMPTS,
     PRICING_PAGE_STRATEGY_SYSTEM_PROMPT,
@@ -90,17 +95,15 @@ class Profile(BaseModel):
         return f"{self.user.username}"
 
     def track_state_change(self, to_state, metadata=None):
-        from_state = self.current_state
-
-        if from_state != to_state:
-            logger.info(
-                "Tracking State Change", from_state=from_state, to_state=to_state, profile_id=self.id, metadata=metadata
-            )
-            ProfileStateTransition.objects.create(
-                profile=self, from_state=from_state, to_state=to_state, backup_profile_id=self.id, metadata=metadata
-            )
-            self.state = to_state
-            self.save(update_fields=["state"])
+        async_task(
+            "core.tasks.track_state_change",
+            profile_id=self.id,
+            from_state=self.current_state,
+            to_state=to_state,
+            metadata=metadata,
+            source_function="Profile - track_state_change",
+            group="Track State Change",
+        )
 
     @property
     def current_state(self):
@@ -180,7 +183,9 @@ class BlogPost(BaseModel):
 
 
 class Project(BaseModel):
-    profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects")
+    profile = models.ForeignKey(
+        Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="projects"
+    )
     url = models.URLField(max_length=200, unique=True)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=50, choices=ProjectType.choices, default=ProjectType.SAAS)
@@ -203,7 +208,9 @@ class Project(BaseModel):
     product_usage = models.TextField(blank=True)
     links = models.TextField(blank=True)
     competitors_list = models.TextField(blank=True)
-    style = models.CharField(max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART)
+    style = models.CharField(
+        max_length=50, choices=ProjectStyle.choices, default=ProjectStyle.DIGITAL_ART
+    )
     proposed_keywords = models.TextField(blank=True)
     location = models.CharField(max_length=50, default="Global")
 
@@ -326,7 +333,9 @@ class Project(BaseModel):
 
         return True
 
-    def generate_title_suggestions(self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""):
+    def generate_title_suggestions(  # noqa: C901
+        self, content_type=ContentType.SHARING, num_titles=3, user_prompt=""
+    ):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
             output_type=TitleSuggestions,
@@ -364,7 +373,8 @@ class Project(BaseModel):
             project = ctx.deps.project_details
             return f"""
                 IMPORTANT: Generate all titles in {project.language} language.
-                Make sure the titles are grammatically correct and culturally appropriate for {project.language}-speaking audiences.
+                Make sure the titles are grammatically correct and culturally
+                appropriate for {project.language}-speaking audiences.
             """
 
         @agent.system_prompt
@@ -416,11 +426,15 @@ class Project(BaseModel):
             if feedback_sections:
                 feedback_sections.append(
                     """
-                    Use this feedback to guide your title generation. Create titles that are thematically similar to the "Liked" titles,
+                    Use this feedback to guide your title generation.
+                    Create titles that are thematically similar to the "Liked" titles,
                     and avoid any stylistic or thematic patterns from the "Disliked" titles.
 
-                    IMPORTANT: You must generate completely new and unique titles. Do not repeat or create minor variations of any
-                    titles listed above in the "Previously Generated", "Liked", or "Disliked" sections. Your primary goal is originality.
+                    IMPORTANT!
+                    You must generate completely new and unique titles.
+                    Do not repeat or create minor variations of any titles listed above in the
+                    "Previously Generated", "Liked", or "Disliked" sections.
+                    Your primary goal is originality.
                     """
                 )
 
@@ -431,7 +445,9 @@ class Project(BaseModel):
             num_titles=num_titles,
             user_prompt=user_prompt,
             liked_suggestions=[suggestion.title for suggestion in self.liked_title_suggestions],
-            disliked_suggestions=[suggestion.title for suggestion in self.disliked_title_suggestions],
+            disliked_suggestions=[
+                suggestion.title for suggestion in self.disliked_title_suggestions
+            ],
             neutral_suggestions=[suggestion.title for suggestion in self.neutral_title_suggestions],
         )
 
@@ -464,7 +480,10 @@ class Project(BaseModel):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
             output_type=list[str],
-            system_prompt="You are an expert link extractor. Extract all the links from the text provided.",
+            system_prompt="""
+                You are an expert link extractor.
+                Extract all the links from the text provided.
+            """,
             retries=2,
         )
 
@@ -494,7 +513,9 @@ class Project(BaseModel):
             model,
             deps_type=ProjectDetails,
             output_type=str,
-            system_prompt="You are a helpful assistant that helps me find competitors for my project.",
+            system_prompt="""
+                You are a helpful assistant that helps me find competitors for my project.
+            """,
             retries=2,
         )
 
@@ -531,15 +552,23 @@ class Project(BaseModel):
         @agent.system_prompt
         def language_specification(ctx: RunContext[ProjectDetails]) -> str:
             project = ctx.deps
-            return f"IMPORTANT: Be mindful that competitors are likely to speak in {project.language} language."
+            return f"""
+                IMPORTANT: Be mindful that competitors are likely to speak in
+                {project.language} language.
+            """
 
         @agent.system_prompt
         def location_specification(ctx: RunContext[ProjectDetails]) -> str:
             project = ctx.deps
             if project.location != "Global":
-                return f"IMPORTANT: Only return competitors whose target audience is in {project.location}."
+                return f"""
+                    IMPORTANT: Only return competitors whose target audience is in
+                    {project.location}.
+                """
             else:
-                return "IMPORTANT: Return competitors from all over the world."
+                return """
+                    IMPORTANT: Return competitors from all over the world.
+                """
 
         result = run_agent_synchronously(
             agent,
@@ -558,7 +587,10 @@ class Project(BaseModel):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
             output_type=list[CompetitorDetails],
-            system_prompt="You are an expert data extractor. Extract all the data from the text provided.",
+            system_prompt="""
+                You are an expert data extractor.
+                Extract all the data from the text provided.
+            """,
             retries=2,
         )
 
@@ -600,8 +632,12 @@ class BlogPostTitleSuggestion(BaseModel):
     )
 
     title = models.CharField(max_length=255)
-    content_type = models.CharField(max_length=20, choices=ContentType.choices, default=ContentType.SHARING)
-    category = models.CharField(max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE)
+    content_type = models.CharField(
+        max_length=20, choices=ContentType.choices, default=ContentType.SHARING
+    )
+    category = models.CharField(
+        max_length=50, choices=Category.choices, default=Category.GENERAL_AUDIENCE
+    )
     description = models.TextField()
     prompt = models.TextField(blank=True)
     target_keywords = models.JSONField(default=list, blank=True, null=True)
@@ -700,29 +736,41 @@ class BlogPostTitleSuggestion(BaseModel):
                 - Title: {title.title}
                 - Description: {title.description}
                 - Category: {title.category}
-                - Target Keywords: {', '.join(title.target_keywords) if title.target_keywords else "None specified"}
-                - Suggested Meta Description: {title.suggested_meta_description if title.suggested_meta_description else "None specified"}
+                - Target Keywords: {
+                ", ".join(title.target_keywords) if title.target_keywords else "None specified"
+            }
+                - Suggested Meta Description: {
+                title.suggested_meta_description
+                if title.suggested_meta_description
+                else "None specified"
+            }
             """
 
         @agent.system_prompt
         def add_language_specification(ctx: RunContext[BlogPostGenerationContext]) -> str:
             return f"""
                 IMPORTANT: Generate the content in {ctx.deps.project_details.language} language.
-                Make sure the content is grammatically correct and culturally appropriate for {ctx.deps.project_details.language}-speaking audiences.
+                Make sure the content is grammatically correct and culturally appropriate for
+                {ctx.deps.project_details.language}-speaking audiences.
             """
 
         @agent.system_prompt
         def valid_markdown_format() -> str:
             return """
                 IMPORTANT: Generate the content in valid markdown format.
-                Make sure the content is formatted correctly with headings, paragraphs, and lists and links.
+                Make sure the content is formatted correctly with:
+                  - headings
+                  - paragraphs
+                  - lists
+                  - links
             """
 
         @agent.system_prompt
         def post_structure() -> str:
             return """
                 - Don't include blogpost title in the content.
-                - Don't start with a header or a subheader. Start with plain text as intro, then add subheaders as you see fit.
+                - Don't start with a header or a subheader.
+                  Start with plain text as intro, then add subheaders as you see fit.
             """
 
         project_pages = [
@@ -761,17 +809,30 @@ class BlogPostTitleSuggestion(BaseModel):
 
 
 class AutoSubmissionSetting(BaseModel):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="auto_submission_settings")
+    project = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name="auto_submission_settings"
+    )
     endpoint_url = models.URLField(
         max_length=500, help_text="The endpoint to which posts will be automatically submitted."
     )
-    body = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request body.")
-    header = models.JSONField(default=dict, blank=True, null=True, help_text="Key-value pairs for the request headers.")
-    posts_per_month = models.PositiveIntegerField(default=1, help_text="How many posts to publish per month.")
-    preferred_timezone = models.CharField(
-        max_length=64, blank=True, null=True, help_text="Preferred timezone for publishing posts."
+    body = models.JSONField(
+        default=dict, blank=True, null=True, help_text="Key-value pairs for the request body."
     )
-    preferred_time = models.TimeField(blank=True, null=True, help_text="Preferred time of day to publish posts.")
+    header = models.JSONField(
+        default=dict, blank=True, null=True, help_text="Key-value pairs for the request headers."
+    )
+    posts_per_month = models.PositiveIntegerField(
+        default=1, help_text="How many posts to publish per month."
+    )
+    preferred_timezone = models.CharField(  # noqa: DJ001
+        max_length=64,
+        blank=True,
+        null=True,
+        help_text="Preferred timezone for publishing posts.",
+    )
+    preferred_time = models.TimeField(
+        blank=True, null=True, help_text="Preferred time of day to publish posts."
+    )
 
     def __str__(self):
         return f"{self.project.name}"
@@ -779,10 +840,18 @@ class AutoSubmissionSetting(BaseModel):
 
 class GeneratedBlogPost(BaseModel):
     project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="generated_blog_posts"
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="generated_blog_posts",
     )
     title = models.ForeignKey(
-        BlogPostTitleSuggestion, null=True, blank=True, on_delete=models.CASCADE, related_name="generated_blog_posts"
+        BlogPostTitleSuggestion,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="generated_blog_posts",
     )
     description = models.TextField(blank=True)
     slug = models.SlugField(max_length=250)
@@ -806,7 +875,9 @@ class GeneratedBlogPost(BaseModel):
         project = self.project
         settings = AutoSubmissionSetting.objects.filter(project=project).order_by("-id").first()
         if not settings or not settings.endpoint_url:
-            logger.warning("No AutoSubmissionSetting or endpoint_url found for project", project_id=project.id)
+            logger.warning(
+                "No AutoSubmissionSetting or endpoint_url found for project", project_id=project.id
+            )
             return False
 
         url = settings.endpoint_url
@@ -818,12 +889,20 @@ class GeneratedBlogPost(BaseModel):
             response.raise_for_status()
             return True
         except requests.RequestException as e:
-            logger.error("Failed to submit blog post to endpoint", error=str(e), url=url, body=body, headers=headers)
+            logger.error(
+                "Failed to submit blog post to endpoint",
+                error=str(e),
+                url=url,
+                body=body,
+                headers=headers,
+            )
             return False
 
 
 class ProjectPage(BaseModel):
-    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="project_pages")
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="project_pages"
+    )
 
     url = models.URLField(max_length=200)
 
@@ -937,7 +1016,9 @@ class ProjectPage(BaseModel):
 
         return True
 
-    def create_new_pricing_strategy(self, strategy_name: str = "Alex Hormozi", user_prompt: str = ""):
+    def create_new_pricing_strategy(
+        self, strategy_name: str = "Alex Hormozi", user_prompt: str = ""
+    ):
         agent = Agent(
             "google-gla:gemini-2.5-flash-preview-04-17",
             output_type=PricingPageStrategySuggestion,
@@ -948,7 +1029,7 @@ class ProjectPage(BaseModel):
 
         @agent.system_prompt
         def add_webpage_content(ctx: RunContext[PricingPageStrategyContext]) -> str:
-            return "Pricing page content:" f"Content: {ctx.deps.web_page_content.markdown_content}"
+            return f"Pricing page content:Content: {ctx.deps.web_page_content.markdown_content}"
 
         @agent.system_prompt
         def add_project_context(ctx: RunContext[PricingPageStrategyContext]) -> str:
@@ -983,7 +1064,8 @@ class ProjectPage(BaseModel):
                 return ""
 
             return f"""
-                IMPORTANT USER REQUEST: The user has specifically requested to focus on the following:
+                IMPORTANT USER REQUEST!
+                The user has specifically requested to focus on the following:
                 "{ctx.deps.user_prompt}"
             """
 
@@ -1009,13 +1091,21 @@ class ProjectPage(BaseModel):
 
 class PricingPageUpdatesSuggestion(BaseModel):
     project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="pricing_page_updates"
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="pricing_page_updates",
     )
     project_page = models.ForeignKey(
-        ProjectPage, null=True, blank=True, on_delete=models.CASCADE, related_name="pricing_page_updates"
+        ProjectPage,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="pricing_page_updates",
     )
 
-    strategy_name = models.CharField(max_length=255, blank=True, null=True)
+    strategy_name = models.CharField(max_length=255, blank=True, null=True)  # noqa: DJ001
     user_prompt = models.TextField(blank=True)
     current_pricing_strategy = models.TextField()
     suggested_pricing_strategy = models.TextField()
@@ -1025,7 +1115,9 @@ class PricingPageUpdatesSuggestion(BaseModel):
 
 
 class Competitor(BaseModel):
-    project = models.ForeignKey(Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitors")
+    project = models.ForeignKey(
+        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitors"
+    )
     name = models.CharField(max_length=255)
     url = models.URLField(max_length=200)
     description = models.TextField()
@@ -1092,16 +1184,19 @@ class Competitor(BaseModel):
             output_type=CompetitorDetails,
             deps_type=WebPageContent,
             system_prompt=(
-                "You are an expert marketer. Based on the competitor details and homepage content provided, "
-                "extract and infer the requested information. Make reasonable inferences based "
-                "on available content, context, and industry knowledge."
+                """
+                You are an expert marketer.
+                Based on the competitor details and homepage content provided,
+                extract and infer the requested information. Make reasonable inferences based
+                on available content, context, and industry knowledge.
+                """
             ),
             retries=2,
         )
 
         @agent.system_prompt
         def add_webpage_content(ctx: RunContext[WebPageContent]) -> str:
-            return f"Web page content:" f"Content: {ctx.deps.markdown_content}"
+            return f"Web page content:Content: {ctx.deps.markdown_content}"
 
         deps = WebPageContent(
             title=self.homepage_title,
@@ -1128,9 +1223,12 @@ class Competitor(BaseModel):
             output_type=CompetitorAnalysis,
             deps_type=CompetitorAnalysisContext,
             system_prompt=(
-                "You are an expert marketer. Based on the competitor details and homepage content provided, "
-                "extract and infer the requested information. Make reasonable inferences based "
-                "on available content, context, and industry knowledge."
+                """
+                You are an expert marketer.
+                Based on the competitor details and homepage content provided,
+                extract and infer the requested information. Make reasonable inferences based
+                on available content, context, and industry knowledge.
+                """
             ),
             retries=2,
         )
@@ -1198,10 +1296,18 @@ class Competitor(BaseModel):
 
 class CompetitorComparisonBlogPost(BaseModel):
     project = models.ForeignKey(
-        Project, null=True, blank=True, on_delete=models.CASCADE, related_name="competitor_comparison_blog_posts"
+        Project,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="competitor_comparison_blog_posts",
     )
     competitor = models.ForeignKey(
-        Competitor, null=True, blank=True, on_delete=models.CASCADE, related_name="competitor_comparison_blog_posts"
+        Competitor,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="competitor_comparison_blog_posts",
     )
 
     title = models.CharField(max_length=255)
@@ -1215,14 +1321,23 @@ class CompetitorComparisonBlogPost(BaseModel):
 
 class Keyword(BaseModel):
     keyword_text = models.CharField(max_length=255, help_text="The keyword string")
-    volume = models.IntegerField(null=True, blank=True, help_text="The search volume of the keyword")
-    cpc_currency = models.CharField(max_length=10, blank=True, help_text="The currency of the CPC value")
+    volume = models.IntegerField(
+        null=True, blank=True, help_text="The search volume of the keyword"
+    )
+    cpc_currency = models.CharField(
+        max_length=10, blank=True, help_text="The currency of the CPC value"
+    )
     cpc_value = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True, help_text="The cost per click value"
     )
-    competition = models.FloatField(null=True, blank=True, help_text="The competition metric of the keyword (0 to 1)")
+    competition = models.FloatField(
+        null=True, blank=True, help_text="The competition metric of the keyword (0 to 1)"
+    )
     country = models.CharField(
-        max_length=10, blank=True, default="us", help_text="The country for which metrics were fetched"
+        max_length=10,
+        blank=True,
+        default="us",
+        help_text="The country for which metrics were fetched",
     )
     data_source = models.CharField(
         max_length=3,
@@ -1231,7 +1346,9 @@ class Keyword(BaseModel):
         blank=True,
         help_text="The data source for the keyword metrics",
     )
-    last_fetched_at = models.DateTimeField(auto_now=True, help_text="Timestamp of when the data was last fetched")
+    last_fetched_at = models.DateTimeField(
+        auto_now=True, help_text="Timestamp of when the data was last fetched"
+    )
 
     class Meta:
         unique_together = ("keyword_text", "country", "data_source")
@@ -1241,7 +1358,7 @@ class Keyword(BaseModel):
     def __str__(self):
         return f"{self.keyword_text} ({self.country or 'global'} - {self.data_source or 'N/A'})"
 
-    def fetch_and_update_metrics(self, currency="usd"):
+    def fetch_and_update_metrics(self, currency="usd"):  # noqa: C901
         if not hasattr(settings, "KEYWORDS_EVERYWHERE_API_KEY"):
             logger.error("[KeywordFetch] KEYWORDS_EVERYWHERE_API_KEY not found in settings.")
             return False
@@ -1287,7 +1404,8 @@ class Keyword(BaseModel):
                 self.cpc_value = Decimal(str(cpc_data.get("value", "0.00")))
             except InvalidOperation:
                 logger.warning(
-                    f"[KeywordFetch] Invalid CPC value for keyword {self.keyword_text}. Defaulting to 0.00.",
+                    "[KeywordFetch] Invalid CPC value for keyword.",
+                    keyword_text=self.keyword_text,
                     keyword_id=self.id,
                     cpc_value_raw=cpc_data.get("value"),
                 )
@@ -1297,7 +1415,15 @@ class Keyword(BaseModel):
             self.last_fetched_at = timezone.now()
 
             # Save keyword instance before handling trends to ensure FK exists
-            self.save(update_fields=["volume", "cpc_currency", "cpc_value", "competition", "last_fetched_at"])
+            self.save(
+                update_fields=[
+                    "volume",
+                    "cpc_currency",
+                    "cpc_value",
+                    "competition",
+                    "last_fetched_at",
+                ]
+            )
 
             trend_data = keyword_api_data.get("trend", [])
             if isinstance(trend_data, list):
@@ -1320,7 +1446,10 @@ class Keyword(BaseModel):
                             if (month_str, year_int) not in existing_trends_tuples:
                                 trends_to_create.append(
                                     KeywordTrend(
-                                        keyword=self, month=month_str, year=year_int, value=int(trend_item["value"])
+                                        keyword=self,
+                                        month=month_str,
+                                        year=year_int,
+                                        value=int(trend_item["value"]),
                                     )
                                 )
                     if trends_to_create:
@@ -1403,7 +1532,9 @@ class KeywordTrend(BaseModel):
 
 
 class Feedback(BaseModel):
-    profile = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="feedback")
+    profile = models.ForeignKey(
+        Profile, null=True, blank=True, on_delete=models.CASCADE, related_name="feedback"
+    )
     feedback = models.TextField()
     page = models.CharField(max_length=255)
     date_submitted = models.DateTimeField(null=True, blank=True)
@@ -1420,7 +1551,12 @@ class Feedback(BaseModel):
             from django.core.mail import send_mail
 
             subject = "New Feedback Submitted"
-            message = f"New feedback was submitted:\n\nUser: {self.profile.user.email if self.profile else 'Anonymous'}\nFeedback: {self.feedback}\nPage: {self.page}"
+            message = f"""
+                New feedback was submitted:
+                User: {self.profile.user.email if self.profile else "Anonymous"}
+                Feedback: {self.feedback}
+                Page: {self.page}
+            """
             from_email = settings.DEFAULT_FROM_EMAIL
             recipient_list = ["kireevr1996@gmail.com"]
 

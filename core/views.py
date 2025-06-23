@@ -41,6 +41,7 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         payment_status = self.request.GET.get("payment")
         if payment_status == "success":
             messages.success(self.request, "Thanks for subscribing, I hope you enjoy the app!")
@@ -52,6 +53,17 @@ class HomeView(TemplateView):
 
         # Add projects to context for authenticated users
         if self.request.user.is_authenticated:
+            user = self.request.user
+            profile = user.profile
+
+            async_task(
+                try_create_posthog_alias,
+                profile_id=profile.id,
+                cookies=self.request.COOKIES,
+                source_function="HomeView - get_context_data",
+                group="Create Posthog Alias",
+            )
+
             projects = Project.objects.filter(profile=self.request.user.profile).order_by(
                 "-created_at"
             )
@@ -77,23 +89,14 @@ class AccountSignupView(SignupView):
 
         user = self.user
         profile = user.profile
-        posthog_cookie = self.request.COOKIES.get(f"ph_{settings.POSTHOG_API_KEY}_posthog")
 
-        if posthog_cookie:
-            async_task(
-                try_create_posthog_alias,
-                profile_id=profile.id,
-                posthog_cookie=posthog_cookie,
-                source_function="AccountSignupView - form_valid",
-                group="Create Posthog Alias",
-            )
-        else:
-            logger.warning(
-                "[AccountSignupView - form_valid] No PostHog cookie found",
-                user=user,
-                user_id=user.id,
-                profile_id=profile.id,
-            )
+        async_task(
+            try_create_posthog_alias,
+            profile_id=profile.id,
+            cookies=self.request.COOKIES,
+            source_function="AccountSignupView - form_valid",
+            group="Create Posthog Alias",
+        )
 
         async_task(
             track_event,
