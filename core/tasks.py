@@ -188,7 +188,7 @@ def try_create_posthog_alias(profile_id: int, cookies: dict, source_function: st
 
     if frontend_distinct_id:
         posthog.alias(frontend_distinct_id, email)
-        posthog.alias(frontend_distinct_id, profile_id)
+        posthog.alias(frontend_distinct_id, str(profile_id))
 
     logger.info("[Try Create Posthog Alias] Set PostHog alias", **base_log_data)
 
@@ -214,6 +214,8 @@ def track_event(
         event=event_name,
         properties={
             "profile_id": profile.id,
+            "email": profile.user.email,
+            "current_state": profile.state,
             **properties,
         },
     )
