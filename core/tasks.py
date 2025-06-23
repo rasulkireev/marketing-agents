@@ -162,7 +162,7 @@ def generate_blog_post_suggestions(project_id: int):
     return "Blog post suggestions generated"
 
 
-def try_create_posthog_alias(profile_id: int, cookies: dict, source_function: str = None) -> None:
+def try_create_posthog_alias(profile_id: int, cookies: dict, source_function: str = None) -> str:
     base_log_data = {
         "profile_id": profile_id,
         "cookies": cookies,
@@ -195,7 +195,7 @@ def try_create_posthog_alias(profile_id: int, cookies: dict, source_function: st
 
 def track_event(
     profile_id: int, event_name: str, properties: dict, source_function: str = None
-) -> None:
+) -> str:
     base_log_data = {
         "profile_id": profile_id,
         "event_name": event_name,
@@ -221,6 +221,8 @@ def track_event(
     )
 
     logger.info("[TrackEvent] Tracked event", **base_log_data)
+
+    return f"Tracked event {event_name} for profile {profile_id}"
 
 
 def track_state_change(
@@ -252,3 +254,5 @@ def track_state_change(
         )
         profile.state = to_state
         profile.save(update_fields=["state"])
+
+    return f"Tracked state change from {from_state} to {to_state} for profile {profile_id}"
