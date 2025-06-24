@@ -63,11 +63,12 @@ def get_or_create_project(profile_id, url, source=None):
     project, created = Project.objects.get_or_create(profile=profile, url=url)
 
     project_metadata = {
-        "project_id": project.id,
-        "url": url,
         "source": source,
         "profile_id": profile_id,
         "profile_email": profile.user.email,
+        "project_id": project.id,
+        "project_name": project.name,
+        "project_url": url,
     }
 
     if created:
