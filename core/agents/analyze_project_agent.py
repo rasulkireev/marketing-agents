@@ -3,7 +3,7 @@ from pydantic_ai import Agent, RunContext
 from core.schemas import ProjectDetails, WebPageContent
 
 analyze_project_agent = Agent(
-    "google-gla:gemini-2.5-flash-preview-04-17",
+    "google-gla:gemini-2.5-flash",
     output_type=ProjectDetails,
     deps_type=WebPageContent,
     system_prompt=(
