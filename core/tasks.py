@@ -1,13 +1,26 @@
 import json
+from datetime import datetime, timedelta
 from urllib.parse import unquote
 
 import posthog
+import pytz
 import requests
 from django.conf import settings
+from django.db.models import Q
+from django.utils import timezone
 from django_q.tasks import async_task
 
 from core.choices import ContentType, KeywordDataSource, ProjectPageType
-from core.models import Competitor, Keyword, Profile, Project, ProjectKeyword, ProjectPage
+from core.models import (
+    AutoSubmissionSetting,
+    Competitor,
+    GeneratedBlogPost,
+    Keyword,
+    Profile,
+    Project,
+    ProjectKeyword,
+    ProjectPage,
+)
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -256,3 +269,200 @@ def track_state_change(
         profile.save(update_fields=["state"])
 
     return f"Tracked state change from {from_state} to {to_state} for profile {profile_id}"
+
+
+def check_and_schedule_blog_posts():
+    """
+    Check each AutoSubmissionSetting and schedule blog posts for projects
+    that need them based on their posting frequency and last post date.
+    """
+    try:
+        # Get all active auto submission settings
+        submission_settings = AutoSubmissionSetting.objects.all()
+        
+        results = []
+        
+        for setting in submission_settings:
+            project = setting.project
+            
+            # Skip if project has no generated blog posts
+            if not project.generated_blog_posts.exists():
+                logger.info(
+                    "No generated blog posts found for project",
+                    project_id=project.id,
+                    project_name=project.name
+                )
+                continue
+            
+            # Get the last posted blog post for this project
+            last_posted_blog = project.generated_blog_posts.filter(
+                posted=True
+            ).order_by('-created_at').first()
+            
+            # Calculate when next post should be scheduled
+            should_schedule, next_post_time = should_schedule_next_post(
+                setting, last_posted_blog
+            )
+            
+            if should_schedule:
+                # Get the next unposted blog post
+                next_blog_post = project.generated_blog_posts.filter(
+                    posted=False
+                ).order_by('created_at').first()
+                
+                if next_blog_post:
+                    # Schedule the blog post
+                    async_task(
+                        "core.tasks.submit_scheduled_blog_post",
+                        next_blog_post.id,
+                        schedule=next_post_time,
+                        group="Blog Post Submission"
+                    )
+                    
+                    result = f"Scheduled blog post '{next_blog_post.post_title}' for {project.name} at {next_post_time}"
+                    results.append(result)
+                    logger.info(
+                        "Scheduled blog post submission",
+                        project_id=project.id,
+                        project_name=project.name,
+                        blog_post_id=next_blog_post.id,
+                        blog_post_title=next_blog_post.post_title,
+                        scheduled_time=next_post_time
+                    )
+                else:
+                    logger.info(
+                        "No unposted blog posts available for scheduling",
+                        project_id=project.id,
+                        project_name=project.name
+                    )
+            else:
+                logger.info(
+                    "No scheduling needed for project",
+                    project_id=project.id,
+                    project_name=project.name,
+                    last_posted_date=last_posted_blog.created_at if last_posted_blog else None
+                )
+        
+        return f"Blog post scheduling check completed. {len(results)} posts scheduled."
+    
+    except Exception as e:
+        logger.error(
+            "Error in check_and_schedule_blog_posts",
+            error=str(e)
+        )
+        return f"Error checking and scheduling blog posts: {str(e)}"
+
+
+def should_schedule_next_post(submission_setting, last_posted_blog):
+    """
+    Determine if a next blog post should be scheduled based on the submission setting
+    and last posted blog post.
+    
+    Returns:
+        tuple: (should_schedule: bool, next_post_time: datetime)
+    """
+    posts_per_month = submission_setting.posts_per_month
+    preferred_timezone = submission_setting.preferred_timezone or 'UTC'
+    preferred_time = submission_setting.preferred_time
+    
+    # Convert to the preferred timezone
+    try:
+        tz = pytz.timezone(preferred_timezone)
+    except pytz.UnknownTimeZoneError:
+        logger.warning(
+            "Unknown timezone, using UTC",
+            timezone=preferred_timezone,
+            project_id=submission_setting.project.id
+        )
+        tz = pytz.UTC
+    
+    # Calculate the interval between posts (in days)
+    days_between_posts = 30 / posts_per_month  # Approximate month as 30 days
+    
+    # Get current time in the preferred timezone
+    current_time = timezone.now().astimezone(tz)
+    
+    # If no previous post, schedule immediately or at next preferred time
+    if not last_posted_blog:
+        if preferred_time:
+            # Schedule for today at preferred time if it's in the future, otherwise tomorrow
+            next_post_time = current_time.replace(
+                hour=preferred_time.hour,
+                minute=preferred_time.minute,
+                second=0,
+                microsecond=0
+            )
+            if next_post_time <= current_time:
+                next_post_time += timedelta(days=1)
+        else:
+            # Schedule for immediate posting
+            next_post_time = current_time + timedelta(minutes=5)
+        
+        return True, next_post_time
+    
+    # Calculate when the next post should be scheduled
+    last_posted_time = last_posted_blog.created_at.astimezone(tz)
+    next_scheduled_time = last_posted_time + timedelta(days=days_between_posts)
+    
+    # If preferred time is set, adjust to that time
+    if preferred_time:
+        next_scheduled_time = next_scheduled_time.replace(
+            hour=preferred_time.hour,
+            minute=preferred_time.minute,
+            second=0,
+            microsecond=0
+        )
+    
+    # Check if enough time has passed
+    if current_time >= next_scheduled_time:
+        return True, next_scheduled_time
+    
+    return False, next_scheduled_time
+
+
+def submit_scheduled_blog_post(blog_post_id):
+    """
+    Submit a scheduled blog post to its endpoint and mark it as posted.
+    """
+    try:
+        blog_post = GeneratedBlogPost.objects.get(id=blog_post_id)
+        
+        # Submit the blog post
+        success = blog_post.submit_blog_post_to_endpoint()
+        
+        if success:
+            blog_post.posted = True
+            blog_post.save(update_fields=['posted'])
+            
+            result = f"Successfully submitted blog post '{blog_post.post_title}' for {blog_post.project.name}"
+            logger.info(
+                "Blog post submitted successfully",
+                project_id=blog_post.project.id,
+                project_name=blog_post.project.name,
+                blog_post_id=blog_post.id,
+                blog_post_title=blog_post.post_title
+            )
+            return result
+        else:
+            logger.error(
+                "Failed to submit blog post",
+                project_id=blog_post.project.id,
+                project_name=blog_post.project.name,
+                blog_post_id=blog_post.id,
+                blog_post_title=blog_post.post_title
+            )
+            return f"Failed to submit blog post '{blog_post.post_title}' for {blog_post.project.name}"
+            
+    except GeneratedBlogPost.DoesNotExist:
+        logger.error(
+            "Blog post not found for submission",
+            blog_post_id=blog_post_id
+        )
+        return f"Blog post with ID {blog_post_id} not found"
+    except Exception as e:
+        logger.error(
+            "Error submitting scheduled blog post",
+            error=str(e),
+            blog_post_id=blog_post_id
+        )
+        return f"Error submitting blog post: {str(e)}"
