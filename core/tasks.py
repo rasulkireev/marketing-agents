@@ -226,7 +226,7 @@ def track_event(
 
 
 def track_state_change(
-    profile_id: int, from_state: str, to_state: str, metadata: dict = None
+    profile_id: int, from_state: str, to_state: str, metadata: dict = None, source_function: str = None
 ) -> None:
     from core.models import Profile, ProfileStateTransition
 
