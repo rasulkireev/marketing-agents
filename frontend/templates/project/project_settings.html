@@ -327,7 +327,16 @@
                     <button type="button" data-action="auto-submit-header#addRow" class="px-3 py-1.5 mt-2 text-xs font-semibold text-pink-700 bg-pink-50 rounded-md border border-pink-200 hover:bg-pink-100">Add Field</button>
                     <input type="hidden" name="header" data-auto-submit-header-target="jsonInput">
                   </div>
-                {% elif field.name == "preferred_timezone" %}
+                {% elif field.name == "posts_per_month" %}
+                  <div>
+                    {{ field.errors | safe }}
+                    <label for="{{ field.id_for_label }}" class="block mb-1 text-sm font-medium text-gray-700">{{ field.label }}</label>
+                    {% if field.help_text %}
+                      <p class="mb-1 text-xs text-gray-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% render_field field class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                  </div>
+                <!-- {% elif field.name == "preferred_timezone" %}
                   <div class="flex gap-4">
                     <div class="flex-1">
                       {{ field.errors | safe }}
@@ -346,7 +355,7 @@
                         <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
                       {% endif %}
                     </div>
-                  </div>
+                  </div> -->
                 {% else %}
                   <div>
                     {{ field.errors | safe }}
