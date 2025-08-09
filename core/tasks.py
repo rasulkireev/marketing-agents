@@ -277,6 +277,7 @@ def schedule_blog_post_posting():
     now = timezone.now()
     projects = Project.objects.filter(enable_automatic_post_submission=True)
 
+    scheduled_posts = 0
     for project in projects:
         if not project.has_auto_submission_setting or not project.profile.experimental_features:
             continue
@@ -293,6 +294,9 @@ def schedule_blog_post_posting():
 
         if time_since_last_post_in_seconds > time_between_posts_in_seconds:
             async_task(generate_and_post_blog_post, project.id)
+            scheduled_posts += 1
+
+    return f"Scheduled {scheduled_posts} blog posts"
 
 
 def generate_and_post_blog_post(project_id: int):
