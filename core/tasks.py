@@ -278,7 +278,7 @@ def schedule_blog_post_posting():
     projects = Project.objects.filter(enable_automatic_post_submission=True)
 
     for project in projects:
-        if not project.has_auto_submission_setting:
+        if not project.has_auto_submission_setting or not project.profile.experimental_features:
             continue
 
         last_post_date = project.last_posted_blog_post.date_posted
