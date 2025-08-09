@@ -261,7 +261,9 @@ class Project(BaseModel):
 
     @property
     def last_posted_blog_post(self):
-        return self.generated_blog_posts.filter(posted=True).order_by("-date_posted").first()
+        return self.generated_blog_posts.filter(posted=True, date_posted__isnull=False).latest(
+            "date_posted"
+        )
 
     @property
     def has_pricing_page(self):

@@ -1,13 +1,25 @@
+import calendar
 import json
+import random
 from urllib.parse import unquote
 
 import posthog
 import requests
 from django.conf import settings
+from django.utils import timezone
 from django_q.tasks import async_task
 
 from core.choices import ContentType, KeywordDataSource, ProjectPageType
-from core.models import Competitor, Keyword, Profile, Project, ProjectKeyword, ProjectPage
+from core.models import (
+    BlogPostTitleSuggestion,
+    Competitor,
+    GeneratedBlogPost,
+    Keyword,
+    Profile,
+    Project,
+    ProjectKeyword,
+    ProjectPage,
+)
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -267,4 +279,57 @@ def schedule_blog_post_posting():
         if not project.has_auto_submission_setting:
             continue
 
-        # last_post_date = project.last_posted_blog_post.date_posted
+        now = timezone.now()
+        last_post_date = project.last_posted_blog_post.date_posted
+        time_since_last_post_in_seconds = (now - last_post_date).total_seconds()
+
+        days_in_month = calendar.monthrange(now.year, now.month)[1]
+        time_between_posts_in_seconds = int(
+            days_in_month
+            * 24
+            * 60
+            * 60
+            / project.auto_submission_settings.latest("created_at").posts_per_month
+        )
+
+        if time_since_last_post_in_seconds > time_between_posts_in_seconds:
+            async_task(generate_and_post_blog_post, project.id)
+
+
+def generate_and_post_blog_post(project_id: int):
+    project = Project.objects.get(id=project_id)
+
+    # first see if there are generated blog posts that are not posted yet
+    blog_post_to_post = GeneratedBlogPost.objects.filter(project=project, posted=False)
+
+    # then see if there are blog post title suggestions without generated blog posts
+    if not blog_post_to_post:
+        ungenerated_blog_post_suggestions = BlogPostTitleSuggestion.objects.filter(
+            project=project, generated_blog_posts__isnull=True
+        )
+        if ungenerated_blog_post_suggestions:
+            ungenerated_blog_post_suggestion = ungenerated_blog_post_suggestions.first()
+            blog_post_to_post = ungenerated_blog_post_suggestion.generate_content(
+                content_type=ungenerated_blog_post_suggestion.content_type
+            )
+
+    # if neither, create a new blog post title suggestion, generate the blog post
+    if not blog_post_to_post:
+        content_type = random.choice([choice[0] for choice in ContentType.choices])
+        suggestions = project.generate_title_suggestions(content_type=content_type, num_titles=1)
+        blog_post_to_post = suggestions[0].generate_content(
+            content_type=suggestions[0].content_type
+        )
+
+    # once you have the generated blog post, submit it to the endpoint
+    if blog_post_to_post:
+        result = blog_post_to_post.submit_blog_post_to_endpoint()
+        if result is True:
+            blog_post_to_post.posted = True
+            blog_post_to_post.date_posted = timezone.now()
+            blog_post_to_post.save(update_fields=["posted", "date_posted"])
+            return f"Posted blog post for {project.name}"
+        else:
+            return f"Failed to post blog post for {project.name}."
+    else:
+        return f"No blog post to post for {project.name}."
