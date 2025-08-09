@@ -313,7 +313,7 @@ def generate_and_post_blog_post(project_id: int):
         ungenerated_blog_post_suggestions = BlogPostTitleSuggestion.objects.filter(
             project=project, generated_blog_posts__isnull=True
         )
-        if ungenerated_blog_post_suggestions:
+        if ungenerated_blog_post_suggestions.exists():
             ungenerated_blog_post_suggestion = ungenerated_blog_post_suggestions.first()
             blog_post_to_post = ungenerated_blog_post_suggestion.generate_content(
                 content_type=ungenerated_blog_post_suggestion.content_type
