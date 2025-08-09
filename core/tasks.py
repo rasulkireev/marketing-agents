@@ -226,7 +226,10 @@ def track_event(
 
 
 def track_state_change(
-    profile_id: int, from_state: str, to_state: str, metadata: dict = None
+    profile_id: int,
+    from_state: str,
+    to_state: str,
+    metadata: dict = None,
 ) -> None:
     from core.models import Profile, ProfileStateTransition
 
@@ -256,3 +259,12 @@ def track_state_change(
         profile.save(update_fields=["state"])
 
     return f"Tracked state change from {from_state} to {to_state} for profile {profile_id}"
+
+
+def schedule_blog_post_posting():
+    projects = Project.objects.filter(enable_automatic_post_submission=True)
+    for project in projects:
+        if not project.has_auto_submission_setting:
+            continue
+
+        # last_post_date = project.last_posted_blog_post.date_posted

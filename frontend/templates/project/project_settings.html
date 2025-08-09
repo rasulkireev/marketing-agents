@@ -269,10 +269,39 @@
       <div id="blogging-agent-settings" class="mt-16">
         <div class="p-8 bg-white rounded-2xl border shadow-sm border-gray-200/80">
           <h2 class="mb-4 text-xl font-bold text-gray-900">Blogging Agent</h2>
+
+          <h3 class="mb-4 text-lg font-semibold text-gray-900">Automatic Submission Configuration</h3>
+
+          <!-- Automatic Post Submission Toggle -->
+          <div
+            data-controller="auto-submission-toggle"
+            data-auto-submission-toggle-project-id-value="{{ project.id }}"
+            data-auto-submission-toggle-enabled-value="{{ project.enable_automatic_post_submission|lower }}"
+            class=""
+          >
+            <div class="flex justify-between items-center">
+              <p class="max-w-prose text-lg font-semibold text-gray-600">
+                Enable
+              </p>
+              <button
+              type="button"
+              data-action="auto-submission-toggle#toggle"
+              data-auto-submission-toggle-target="toggle"
+              class="inline-flex relative items-center w-11 h-6 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500"
+              role="switch"
+              aria-checked="{{ project.enable_automatic_post_submission|lower }}"
+              >
+              <span
+                  data-auto-submission-toggle-target="switch"
+                  class="inline-block w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out transform"
+                ></span>
+              </button>
+            </div>
+          </div>
+
           <!-- Automatic Submission Form -->
-          <form method="post" class="mt-10 space-y-8" data-controller="auto-submit-body">
+          <form method="post" class="space-y-8" data-controller="auto-submit-body">
             {% csrf_token %}
-            <h3 class="mb-4 text-lg font-semibold text-gray-900">Automatic Submission</h3>
             {{ auto_submission_settings_form.non_field_errors | safe }}
             <div class="space-y-6">
               {% for field in auto_submission_settings_form.visible_fields %}
