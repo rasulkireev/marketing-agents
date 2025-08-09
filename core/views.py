@@ -273,6 +273,7 @@ class ProjectSettingsView(LoginRequiredMixin, DetailView):
             form = AutoSubmissionSettingForm()
         context["auto_submission_settings_form"] = form
         context["languages"] = Language.choices
+
         return context
 
     def post(self, request, *args, **kwargs):

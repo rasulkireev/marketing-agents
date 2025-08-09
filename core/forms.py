@@ -74,8 +74,8 @@ class AutoSubmissionSettingForm(forms.ModelForm):
             "body",
             "header",
             "posts_per_month",
-            "preferred_timezone",
-            "preferred_time",
+            # "preferred_timezone",
+            # "preferred_time",
         ]
 
     def clean_body(self):
@@ -87,4 +87,4 @@ class AutoSubmissionSettingForm(forms.ModelForm):
         try:
             return json.loads(data) if data else {}
         except Exception:
-            raise forms.ValidationError("Invalid JSON for request body.")
+            raise

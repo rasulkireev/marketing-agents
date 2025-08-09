@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from ninja import NinjaAPI
-from ninja.errors import HttpError
 
 from core.api.auth import MultipleAuthSchema
 from core.api.schemas import (
@@ -22,6 +22,7 @@ from core.api.schemas import (
     ProjectScanIn,
     ProjectScanOut,
     SubmitFeedbackIn,
+    ToggleAutoSubmissionOut,
     ToggleProjectKeywordUseIn,
     ToggleProjectKeywordUseOut,
     UpdateArchiveStatusIn,
@@ -114,16 +115,25 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
     try:
         content_type = ContentType[data.content_type]
     except KeyError:
-        return {"suggestions": [], "status": "error", "message": f"Invalid content type: {data.content_type}"}
-
-    if profile.number_of_title_suggestions + data.num_titles >= 20 and not profile.has_active_subscription:
         return {
             "suggestions": [],
             "status": "error",
-            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+            "message": f"Invalid content type: {data.content_type}",
         }
 
-    suggestions = project.generate_title_suggestions(content_type=content_type, num_titles=data.num_titles)
+    if (
+        profile.number_of_title_suggestions + data.num_titles >= 20
+        and not profile.has_active_subscription
+    ):
+        return {
+            "suggestions": [],
+            "status": "error",
+            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",  # noqa: E501
+        }
+
+    suggestions = project.generate_title_suggestions(
+        content_type=content_type, num_titles=data.num_titles
+    )
 
     return {"suggestions": suggestions, "status": "success", "message": ""}
 
@@ -136,7 +146,7 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
     if profile.reached_title_generation_limit:
         return {
             "status": "error",
-            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+            "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",  # noqa: E501
         }
 
     try:
@@ -169,20 +179,25 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
 
     except Exception as e:
         logger.error(
-            "Failed to generate title from idea", error=str(e), project_id=project.id, user_prompt=data.user_prompt
+            "Failed to generate title from idea",
+            error=str(e),
+            project_id=project.id,
+            user_prompt=data.user_prompt,
         )
-        raise ValueError(f"Failed to generate title: {str(e)}")
+        raise e
 
 
 @api.post("/generate-blog-content/{suggestion_id}", response=GeneratedContentOut)
 def generate_blog_content(request: HttpRequest, suggestion_id: int):
     profile = request.auth
-    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+    suggestion = get_object_or_404(
+        BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile
+    )
 
     if profile.reached_content_generation_limit:
         return {
             "status": "error",
-            "message": "Content generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",
+            "message": "Content generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",  # noqa: E501
         }
 
     try:
@@ -202,7 +217,10 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
 
     except ValueError as e:
         logger.error(
-            "Failed to generate blog content", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id
+            "Failed to generate blog content",
+            error=str(e),
+            suggestion_id=suggestion_id,
+            profile_id=profile.id,
         )
         return {"status": "error", "message": str(e)}
     except Exception as e:
@@ -213,7 +231,10 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
             suggestion_id=suggestion_id,
             profile_id=profile.id,
         )
-        return {"status": "error", "message": "An unexpected error occurred. Please try again later."}
+        return {
+            "status": "error",
+            "message": "An unexpected error occurred. Please try again later.",
+        }
 
 
 @api.post("/projects/{project_id}/update", response={200: dict})
@@ -237,10 +258,23 @@ def update_project(request: HttpRequest, project_id: int):
     return {"status": "success"}
 
 
+@api.post("/projects/{project_id}/toggle-auto-submission", response=ToggleAutoSubmissionOut)
+def toggle_auto_submission(request: HttpRequest, project_id: int):
+    profile = request.auth
+    project = get_object_or_404(Project, id=project_id, profile=profile)
+
+    project.enable_automatic_post_submission = not project.enable_automatic_post_submission
+    project.save(update_fields=["enable_automatic_post_submission"])
+
+    return {"status": "success", "enabled": project.enable_automatic_post_submission}
+
+
 @api.post("/update-title-score/{suggestion_id}", response={200: dict})
 def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTitleScoreIn):
     profile = request.auth
-    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+    suggestion = get_object_or_404(
+        BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile
+    )
 
     if data.score not in [-1, 0, 1]:
         return {"status": "error", "message": "Invalid score value. Must be -1, 0, or 1"}
@@ -252,14 +286,21 @@ def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTit
         return {"status": "success", "message": "Score updated successfully"}
 
     except Exception as e:
-        logger.error("Failed to update title score", error=str(e), suggestion_id=suggestion_id, profile_id=profile.id)
+        logger.error(
+            "Failed to update title score",
+            error=str(e),
+            suggestion_id=suggestion_id,
+            profile_id=profile.id,
+        )
         return {"status": "error", "message": f"Failed to update score: {str(e)}"}
 
 
 @api.post("/suggestions/{suggestion_id}/archive-status", response={200: dict})
 def update_archive_status(request: HttpRequest, suggestion_id: int, data: UpdateArchiveStatusIn):
     profile = request.auth
-    suggestion = get_object_or_404(BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile)
+    suggestion = get_object_or_404(
+        BlogPostTitleSuggestion, id=suggestion_id, project__profile=profile
+    )
 
     try:
         suggestion.archived = data.archived
@@ -280,7 +321,9 @@ def add_pricing_page(request: HttpRequest, data: AddPricingPageIn):
     profile = request.auth
     project = Project.objects.get(id=data.project_id, profile=profile)
 
-    project_page = ProjectPage.objects.create(project=project, url=data.url, type=ProjectPageType.PRICING)
+    project_page = ProjectPage.objects.create(
+        project=project, url=data.url, type=ProjectPageType.PRICING
+    )
 
     project_page.get_page_content()
     project_page.analyze_content()
@@ -294,9 +337,13 @@ def create_pricing_strategy(request: HttpRequest, data: CreatePricingStrategyIn)
     profile = request.auth
     project = Project.objects.get(id=data.project_id, profile=profile)
 
-    project_page = ProjectPage.objects.filter(project=project, type=ProjectPageType.PRICING).latest("id")
+    project_page = ProjectPage.objects.filter(project=project, type=ProjectPageType.PRICING).latest(
+        "id"
+    )
 
-    project_page.create_new_pricing_strategy(strategy_name=data.strategy_name, user_prompt=data.user_prompt)
+    project_page.create_new_pricing_strategy(
+        strategy_name=data.strategy_name, user_prompt=data.user_prompt
+    )
 
     return {"status": "success", "message": "Pricing page added successfully"}
 
@@ -314,7 +361,9 @@ def add_competitor(request: HttpRequest, data: AddCompetitorIn):
             project=project,
             name=data.name if hasattr(data, "name") and data.name else "Unknown Competitor",
             url=data.url,
-            description=data.description if hasattr(data, "description") and data.description else "",
+            description=data.description
+            if hasattr(data, "description") and data.description
+            else "",
         )
 
         got_content = competitor.get_page_content()
@@ -322,7 +371,10 @@ def add_competitor(request: HttpRequest, data: AddCompetitorIn):
 
         if not got_content or not got_name_and_description:
             competitor.delete()
-            return {"status": "error", "message": "Failed to get page content for this competitor URL"}
+            return {
+                "status": "error",
+                "message": "Failed to get page content for this competitor URL",
+            }
 
         analyzed = competitor.analyze_competitor()
 
@@ -349,7 +401,13 @@ def add_competitor(request: HttpRequest, data: AddCompetitorIn):
         }
 
     except Exception as e:
-        logger.error("Failed to add competitor", error=str(e), exc_info=True, project_id=project.id, url=data.url)
+        logger.error(
+            "Failed to add competitor",
+            error=str(e),
+            exc_info=True,
+            project_id=project.id,
+            url=data.url,
+        )
         return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}
 
 
@@ -387,7 +445,7 @@ def user_settings(request: HttpRequest, project_id: int):
             profile_id=profile.id,
             exc_info=True,
         )
-        raise HttpError(500, "An unexpected error occurred.")
+        raise
 
 
 @api.post("/keywords/add", response=AddKeywordOut)
@@ -404,7 +462,9 @@ def add_keyword_to_project(request: HttpRequest, data: AddKeywordIn):
             keyword_text=keyword_text_cleaned,
         )
 
-        project_keyword, pk_created = ProjectKeyword.objects.get_or_create(project=project, keyword=keyword)
+        project_keyword, pk_created = ProjectKeyword.objects.get_or_create(
+            project=project, keyword=keyword
+        )
 
         if created:
             metrics_fetched = keyword.fetch_and_update_metrics()
@@ -428,9 +488,12 @@ def add_keyword_to_project(request: HttpRequest, data: AddKeywordIn):
             "competition": keyword.competition,
             "country": keyword.country,
             "data_source": keyword.data_source,
-            "last_fetched_at": keyword.last_fetched_at.isoformat() if keyword.last_fetched_at else None,
+            "last_fetched_at": keyword.last_fetched_at.isoformat()
+            if keyword.last_fetched_at
+            else None,
             "trend_data": [
-                {"value": trend.value, "month": trend.month, "year": trend.year} for trend in keyword.trends.all()
+                {"value": trend.value, "month": trend.month, "year": trend.year}
+                for trend in keyword.trends.all()
             ],
         }
 
@@ -456,7 +519,9 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
     profile = request.auth
     try:
         project = get_object_or_404(Project, id=data.project_id, profile=profile)
-        project_keyword = get_object_or_404(ProjectKeyword, project=project, keyword_id=data.keyword_id)
+        project_keyword = get_object_or_404(
+            ProjectKeyword, project=project, keyword_id=data.keyword_id
+        )
         project_keyword.use = not project_keyword.use
         project_keyword.save(update_fields=["use"])
         return ToggleProjectKeywordUseOut(status="success", use=project_keyword.use)
@@ -504,7 +569,8 @@ def post_generated_blog_post(request: HttpRequest, data: PostGeneratedBlogPostIn
         result = generated_post.submit_blog_post_to_endpoint()
         if result is True:
             generated_post.posted = True
-            generated_post.save(update_fields=["posted"])
+            generated_post.date_posted = timezone.now()
+            generated_post.save(update_fields=["posted", "date_posted"])
             return {"status": "success", "message": "Blog post published!"}
         else:
             return {"status": "error", "message": "Failed to post blog."}

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from ninja import Schema
 
 from core.choices import BlogPostStatus, ContentType
@@ -66,12 +64,12 @@ class GenerateTitleSuggestionsOut(Schema):
 
 class GeneratedContentOut(Schema):
     status: str = "success"
-    message: Optional[str] = None
-    content: Optional[str] = None
-    slug: Optional[str] = None
-    tags: Optional[str] = None
-    description: Optional[str] = None
-    id: Optional[int] = None
+    message: str | None = None
+    content: str | None = None
+    slug: str | None = None
+    tags: str | None = None
+    description: str | None = None
+    id: int | None = None
 
 
 class UpdateTitleScoreIn(Schema):
@@ -96,27 +94,27 @@ class CreatePricingStrategyIn(Schema):
 class AddCompetitorIn(Schema):
     project_id: int
     url: str
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
 
 
 class CompetitorAnalysisOut(Schema):
     status: str
-    message: Optional[str] = None
-    competitor_id: Optional[int] = None
-    name: Optional[str] = None
-    url: Optional[str] = None
-    description: Optional[str] = None
-    summary: Optional[str] = None
-    competitor_analysis: Optional[str] = None
-    key_differences: Optional[str] = None
-    strengths: Optional[str] = None
-    weaknesses: Optional[str] = None
-    opportunities: Optional[str] = None
-    threats: Optional[str] = None
-    key_features: Optional[str] = None
-    key_benefits: Optional[str] = None
-    key_drawbacks: Optional[str] = None
+    message: str | None = None
+    competitor_id: int | None = None
+    name: str | None = None
+    url: str | None = None
+    description: str | None = None
+    summary: str | None = None
+    competitor_analysis: str | None = None
+    key_differences: str | None = None
+    strengths: str | None = None
+    weaknesses: str | None = None
+    opportunities: str | None = None
+    threats: str | None = None
+    key_features: str | None = None
+    key_benefits: str | None = None
+    key_drawbacks: str | None = None
 
 
 class SubmitFeedbackIn(Schema):
@@ -132,20 +130,20 @@ class AddKeywordIn(Schema):
 class KeywordMetricsOut(Schema):
     id: int
     keyword_text: str
-    volume: Optional[int] = None
-    cpc_currency: Optional[str] = None
-    cpc_value: Optional[float] = None  # Using float for schema, Decimal in model
-    competition: Optional[float] = None
-    country: Optional[str] = None
-    data_source: Optional[str] = None
-    last_fetched_at: Optional[str] = None  # datetime converted to str
-    trend_data: Optional[list[dict]] = None
+    volume: int | None = None
+    cpc_currency: str | None = None
+    cpc_value: float | None = None  # Using float for schema, Decimal in model
+    competition: float | None = None
+    country: str | None = None
+    data_source: str | None = None
+    last_fetched_at: str | None = None  # datetime converted to str
+    trend_data: list[dict] | None = None
 
 
 class AddKeywordOut(Schema):
     status: str
-    message: Optional[str] = None
-    keyword: Optional[KeywordMetricsOut] = None
+    message: str | None = None
+    keyword: KeywordMetricsOut | None = None
 
 
 class ToggleProjectKeywordUseIn(Schema):
@@ -155,8 +153,8 @@ class ToggleProjectKeywordUseIn(Schema):
 
 class ToggleProjectKeywordUseOut(Schema):
     status: str
-    message: Optional[str] = None
-    use: Optional[bool] = None
+    message: str | None = None
+    use: bool | None = None
 
 
 class BlogPostIn(Schema):
@@ -165,8 +163,8 @@ class BlogPostIn(Schema):
     slug: str
     tags: str = ""
     content: str
-    icon: Optional[str] = None  # URL or base64 string
-    image: Optional[str] = None  # URL or base64 string
+    icon: str | None = None  # URL or base64 string
+    image: str | None = None  # URL or base64 string
     status: BlogPostStatus = BlogPostStatus.DRAFT
 
 
@@ -182,3 +180,9 @@ class PostGeneratedBlogPostIn(Schema):
 class PostGeneratedBlogPostOut(Schema):
     status: str
     message: str
+
+
+class ToggleAutoSubmissionOut(Schema):
+    status: str
+    enabled: bool
+    message: str = ""

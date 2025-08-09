@@ -58,6 +58,7 @@ logger = get_seo_blog_bot_logger(__name__)
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     key = models.CharField(max_length=10, unique=True, default=generate_random_key)
+    experimental_features = models.BooleanField(default=False)
 
     subscription = models.ForeignKey(
         "djstripe.Subscription",
@@ -191,6 +192,10 @@ class Project(BaseModel):
     type = models.CharField(max_length=50, choices=ProjectType.choices, default=ProjectType.SAAS)
     summary = models.TextField(blank=True)
 
+    # Agent Settings
+    enable_automatic_post_submission = models.BooleanField(default=False)
+    enable_automatic_post_generation = models.BooleanField(default=True)
+
     # Content from Jina Reader
     date_scraped = models.DateTimeField(null=True, blank=True)
     title = models.CharField(max_length=500, blank=True, default="")
@@ -236,6 +241,10 @@ class Project(BaseModel):
         )
 
     @property
+    def title_suggestions(self):
+        return self.blog_post_title_suggestions.all()
+
+    @property
     def liked_title_suggestions(self):
         return self.blog_post_title_suggestions.filter(user_score__gt=0).all()
 
@@ -246,6 +255,16 @@ class Project(BaseModel):
     @property
     def neutral_title_suggestions(self):
         return self.blog_post_title_suggestions.filter(user_score=0).all()
+
+    @property
+    def generated_blog_posts(self):
+        return self.generated_blog_posts.all()
+
+    @property
+    def last_posted_blog_post(self):
+        return self.generated_blog_posts.filter(posted=True, date_posted__isnull=False).latest(
+            "date_posted"
+        )
 
     @property
     def has_pricing_page(self):
@@ -670,15 +689,6 @@ class BlogPostTitleSuggestion(BaseModel):
         )
 
     def generate_content(self, content_type=ContentType.SHARING):
-        """
-        Generate blog post content based on the title suggestion and content type.
-
-        Args:
-            content_type: The type of content to generate (SEO or SHARING)
-
-        Returns:
-            The generated blog post
-        """
         agent = Agent(
             "google-gla:gemini-2.5-flash",
             output_type=BlogPostContent,
@@ -769,10 +779,20 @@ class BlogPostTitleSuggestion(BaseModel):
         @agent.system_prompt
         def post_structure() -> str:
             return """
-                - Don't include blogpost title in the content.
+                - Don't include blogpost title in the content. Start with the content.
                 - Don't start with a header or a subheader.
                   Start with plain text as intro, then add subheaders as you see fit.
             """
+
+        @agent.system_prompt
+        def filler_content() -> str:
+            return """
+                - Do not add content that needs to be filled in later.
+                - No placeholders either. This means no:
+                  - Image Suggestion: [Image]
+                  - Link Suggestion: [Link]
+                  ...
+             """
 
         project_pages = [
             ProjectPageContext(
@@ -862,6 +882,7 @@ class GeneratedBlogPost(BaseModel):
     image = models.ImageField(upload_to="blog_post_images/", blank=True)
 
     posted = models.BooleanField(default=False)
+    date_posted = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.project.name}: {self.title.title}"
