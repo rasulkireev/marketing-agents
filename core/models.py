@@ -58,6 +58,7 @@ logger = get_seo_blog_bot_logger(__name__)
 class Profile(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     key = models.CharField(max_length=10, unique=True, default=generate_random_key)
+    experimental_features = models.BooleanField(default=False)
 
     subscription = models.ForeignKey(
         "djstripe.Subscription",

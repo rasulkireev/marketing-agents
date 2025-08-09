@@ -274,12 +274,13 @@ def track_state_change(
 
 
 def schedule_blog_post_posting():
+    now = timezone.now()
     projects = Project.objects.filter(enable_automatic_post_submission=True)
+
     for project in projects:
         if not project.has_auto_submission_setting:
             continue
 
-        now = timezone.now()
         last_post_date = project.last_posted_blog_post.date_posted
         time_since_last_post_in_seconds = (now - last_post_date).total_seconds()
 
