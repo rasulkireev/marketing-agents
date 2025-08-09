@@ -284,6 +284,11 @@ def schedule_blog_post_posting():
         if not project.has_auto_submission_setting or not project.profile.experimental_features:
             continue
 
+        if not project.last_posted_blog_post:
+            async_task(generate_and_post_blog_post, project.id)
+            scheduled_posts += 1
+            continue
+
         last_post_date = project.last_posted_blog_post.date_posted
         time_since_last_post_in_seconds = (now - last_post_date).total_seconds()
 

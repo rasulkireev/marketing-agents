@@ -19,3 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Fixed**
 - `last_posted_blog_post` fixed when don't exist
+- Schedule post if there are no posts from the past
