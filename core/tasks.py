@@ -303,7 +303,10 @@ def generate_and_post_blog_post(project_id: int):
     project = Project.objects.get(id=project_id)
 
     # first see if there are generated blog posts that are not posted yet
-    blog_post_to_post = GeneratedBlogPost.objects.filter(project=project, posted=False)
+    blog_posts_to_post = GeneratedBlogPost.objects.filter(project=project, posted=False)
+
+    if blog_posts_to_post.exists():
+        blog_post_to_post = blog_posts_to_post.first()
 
     # then see if there are blog post title suggestions without generated blog posts
     if not blog_post_to_post:
