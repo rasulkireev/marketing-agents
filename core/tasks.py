@@ -286,9 +286,7 @@ def schedule_blog_post_posting():
         days_in_month = calendar.monthrange(now.year, now.month)[1]
         time_between_posts_in_seconds = int(
             days_in_month
-            * 24
-            * 60
-            * 60
+            * (24 * 60 * 60)
             / project.auto_submission_settings.latest("created_at").posts_per_month
         )
 
