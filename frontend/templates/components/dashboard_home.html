@@ -2,27 +2,33 @@
 
 <div data-controller="scan-progress">
   <div class="mx-auto max-w-md text-center">
-    <h2 class="mb-2 text-2xl font-bold text-gray-900 animate-fade-in">Ready to create content? ✨</h2>
-    <p class="mb-6 text-base text-gray-600 animate-fade-in-delay">
-      Enter your project's homepage URL below. We'll analyze it to generate relevant blog post ideas for your audience. 🚀
-    </p>
+    <button data-action="click->scan-progress#toggleForm" data-scan-progress-target="addButton" class="px-6 py-3 text-sm font-medium text-white bg-gray-800 rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+      Add project
+    </button>
   </div>
-  <form data-action="submit->scan-progress#handleSubmit" class="mx-auto max-w-md animate-slide-up">
+  <form data-action="submit->scan-progress#handleSubmit" data-scan-progress-target="form" class="hidden mx-auto mt-6 max-w-md animate-slide-up">
     {% csrf_token %}
+    <div class="mb-4 text-center">
+      <p class="text-sm text-gray-600">
+        Enter your project's homepage URL. We'll analyze it to generate relevant blog post ideas.
+      </p>
+    </div>
     <div class="flex gap-x-4">
-      {% render_field form.url class="flex-auto px-3.5 py-2.5 min-w-0 text-gray-900 rounded-lg border-0 ring-2 ring-inset ring-pink-200 shadow-md transition-all duration-300 ease-in-out placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-500 hover:ring-pink-300 sm:text-sm sm:leading-6" placeholder="Enter your website URL" %}
-      <button type="submit" class="flex-none px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:from-pink-600 hover:to-purple-700 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+      {% render_field form.url class="flex-auto px-3.5 py-2.5 min-w-0 text-gray-900 rounded-md border border-gray-300 shadow-sm transition-all duration-200 ease-in-out placeholder:text-gray-400 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 hover:border-gray-400 sm:text-sm sm:leading-6" placeholder="Enter your website URL" %}
+      <button type="submit" class="flex-none px-4 py-2.5 text-sm font-medium text-white bg-gray-800 rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
         <span>Scan</span>
-        <span class="ml-1">🔍</span>
       </button>
     </div>
+    <button type="button" data-action="click->scan-progress#toggleForm" class="mt-2 text-xs text-gray-500 hover:text-gray-700">
+      Cancel
+    </button>
 
     <!-- Progress Indicators -->
     <div data-scan-progress-target="progress" class="hidden mt-8">
       <div class="space-y-6">
         <!-- Project Details -->
-        <div class="flex gap-x-4 items-center p-4 rounded-lg border border-pink-100 shadow-sm backdrop-blur-sm transition-all duration-300 bg-white/50">
-          <div data-scan-progress-target="detailsSpinner" class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-pink-600"></div>
+        <div class="flex gap-x-4 items-center p-4 bg-white rounded-md border border-gray-200 shadow-sm transition-all duration-300">
+          <div data-scan-progress-target="detailsSpinner" class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-gray-600"></div>
           <div data-scan-progress-target="detailsCheck" class="hidden text-green-500">
             <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
@@ -33,20 +39,20 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           </div>
-          <span class="font-medium text-gray-700">Analyzing website content... 🔎</span>
+          <span class="font-medium text-gray-700">Analyzing website content...</span>
         </div>
         <!-- Blog Suggestions / Background Tasks -->
-        <div data-scan-progress-target="backgroundTasks" class="flex hidden items-start p-6 mt-4 w-full rounded-2xl border-2 border-pink-200 shadow-2xl opacity-0 backdrop-blur-lg transition-transform duration-500 ease-out translate-x-full pointer-events-none bg-white/90">
+        <div data-scan-progress-target="backgroundTasks" class="flex hidden items-start p-6 mt-4 w-full bg-white rounded-lg border border-gray-200 shadow-lg opacity-0 transition-transform duration-500 ease-out translate-x-full pointer-events-none">
           <div class="flex-shrink-0 mr-4">
-            <span class="inline-flex justify-center items-center w-10 h-10 text-2xl text-white bg-gradient-to-br from-pink-500 to-purple-500 rounded-full shadow-lg">✨</span>
+            <span class="inline-flex justify-center items-center w-10 h-10 text-sm font-semibold text-white bg-gray-700 rounded-full shadow-sm">AI</span>
           </div>
           <div class="w-full text-left">
             <h3 class="mb-1 text-lg font-bold text-gray-900">We're working in the background!</h3>
             <p class="mb-2 text-sm text-gray-700">You'll see updates in your project shortly. Here's what we're doing:</p>
             <ul class="pl-4 space-y-1 text-sm list-disc list-inside text-gray-700">
-              <li><span class="font-medium">Generating blog post suggestions</span> ✍️</li>
-              <li><span class="font-medium">Coming up with keywords that will work best for your project</span> 🔑</li>
-              <li><span class="font-medium">Analyzing competitors</span> 🕵️‍♂️</li>
+              <li><span class="font-medium">Generating blog post suggestions</span></li>
+              <li><span class="font-medium">Coming up with keywords that will work best for your project</span></li>
+              <li><span class="font-medium">Analyzing competitors</span></li>
             </ul>
           </div>
         </div>
@@ -54,53 +60,25 @@
     </div>
 
     <!-- Results Button -->
-    <a href="#" data-scan-progress-target="resultsButton" class="inline-flex hidden justify-center px-6 py-3 mt-8 w-full text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg border border-transparent shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
-      Show Results ✨
+    <a href="#" data-scan-progress-target="resultsButton" class="inline-flex hidden justify-center px-6 py-3 mt-8 w-full text-sm font-medium text-white bg-gray-800 rounded-md border border-transparent shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+      Show Results
     </a>
   </form>
 
   <div class="px-6 mx-auto mt-12 max-w-7xl lg:px-8">
     <div class="mx-auto max-w-2xl">
-      <h2 class="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600">Your Projects ⭐</h2>
+      <h2 class="text-2xl font-bold tracking-tight text-gray-900">Your Projects</h2>
 
       <div class="mt-8 space-y-8" data-scan-progress-target="projectsList">
         {% if projects %}
           {% for project_data in projects %}
-            <div class="overflow-hidden p-4 rounded-xl border border-pink-100 shadow-lg backdrop-blur-sm transition-all duration-300 transform md:p-8 bg-white/90 hover:shadow-xl hover:border-pink-200 hover:-translate-y-1">
-              <!-- Project Content -->
-              <div class="flex flex-col h-full">
-                <!-- Header -->
-                <div class="flex flex-col gap-x-3 items-center space-y-2 md:flex-row">
-                  <h3 class="text-2xl font-bold text-gray-900">
-                    {% if project_data.project.name %}
-                      {{ project_data.project.name }}
-                    {% else %}
-                      {{ project_data.project.url }}
-                    {% endif %}
-                  </h3>
-                  <span class="px-2.5 py-1 text-xs font-semibold text-pink-700 bg-pink-50 rounded-full ring-1 ring-inset ring-pink-600/20">
-                    {{ project_data.project.get_type_display }}
-                  </span>
-                </div>
-
-                <!-- Summary -->
-                {% if project_data.project.summary %}
-                  <p class="mt-4 text-sm text-left text-gray-600 line-clamp-4">{{ project_data.project.summary }}</p>
-                {% endif %}
-
-                <!-- View Details Button (pushed to bottom) -->
-                <div class="flex justify-center pt-6 mt-auto md:justify-end">
-                  <a href="{% url 'project_detail' project_data.project.id %}"
-                     class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg shadow-sm transition-all duration-300 hover:from-pink-600 hover:to-purple-700">
-                    View details →
-                  </a>
-                </div>
-              </div>
-            </div>
+            {% with project=project_data.project %}
+              {% include 'components/project_information_card.html' %}
+            {% endwith %}
           {% endfor %}
         {% else %}
-          <div data-empty-state class="p-8 text-center rounded-xl border border-pink-100 shadow-md backdrop-blur-sm bg-white/90">
-            <p class="text-sm text-gray-500">No projects yet. Add your first project above! 🎯</p>
+          <div data-empty-state class="p-8 text-center bg-white rounded-lg border border-gray-200 shadow-sm">
+            <p class="text-sm text-gray-500">No projects yet. Add your first project above!</p>
           </div>
         {% endif %}
       </div>

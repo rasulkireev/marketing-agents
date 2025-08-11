@@ -107,7 +107,7 @@
             </h4>
             <div data-archived-list-target="list" class="mt-4 space-y-8" data-title-suggestions-target="activeSuggestionsList">
                 {% for suggestion in active_suggestions %}
-                    {% include "components/blog_suggestion.html" with suggestion=suggestion %}
+                    {% include "components/blog_post_suggestion_card.html" with suggestion=suggestion %}
                 {% endfor %}
             </div>
         </div>
@@ -120,7 +120,7 @@
             </h4>
             <div data-archived-list-target="list" class="hidden mt-4 space-y-8">
                 {% for suggestion in posted_suggestions %}
-                    {% include "components/blog_suggestion.html" with suggestion=suggestion %}
+                    {% include "components/blog_post_suggestion_card.html" with suggestion=suggestion %}
                 {% endfor %}
             </div>
         </div>
@@ -133,7 +133,7 @@
             </h4>
             <div data-archived-list-target="list" class="hidden mt-4 space-y-8">
                 {% for suggestion in archived_suggestions %}
-                    {% include "components/blog_suggestion.html" with suggestion=suggestion %}
+                    {% include "components/blog_post_suggestion_card.html" with suggestion=suggestion %}
                 {% endfor %}
             </div>
         </div>

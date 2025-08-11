@@ -21,6 +21,7 @@ from core.models import (
     AutoSubmissionSetting,
     BlogPost,
     Competitor,
+    GeneratedBlogPost,
     PricingPageUpdatesSuggestion,
     Profile,
     Project,
@@ -73,6 +74,7 @@ class HomeView(TemplateView):
             for project in projects:
                 project_stats = {
                     "project": project,
+                    "posted_posts_count": project.generated_blog_posts.filter(posted=True).count(),
                 }
                 projects_with_stats.append(project_stats)
 
@@ -248,8 +250,34 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        project = self.object
+
         context["has_content_access"] = self.request.user.profile.has_active_subscription
-        context["has_pricing_page"] = self.object.has_pricing_page
+        context["has_pricing_page"] = project.has_pricing_page
+
+        all_suggestions = project.blog_post_title_suggestions.all().prefetch_related(
+            "generated_blog_posts"
+        )
+
+        posted_suggestions_ids = {
+            s.id for s in all_suggestions if s.generated_blog_posts.filter(posted=True).exists()
+        }
+
+        context["posted_suggestions"] = [
+            s for s in all_suggestions if s.id in posted_suggestions_ids
+        ]
+        context["archived_suggestions"] = [
+            s for s in all_suggestions if s.archived and s.id not in posted_suggestions_ids
+        ]
+        context["active_suggestions"] = [
+            s for s in all_suggestions if not s.archived and s.id not in posted_suggestions_ids
+        ]
+
+        context["has_pro_subscription"] = self.request.user.profile.has_active_subscription
+        context["has_auto_submission_setting"] = AutoSubmissionSetting.objects.filter(
+            project=project
+        ).exists()
+
         return context
 
 
@@ -415,3 +443,13 @@ class CompetitorAnalysisAgentView(LoginRequiredMixin, DetailView):
             context["competitors"] = None
 
         return context
+
+
+class GeneratedBlogPostDetailView(LoginRequiredMixin, DetailView):
+    model = GeneratedBlogPost
+    template_name = "blog/generated_blog_post_detail.html"
+    context_object_name = "generated_post"
+
+    def get_queryset(self):
+        # Ensure users can only see blog posts from their own projects
+        return GeneratedBlogPost.objects.filter(project__profile=self.request.user.profile)

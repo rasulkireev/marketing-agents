@@ -77,4 +77,4 @@ This is demonstrated in `[archived_list_controller.js](mdc:frontend/src/controll
 
 With this event-based approach, the HTML becomes cleaner. There's no need for `data-*-outlet` attributes to link the controllers. Each controller is self-contained.
 
-The `archive-suggestion` controller is on an individual suggestion in `[blog_suggestion.html](mdc:frontend/templates/components/blog_suggestion.html)`, while the `archived-list` controllers are on the lists in `[blogging-agent.html](mdc:frontend/templates/agents/blogging-agent.html)`.
+The `archive-suggestion` controller is on an individual suggestion in `[blog_post_suggestion_card.html](mdc:frontend/templates/components/blog_post_suggestion_card.html)`, while the `archived-list` controllers are on the lists in `[blogging-agent.html](mdc:frontend/templates/agents/blogging-agent.html)`.

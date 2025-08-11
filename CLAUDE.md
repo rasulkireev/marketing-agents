@@ -106,6 +106,8 @@ Uses django-q2 for async task processing:
 - Test files in `core/tests/`
 - Run tests with `make test` or `poetry run pytest`
 - Fixtures should be minimal, create test data in-context when possible
+- Don't write or execute tests unless directly told to do so.
+- Don't run npm commands.
 
 ### Key Conventions
 - Follow PEP 8 for Python code style
