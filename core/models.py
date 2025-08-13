@@ -31,7 +31,6 @@ from core.model_utils import (
 )
 from core.prompts import (
     GENERATE_CONTENT_SYSTEM_PROMPTS,
-    PRICING_PAGE_STRATEGY_SYSTEM_PROMPT,
     TITLE_SUGGESTION_SYSTEM_PROMPTS,
 )
 from core.schemas import (
@@ -40,8 +39,6 @@ from core.schemas import (
     CompetitorAnalysis,
     CompetitorAnalysisContext,
     CompetitorDetails,
-    PricingPageStrategyContext,
-    PricingPageStrategySuggestion,
     ProjectDetails,
     ProjectPageContext,
     ProjectPageDetails,
@@ -1043,103 +1040,6 @@ class ProjectPage(BaseModel):
 
         return True
 
-    def create_new_pricing_strategy(
-        self, strategy_name: str = "Alex Hormozi", user_prompt: str = ""
-    ):
-        agent = Agent(
-            "google-gla:gemini-2.5-flash",
-            output_type=PricingPageStrategySuggestion,
-            deps_type=PricingPageStrategyContext,
-            system_prompt=PRICING_PAGE_STRATEGY_SYSTEM_PROMPT[strategy_name],
-            retries=2,
-        )
-
-        @agent.system_prompt
-        def add_webpage_content(ctx: RunContext[PricingPageStrategyContext]) -> str:
-            return f"Pricing page content:Content: {ctx.deps.web_page_content.markdown_content}"
-
-        @agent.system_prompt
-        def add_project_context(ctx: RunContext[PricingPageStrategyContext]) -> str:
-            return f"""
-                Project Context:
-                - Project Name: {self.project.name}
-                - Project Type: {self.project.type}
-                - Project Summary: {self.project.summary}
-                - Target Audience: {self.project.target_audience_summary}
-                - Key Features: {self.project.key_features}
-                - Pain Points: {self.project.pain_points}
-            """
-
-        @agent.system_prompt
-        def actionable_advice() -> str:
-            return """
-                IMPORTANT:
-                - Provide actionable advice that can be implemented immediately.
-                - Avoid vague suggestions that are not actionable.
-                - Focus on the specific needs and challenges of the target audience.
-            """
-
-        @agent.system_prompt
-        def markdown_formatting() -> str:
-            return """
-                IMPORTANT: Make sure the output is valid markdown.
-            """
-
-        @agent.system_prompt
-        def add_user_prompt(ctx: RunContext[PricingPageStrategyContext]) -> str:
-            if not ctx.deps.user_prompt:
-                return ""
-
-            return f"""
-                IMPORTANT USER REQUEST!
-                The user has specifically requested to focus on the following:
-                "{ctx.deps.user_prompt}"
-            """
-
-        result = run_agent_synchronously(
-            agent,
-            "Please analyze this pricing page and suggest a new pricing strategy.",
-            deps=PricingPageStrategyContext(
-                project_details=self.project.project_details,
-                web_page_content=self.web_page_content,
-            ),
-            function_name="create_new_pricing_strategy",
-            model_name="ProjectPage",
-        )
-
-        return PricingPageUpdatesSuggestion.objects.create(
-            project=self.project,
-            project_page=self,
-            strategy_name=strategy_name,
-            current_pricing_strategy=result.data.current_pricing_strategy,
-            suggested_pricing_strategy=result.data.suggested_pricing_strategy,
-        )
-
-
-class PricingPageUpdatesSuggestion(BaseModel):
-    project = models.ForeignKey(
-        Project,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="pricing_page_updates",
-    )
-    project_page = models.ForeignKey(
-        ProjectPage,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="pricing_page_updates",
-    )
-
-    strategy_name = models.CharField(max_length=255, blank=True, null=True)  # noqa: DJ001
-    user_prompt = models.TextField(blank=True)
-    current_pricing_strategy = models.TextField()
-    suggested_pricing_strategy = models.TextField()
-
-    def __str__(self):
-        return f"{self.project.name}"
-
 
 class Competitor(BaseModel):
     project = models.ForeignKey(
@@ -1320,31 +1220,6 @@ class Competitor(BaseModel):
         self.save()
 
         return True
-
-
-class CompetitorComparisonBlogPost(BaseModel):
-    project = models.ForeignKey(
-        Project,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="competitor_comparison_blog_posts",
-    )
-    competitor = models.ForeignKey(
-        Competitor,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="competitor_comparison_blog_posts",
-    )
-
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    slug = models.SlugField(max_length=250)
-    content = models.TextField()
-
-    def __str__(self):
-        return f"{self.project.name}: {self.title}"
 
 
 class Keyword(BaseModel):

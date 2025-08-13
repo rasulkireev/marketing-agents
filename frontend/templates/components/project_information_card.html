@@ -1,0 +1,75 @@
+{% load humanize %}
+
+<div class="overflow-hidden p-6 bg-white rounded-xl border border-gray-200 shadow-sm transition-all duration-300 transform hover:shadow-lg hover:border-gray-300 hover:-translate-y-1">
+  <!-- Project Content -->
+  <div class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="flex flex-col gap-3 items-start mb-4 md:flex-row md:items-center md:justify-between">
+      <div class="flex flex-col flex-1 gap-2 min-w-0">
+        <div class="flex gap-3 items-center">
+          <h3 class="text-xl font-bold text-gray-900 truncate">
+            {% if project.name %}
+              {{ project.name }}
+            {% else %}
+              {{ project.url|truncatechars:40 }}
+            {% endif %}
+          </h3>
+          <span class="px-2.5 py-1 text-xs font-medium text-gray-700 whitespace-nowrap bg-gray-100 rounded-full ring-1 ring-inset ring-gray-300">
+            {{ project.get_type_display }}
+          </span>
+        </div>
+
+        {% if project.url %}
+          <a href="{{ project.url }}" target="_blank" rel="noopener noreferrer"
+             class="text-sm text-gray-500 truncate hover:text-gray-700 max-w-fit">
+            {{ project.url|truncatechars:50 }} �
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Last Analysis Date -->
+      {% if project.date_analyzed %}
+        <div class="flex gap-1.5 items-center text-xs text-gray-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Analyzed {{ project.date_analyzed|naturaltime }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Summary -->
+    {% if project.summary %}
+      <p class="mb-4 text-sm leading-relaxed text-gray-600 line-clamp-3">{{ project.summary }}</p>
+    {% endif %}
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <!-- Blog Post Title Suggestions -->
+      <div class="p-3 text-center bg-blue-50 rounded-lg border border-blue-100">
+        <div class="text-lg font-bold text-blue-900">{{ project.blog_post_title_suggestions.count }}</div>
+        <div class="text-xs font-medium text-blue-700">Title Ideas</div>
+      </div>
+
+      <!-- Generated Blog Posts -->
+      <div class="p-3 text-center bg-green-50 rounded-lg border border-green-100">
+        <div class="text-lg font-bold text-green-900">{{ project.generated_blog_posts.count }}</div>
+        <div class="text-xs font-medium text-green-700">Generated</div>
+      </div>
+
+      <!-- Posted Blog Posts -->
+      <div class="p-3 text-center bg-purple-50 rounded-lg border border-purple-100">
+        <div class="text-lg font-bold text-purple-900">{{ project_data.posted_posts_count|default:0 }}</div>
+        <div class="text-xs font-medium text-purple-700">Posted</div>
+      </div>
+    </div>
+
+    <!-- Action Button (pushed to bottom) -->
+    <div class="flex justify-end mt-auto">
+      <a href="{% url 'project_detail' project.id %}"
+         class="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-md shadow-sm transition-all duration-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+        View details �
+      </a>
+    </div>
+  </div>
+</div>

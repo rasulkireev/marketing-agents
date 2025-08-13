@@ -40,13 +40,28 @@ export default class extends Controller {
     event.preventDefault();
 
     try {
-      // Remove the button
-      this.buttonContainerTarget.innerHTML = "";
-
-      // Update status to spinning wheel
-      this.statusTarget.innerHTML = `
-        <div class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-pink-600"></div>
+      // Update button to show loading state
+      this.buttonContainerTarget.innerHTML = `
+        <button
+          disabled
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 border border-gray-900 rounded-md opacity-75 cursor-not-allowed">
+          <svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Generating...
+        </button>
       `;
+
+      // Update status to show generating state
+      if (this.hasStatusTarget) {
+        this.statusTarget.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 bg-amber-500 rounded-full animate-pulse"></div>
+            <span class="text-sm text-amber-700 font-medium">Generating...</span>
+          </div>
+        `;
+      }
 
       const response = await fetch(`/api/generate-blog-content/${this.suggestionIdValue}`, {
         method: "POST",
@@ -67,58 +82,55 @@ export default class extends Controller {
         throw new Error(data.message || "Generation failed");
       }
 
-      // Update status icon to checkmark with dropdown button
-      this.statusTarget.innerHTML = `
-        <div class="flex gap-x-2 items-center">
-          <div class="text-green-500">
-            <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-            </svg>
-          </div>
-          <button data-action="generate-content#toggle" class="flex items-center text-gray-500 hover:text-gray-700">
-            <svg data-generate-content-target="chevron" class="w-5 h-5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-        </div>
+      // Update button to "View Post"
+      this.buttonContainerTarget.innerHTML = `
+        <a
+          href="/generated-blog-post/${data.id}/"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 border border-gray-900 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          View Post
+        </a>
       `;
 
-      // Create form elements and set content
-      const contentContainer = document.createElement("div");
-      contentContainer.className = "space-y-4";
+      // Update status to show completed state
+      if (this.hasStatusTarget) {
+        this.statusTarget.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span class="text-sm text-green-700 font-medium">Generated</span>
+          </div>
+        `;
+      }
 
-      // Add slug input
-      const slugDiv = this.createFormGroup("slug", data.slug, "Slug");
-      contentContainer.appendChild(slugDiv);
-
-      // Add tags input
-      const tagsDiv = this.createFormGroup("tags", data.tags, "Tags");
-      contentContainer.appendChild(tagsDiv);
-
-      // Add description textarea
-      const descriptionDiv = this.createFormGroup("description", data.description, "Description", true);
-      contentContainer.appendChild(descriptionDiv);
-
-      // Add content textarea
-      const contentDiv = this.createFormGroup("content", data.content, "Content", true, "h-96 font-mono");
-      contentContainer.appendChild(contentDiv);
-
+      // Handle the post button
       this._appendPostButton(this.postButtonContainerTarget, data.id);
-
-      this.contentTarget.innerHTML = "";
-      this.contentTarget.appendChild(contentContainer);
 
     } catch (error) {
       showMessage(error.message || "Failed to generate content. Please try again later.", 'error');
-      // reset the button
+      // Reset the button to original state
       this.buttonContainerTarget.innerHTML = `
         <button
           data-action="generate-content#generate"
-          class="px-3 py-1 text-sm font-semibold text-white bg-pink-600 rounded-md hover:bg-pink-700">
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 border border-gray-900 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
           Generate
         </button>
       `;
-      this.statusTarget.innerHTML = "";
+
+      // Reset status if available
+      if (this.hasStatusTarget) {
+        this.statusTarget.innerHTML = `
+          <div class="flex items-center gap-1.5">
+            <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+            <span class="text-sm text-gray-600">Ready to generate</span>
+          </div>
+        `;
+      }
     }
   }
 
@@ -141,8 +153,11 @@ export default class extends Controller {
       buttonHtml = `
         <button
           data-action="post-button#post"
-          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border-2 border-pink-600 hover:bg-pink-700 transition-colors duration-200"
+          class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-gray-800 border border-gray-800 rounded hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
         >
+          <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+          </svg>
           Post
         </button>
       `;
@@ -151,12 +166,16 @@ export default class extends Controller {
       buttonHtml = `
         <a
           href="${this.projectSettingsUrlValue}#blogging-agent-settings"
-          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border-gray-200 transition-colors duration-200 cursor-not-allowed"
+          class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded hover:bg-gray-50 transition-colors"
           data-controller="tooltip"
           data-tooltip-message-value="You need to set up the API endpoint for automatic posting in your project settings."
           data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
         >
-          Post
+          <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          Setup
         </a>
       `;
     } else {
@@ -164,12 +183,15 @@ export default class extends Controller {
       buttonHtml = `
         <a
           href="${this.pricingUrlValue}"
-          class="inline-flex gap-x-2 items-center px-4 py-2 text-sm font-medium text-gray-400 bg-gray-200 rounded-md border-2 border-gray-200 transition-colors duration-200 cursor-not-allowed"
+          class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded hover:bg-gray-50 transition-colors"
           data-controller="tooltip"
           data-tooltip-message-value="This feature is available for Pro subscribers only."
           data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
         >
-          Post
+          <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          Pro Only
         </a>
       `;
     }

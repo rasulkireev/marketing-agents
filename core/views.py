@@ -9,23 +9,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Count, Q
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
 from django_q.tasks import async_task
 from djstripe import models as djstripe_models
 
-from core.choices import BlogPostStatus, Language, ProfileStates, ProjectPageType
+from core.choices import BlogPostStatus, Language, ProfileStates
 from core.forms import AutoSubmissionSettingForm, ProfileUpdateForm, ProjectScanForm
 from core.models import (
     AutoSubmissionSetting,
     BlogPost,
-    Competitor,
-    PricingPageUpdatesSuggestion,
+    GeneratedBlogPost,
     Profile,
     Project,
-    ProjectKeyword,
-    ProjectPage,
 )
 from core.tasks import track_event, try_create_posthog_alias
 from seo_blog_bot.utils import get_seo_blog_bot_logger
@@ -64,8 +62,14 @@ class HomeView(TemplateView):
                 group="Create Posthog Alias",
             )
 
-            projects = Project.objects.filter(profile=self.request.user.profile).order_by(
-                "-created_at"
+            projects = (
+                Project.objects.filter(profile=self.request.user.profile)
+                .annotate(
+                    posted_posts_count=Count(
+                        "generated_blog_posts", filter=Q(generated_blog_posts__posted=True)
+                    )
+                )
+                .order_by("-created_at")
             )
 
             # Annotate projects with counts
@@ -73,6 +77,7 @@ class HomeView(TemplateView):
             for project in projects:
                 project_stats = {
                     "project": project,
+                    "posted_posts_count": project.posted_posts_count,
                 }
                 projects_with_stats.append(project_stats)
 
@@ -248,8 +253,40 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        project = self.object
+
         context["has_content_access"] = self.request.user.profile.has_active_subscription
-        context["has_pricing_page"] = self.object.has_pricing_page
+        context["has_pricing_page"] = project.has_pricing_page
+
+        # Use a single query with annotation to count posted blog posts
+        all_suggestions = project.blog_post_title_suggestions.annotate(
+            posted_count=Count("generated_blog_posts", filter=Q(generated_blog_posts__posted=True))
+        ).prefetch_related("generated_blog_posts")
+
+        # Categorize suggestions based on the annotated posted_count
+        posted_suggestions = []
+        archived_suggestions = []
+        active_suggestions = []
+
+        for suggestion in all_suggestions:
+            has_posted = suggestion.posted_count > 0
+
+            if has_posted:
+                posted_suggestions.append(suggestion)
+            elif suggestion.archived:
+                archived_suggestions.append(suggestion)
+            else:
+                active_suggestions.append(suggestion)
+
+        context["posted_suggestions"] = posted_suggestions
+        context["archived_suggestions"] = archived_suggestions
+        context["active_suggestions"] = active_suggestions
+
+        context["has_pro_subscription"] = self.request.user.profile.has_active_subscription
+        context["has_auto_submission_setting"] = AutoSubmissionSetting.objects.filter(
+            project=project
+        ).exists()
+
         return context
 
 
@@ -296,122 +333,12 @@ class ProjectSettingsView(LoginRequiredMixin, DetailView):
             return self.render_to_response(context)
 
 
-class BloggingAgentDetailView(LoginRequiredMixin, DetailView):
-    model = Project
-    template_name = "agents/blogging-agent.html"
-    context_object_name = "project"
+class GeneratedBlogPostDetailView(LoginRequiredMixin, DetailView):
+    model = GeneratedBlogPost
+    template_name = "blog/generated_blog_post_detail.html"
+    context_object_name = "generated_post"
 
     def get_queryset(self):
-        # Ensure users can only see their own projects
-        return Project.objects.filter(profile=self.request.user.profile)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        project = self.object
-
-        all_suggestions = project.blog_post_title_suggestions.all().prefetch_related(
-            "generated_blog_posts"
+        return GeneratedBlogPost.objects.filter(
+            project__profile=self.request.user.profile, project__pk=self.kwargs["project_pk"]
         )
-
-        posted_suggestions_ids = {
-            s.id for s in all_suggestions if s.generated_blog_posts.filter(posted=True).exists()
-        }
-
-        context["posted_suggestions"] = [
-            s for s in all_suggestions if s.id in posted_suggestions_ids
-        ]
-        context["archived_suggestions"] = [
-            s for s in all_suggestions if s.archived and s.id not in posted_suggestions_ids
-        ]
-        context["active_suggestions"] = [
-            s for s in all_suggestions if not s.archived and s.id not in posted_suggestions_ids
-        ]
-
-        context["has_pro_subscription"] = self.request.user.profile.has_active_subscription
-        context["has_auto_submission_setting"] = AutoSubmissionSetting.objects.filter(
-            project=project
-        ).exists()
-        return context
-
-
-class KeywordsAgentView(LoginRequiredMixin, DetailView):
-    model = Project
-    template_name = "agents/keywords-agent.html"
-    context_object_name = "project"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Fetch all ProjectKeyword objects for this project, select_related to avoid N+1
-        # Order by most recent first (assuming 'created' field, fallback to '-id')
-        project_keywords = (
-            ProjectKeyword.objects.filter(project=self.object)
-            .select_related("keyword")
-            .order_by("-id")  # Change to '-created' if a 'created' field exists
-        )
-
-        processed_keywords = []
-        for pk in project_keywords:
-            keyword_obj = pk.keyword
-            # Extract the 'value', 'month', and 'year' from each trend object.
-            keyword_obj.trend_data = [
-                {"value": trend.value, "month": trend.month, "year": trend.year}
-                for trend in keyword_obj.trends.all()
-            ]
-            # Attach the 'use' field from ProjectKeyword
-            keyword_obj.use = pk.use
-            processed_keywords.append(keyword_obj)
-
-        context["keywords"] = processed_keywords
-
-        return context
-
-
-class PricingAgentView(LoginRequiredMixin, DetailView):
-    model = Project
-    template_name = "agents/pricing-agent.html"
-    context_object_name = "project"
-
-    def get_context_data(self, **kwargs):
-        pricing_pages = ProjectPage.objects.filter(
-            project=self.object, type=ProjectPageType.PRICING
-        )
-        pricing_suggestions = PricingPageUpdatesSuggestion.objects.filter(
-            project=self.object,
-        )
-
-        context = super().get_context_data(**kwargs)
-        context["has_pro_subscription"] = self.request.user.profile.has_product_or_subscription
-
-        if pricing_pages.exists():
-            context["pricing_page"] = pricing_pages.latest("id")
-        else:
-            context["pricing_page"] = None
-
-        if pricing_suggestions.exists():
-            context["pricing_suggestions"] = pricing_suggestions
-        else:
-            context["pricing_suggestions"] = None
-
-        return context
-
-
-class CompetitorAnalysisAgentView(LoginRequiredMixin, DetailView):
-    model = Project
-    template_name = "agents/competitor-analysis-agent.html"
-    context_object_name = "project"
-
-    def get_context_data(self, **kwargs):
-        competitors = Competitor.objects.filter(
-            project=self.object,
-        ).exclude(markdown_content="")
-
-        context = super().get_context_data(**kwargs)
-        context["has_pro_subscription"] = self.request.user.profile.has_product_or_subscription
-
-        if competitors.exists():
-            context["competitors"] = competitors
-        else:
-            context["competitors"] = None
-
-        return context
