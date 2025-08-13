@@ -258,23 +258,29 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context["has_content_access"] = self.request.user.profile.has_active_subscription
         context["has_pricing_page"] = project.has_pricing_page
 
-        all_suggestions = project.blog_post_title_suggestions.all().prefetch_related(
-            "generated_blog_posts"
-        )
+        # Use a single query with annotation to count posted blog posts
+        all_suggestions = project.blog_post_title_suggestions.annotate(
+            posted_count=Count("generated_blog_posts", filter=Q(generated_blog_posts__posted=True))
+        ).prefetch_related("generated_blog_posts")
 
-        posted_suggestions_ids = {
-            s.id for s in all_suggestions if s.generated_blog_posts.filter(posted=True).exists()
-        }
+        # Categorize suggestions based on the annotated posted_count
+        posted_suggestions = []
+        archived_suggestions = []
+        active_suggestions = []
 
-        context["posted_suggestions"] = [
-            s for s in all_suggestions if s.id in posted_suggestions_ids
-        ]
-        context["archived_suggestions"] = [
-            s for s in all_suggestions if s.archived and s.id not in posted_suggestions_ids
-        ]
-        context["active_suggestions"] = [
-            s for s in all_suggestions if not s.archived and s.id not in posted_suggestions_ids
-        ]
+        for suggestion in all_suggestions:
+            has_posted = suggestion.posted_count > 0
+
+            if has_posted:
+                posted_suggestions.append(suggestion)
+            elif suggestion.archived:
+                archived_suggestions.append(suggestion)
+            else:
+                active_suggestions.append(suggestion)
+
+        context["posted_suggestions"] = posted_suggestions
+        context["archived_suggestions"] = archived_suggestions
+        context["active_suggestions"] = active_suggestions
 
         context["has_pro_subscription"] = self.request.user.profile.has_active_subscription
         context["has_auto_submission_setting"] = AutoSubmissionSetting.objects.filter(
