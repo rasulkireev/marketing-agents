@@ -4,7 +4,7 @@
   data-generate-content-suggestion-id-value="{{ suggestion.id }}"
   data-generate-content-project-id-value="{{ suggestion.project.id }}"
   data-archive-suggestion-suggestion-id-value="{{ suggestion.id }}"
-  data-archive-suggestion-archived-value="{{ suggestion.archived }}"
+  data-archive-suggestion-archived-value="{{ suggestion.archived|yesno:'true,false' }}"
   data-suggestion-type="{{ suggestion.content_type }}"
 >
   <div class="p-6">
@@ -107,7 +107,7 @@
       <div class="flex items-center space-x-3"
            data-controller="title-score"
            data-title-score-suggestion-id-value="{{ suggestion.id }}"
-           data-current-score="{{ suggestion.user_score }}">
+           data-title-score-current-score-value="{{ suggestion.user_score }}">
 
         <button data-title-score-target="likeButton"
                 data-action="title-score#updateScore"

@@ -29,10 +29,10 @@ export default class extends Controller {
       this.monthlyCheckoutTarget.classList.remove("hidden");
       this.yearlyCheckoutTarget.classList.add("hidden");
 
-      this.monthlyLabelTarget.classList.add("bg-pink-600", "text-white");
+      this.monthlyLabelTarget.classList.add("bg-white", "text-gray-900", "shadow-sm");
       this.monthlyLabelTarget.classList.remove("text-gray-500");
       this.yearlyLabelTarget.classList.add("text-gray-500");
-      this.yearlyLabelTarget.classList.remove("bg-pink-600", "text-white");
+      this.yearlyLabelTarget.classList.remove("bg-white", "text-gray-900", "shadow-sm");
 
     } else {
       this.yearlyPriceDisplayTarget.classList.remove("hidden");
@@ -41,10 +41,10 @@ export default class extends Controller {
       this.yearlyCheckoutTarget.classList.remove("hidden");
       this.monthlyCheckoutTarget.classList.add("hidden");
 
-      this.yearlyLabelTarget.classList.add("bg-pink-600", "text-white");
+      this.yearlyLabelTarget.classList.add("bg-white", "text-gray-900", "shadow-sm");
       this.yearlyLabelTarget.classList.remove("text-gray-500");
       this.monthlyLabelTarget.classList.add("text-gray-500");
-      this.monthlyLabelTarget.classList.remove("bg-pink-600", "text-white");
+      this.monthlyLabelTarget.classList.remove("bg-white", "text-gray-900", "shadow-sm");
     }
   }
 }

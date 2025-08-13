@@ -34,12 +34,12 @@
 
     <div class="flex justify-center mt-16">
       <fieldset aria-label="Payment frequency" data-action="change->pricing-toggle#switch">
-        <div class="grid grid-cols-2 gap-x-1 p-1 font-semibold text-center rounded-full ring-1 ring-inset ring-gray-200 text-xs/5">
-          <label data-pricing-toggle-target="monthlyLabel" class="px-2.5 py-1 rounded-full cursor-pointer">
+        <div class="relative grid grid-cols-2 gap-x-1 p-1 font-semibold text-center rounded-full ring-1 ring-inset ring-gray-200 text-xs/5">
+          <label data-pricing-toggle-target="monthlyLabel" class="relative z-10 px-2.5 py-1 rounded-full cursor-pointer transition-colors duration-200 text-gray-900 bg-white shadow-sm">
             <input type="radio" name="frequency" value="monthly" class="sr-only" checked>
             <span>Monthly</span>
           </label>
-          <label data-pricing-toggle-target="yearlyLabel" class="px-2.5 py-1 rounded-full cursor-pointer">
+          <label data-pricing-toggle-target="yearlyLabel" class="relative z-10 px-2.5 py-1 rounded-full cursor-pointer transition-colors duration-200 text-gray-500">
             <input type="radio" name="frequency" value="annually" class="sr-only">
             <span>Annually</span>
           </label>
