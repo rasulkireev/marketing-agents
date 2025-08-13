@@ -9,7 +9,7 @@ from django.conf import settings
 from django.utils import timezone
 from django_q.tasks import async_task
 
-from core.choices import ContentType, KeywordDataSource, ProjectPageType
+from core.choices import ContentType, KeywordDataSource
 from core.models import (
     BlogPostTitleSuggestion,
     Competitor,
@@ -46,14 +46,10 @@ def add_email_to_buttondown(email, tag):
 def analyze_project_page(project_id: int, link: str):
     project = Project.objects.get(id=project_id)
     project_page, created = ProjectPage.objects.get_or_create(project=project, url=link)
-    page_analyzed = False
 
     if created:
         project_page.get_page_content()
-        page_analyzed = project_page.analyze_content()
-
-    if project_page.type == ProjectPageType.PRICING and page_analyzed:
-        async_task(project_page.create_new_pricing_strategy)
+        project_page.analyze_content()
 
     return f"Analyzed {link} for {project.name}"
 

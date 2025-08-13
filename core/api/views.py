@@ -12,7 +12,6 @@ from core.api.schemas import (
     BlogPostIn,
     BlogPostOut,
     CompetitorAnalysisOut,
-    CreatePricingStrategyIn,
     GeneratedContentOut,
     GenerateTitleSuggestionOut,
     GenerateTitleSuggestionsIn,
@@ -327,23 +326,6 @@ def add_pricing_page(request: HttpRequest, data: AddPricingPageIn):
 
     project_page.get_page_content()
     project_page.analyze_content()
-    project_page.create_new_pricing_strategy()
-
-    return {"status": "success", "message": "Pricing page added successfully"}
-
-
-@api.post("/create-pricing-strategy")
-def create_pricing_strategy(request: HttpRequest, data: CreatePricingStrategyIn):
-    profile = request.auth
-    project = Project.objects.get(id=data.project_id, profile=profile)
-
-    project_page = ProjectPage.objects.filter(project=project, type=ProjectPageType.PRICING).latest(
-        "id"
-    )
-
-    project_page.create_new_pricing_strategy(
-        strategy_name=data.strategy_name, user_prompt=data.user_prompt
-    )
 
     return {"status": "success", "message": "Pricing page added successfully"}
 
