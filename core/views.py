@@ -74,7 +74,22 @@ class HomeView(TemplateView):
             for project in projects:
                 project_stats = {
                     "project": project,
-                    "posted_posts_count": project.generated_blog_posts.filter(posted=True).count(),
+                    # Annotate projects with counts to avoid N+1 queries
+        projects = Project.objects.filter(profile=self.request.user.profile).annotate(
+            posted_posts_count=Count(
+                'generated_blog_posts',
+                filter=Q(generated_blog_posts__posted=True)
+            )
+        ).order_by("-created_at")
+
+        # Create projects with stats
+        projects_with_stats = []
+        for project in projects:
+            project_stats = {
+                "project": project,
+                "posted_posts_count": project.posted_posts_count,
+            }
+            projects_with_stats.append(project_stats)
                 }
                 projects_with_stats.append(project_stats)
 
