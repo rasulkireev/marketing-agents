@@ -54,16 +54,8 @@ class HomeView(TemplateView):
             user = self.request.user
             profile = user.profile
 
-            async_task(
-                try_create_posthog_alias,
-                profile_id=profile.id,
-                cookies=self.request.COOKIES,
-                source_function="HomeView - get_context_data",
-                group="Create Posthog Alias",
-            )
-
             projects = (
-                Project.objects.filter(profile=self.request.user.profile)
+                Project.objects.filter(profile=profile)
                 .annotate(
                     posted_posts_count=Count(
                         "generated_blog_posts", filter=Q(generated_blog_posts__posted=True)
