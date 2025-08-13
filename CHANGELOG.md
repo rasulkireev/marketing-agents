@@ -16,9 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.2] - 2025-08-10
 **Removed**
 - Various agents, focus on generating blog post content
+- PricingPageAnalysis and CompetitorBlog post models
+- Views for now unsporrted models
 
 **Changed**
-- Simplification of the design
+- Simplification of the design and the UI
 
 **Added**
 - A page for generated content
