@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, Field, field_validator
 
 from core.choices import Language, ProjectPageType, ProjectType
@@ -23,23 +21,33 @@ class ProjectDetails(BaseModel):
     type: str = Field(
         description=(
             "Primary business model or project category."
-            f"One of the following options: {', '.join([choice[0] for choice in ProjectType.choices])}"
+            f"One of the following options: {', '.join([choice[0] for choice in ProjectType.choices])}"  # noqa: E501
         )
     )
-    summary: str = Field(description="Comprehensive overview of the project's purpose and value proposition")
-    blog_theme: str = Field(description="List of primary content themes and topics in markdown list format")
+    summary: str = Field(
+        description="Comprehensive overview of the project's purpose and value proposition"  # noqa: E501
+    )
+    blog_theme: str = Field(
+        description="List of primary content themes and topics in markdown list format"
+    )
     founders: str = Field(description="List of founders with their roles in markdown list format")
-    key_features: str = Field(description="List of main product capabilities in markdown list format")
-    target_audience_summary: str = Field(description="Profile of ideal users including demographics and needs")
-    pain_points: str = Field(description="List of target audience challenges in markdown list format")
+    key_features: str = Field(
+        description="List of main product capabilities in markdown list format"
+    )
+    target_audience_summary: str = Field(
+        description="Profile of ideal users including demographics and needs"
+    )
+    pain_points: str = Field(
+        description="List of target audience challenges in markdown list format"
+    )
     product_usage: str = Field(description="List of common use cases in markdown list format")
     proposed_keywords: str = Field(
-        description="""Comma separated list of 20 short-tail keywords you think this site would rank well for"""
+        description="""Comma separated list of 20 short-tail keywords you think this site would rank well for"""  # noqa: E501
     )
     links: str = Field(
         description="""List of relevant URLs in markdown list format.
                       Please make sure the urls are full. If the link is "/pricing", please complete it
-                      to the full url like so. https://{page-url}/pricing"""
+                      to the full url like so. https://{page-url}/pricing"""  # noqa: E501
     )
     language: str = Field(
         description=(
@@ -51,7 +59,7 @@ class ProjectDetails(BaseModel):
         description="""Location of the target audience. Most of online businesses will be 'Global',
         meaning anyone in the world can use. But in case of a local business, it will be the country or region.
         So, if the business is local, please specify the country or region. Otherwise, use 'Global'.
-    """
+    """  # noqa: E501
     )
 
     @field_validator("type")
@@ -83,7 +91,9 @@ class ProjectDetails(BaseModel):
                 if v_lower in valid_type.lower():
                     return valid_type
 
-            logger.warning("[Project Details Schema] Language is not a valid option", provided_language=v)
+            logger.warning(
+                "[Project Details Schema] Language is not a valid option", provided_language=v
+            )
             if len(v) > 50:
                 return v
             else:
@@ -96,7 +106,7 @@ class ProjectPageDetails(BaseModel):
     type: str = Field(
         description=(
             "Primary business model or project category."
-            f"One of the following options: {', '.join([choice[0] for choice in ProjectPageType.choices])}"
+            f"One of the following options: {', '.join([choice[0] for choice in ProjectPageType.choices])}"  # noqa: E501
         )
     )
     type_ai_guess: str = Field(description="Page Type. Should never be 'Other'")
@@ -126,30 +136,38 @@ class TitleSuggestionContext(BaseModel):
 
     project_details: ProjectDetails
     num_titles: int = Field(default=3, description="Number of title suggestions to generate")
-    user_prompt: Optional[str] = Field(default=None, description="Optional user-provided guidance for title generation")
-    neutral_suggestions: Optional[List[str]] = Field(
+    user_prompt: str | None = Field(
+        default=None, description="Optional user-provided guidance for title generation"
+    )
+    neutral_suggestions: list[str] | None = Field(
         default_factory=list, description="Titles that users have not yet liked or disliked"
     )
-    liked_suggestions: Optional[List[str]] = Field(
+    liked_suggestions: list[str] | None = Field(
         default_factory=list, description="Titles the user has previously liked"
     )
-    disliked_suggestions: Optional[List[str]] = Field(
+    disliked_suggestions: list[str] | None = Field(
         default_factory=list, description="Titles the user has previously disliked"
     )
 
 
 class TitleSuggestion(BaseModel):
     title: str = Field(description="SEO-optimized blog post title")
-    category: str = Field(description="Primary content category. Make sure it is under 50 characters.")
+    category: str = Field(
+        description="Primary content category. Make sure it is under 50 characters."
+    )
     target_keywords: list[str] = Field(description="Strategic SEO keywords to target")
     description: str = Field(
-        description="Brief overview of why this title is a good fit for the project and why it might work well for the target audience"
+        description="Brief overview of why this title is a good fit for the project and why it might work well for the target audience"  # noqa: E501
     )
-    suggested_meta_description: str = Field(description="SEO-optimized meta description (150-160 characters)")
+    suggested_meta_description: str = Field(
+        description="SEO-optimized meta description (150-160 characters)"
+    )
 
 
 class TitleSuggestions(BaseModel):
-    titles: list[TitleSuggestion] = Field(description="Collection of title suggestions with metadata")
+    titles: list[TitleSuggestion] = Field(
+        description="Collection of title suggestions with metadata"
+    )
 
 
 class ProjectPageContext(BaseModel):
@@ -164,15 +182,21 @@ class BlogPostGenerationContext(BaseModel):
 
     project_details: ProjectDetails
     title_suggestion: TitleSuggestion
-    project_pages: List[ProjectPageContext] = []
+    project_pages: list[ProjectPageContext] = []
     content_type: str = Field(description="Type of content to generate (SEO or SHARING)")
 
 
 class BlogPostContent(BaseModel):
-    description: str = Field(description="Meta description (150-160 characters) optimized for search engines")
-    slug: str = Field(description="URL-friendly format using lowercase letters, numbers, and hyphens")
+    description: str = Field(
+        description="Meta description (150-160 characters) optimized for search engines"
+    )
+    slug: str = Field(
+        description="URL-friendly format using lowercase letters, numbers, and hyphens"
+    )
     tags: str = Field(description="5-8 relevant keywords as comma-separated values")
-    content: str = Field(description="Full blog post content in Markdown format with proper structure and formatting")
+    content: str = Field(
+        description="Full blog post content in Markdown format with proper structure and formatting"
+    )
 
 
 class PricingPageStrategyContext(BaseModel):
@@ -182,11 +206,6 @@ class PricingPageStrategyContext(BaseModel):
         description="Optional user-provided guidance for pricing strategy generation",
         default="",
     )
-
-
-class PricingPageStrategySuggestion(BaseModel):
-    current_pricing_strategy: str = Field(description="Current pricing strategy")
-    suggested_pricing_strategy: str = Field(description="Suggested pricing strategy")
 
 
 class CompetitorDetails(BaseModel):
@@ -212,12 +231,16 @@ class CompetitorAnalysis(BaseModel):
     key_differences: str = Field(description="What are the key differences with my project?")
     strengths: str = Field(description="What are the strengths of this competitor?")
     weaknesses: str = Field(description="What are the weaknesses of this competitor?")
-    opportunities: str = Field(description="What are the opportunities for us to be better than this competitor?")
+    opportunities: str = Field(
+        description="What are the opportunities for us to be better than this competitor?"
+    )
     threats: str = Field(description="What are the threats from this competitor?")
     key_benefits: str = Field(description="What are the key benefits of this competitor?")
     key_drawbacks: str = Field(description="What are the key drawbacks of this competitor?")
     key_features: str = Field(description="What are the key features of this competitor?")
-    summary: str = Field(description="Comprehensive overview of the competitor's purpose and value proposition")
+    summary: str = Field(
+        description="Comprehensive overview of the competitor's purpose and value proposition"  # noqa: E501
+    )
     links: str = Field(
         description="""
         List of relevant URLs in markdown list format.
