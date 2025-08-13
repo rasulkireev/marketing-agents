@@ -61,6 +61,16 @@ export default class extends Controller {
     });
   }
 
+  escapeHTML(value) {
+    if (value == null) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   createSuggestionHTML(suggestion, contentType) {
     // Check if target_keywords is an array, a string, or null/undefined
     let keywordsHTML = '';
@@ -72,7 +82,7 @@ export default class extends Controller {
             <div class="flex flex-wrap gap-2">
               ${suggestion.target_keywords.map(keyword => `
                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded">
-                  ${keyword.trim()}
+                  ${this.escapeHTML(keyword.trim())}
                 </span>
               `).join("")}
             </div>
@@ -86,7 +96,7 @@ export default class extends Controller {
             <div class="flex flex-wrap gap-2">
               ${suggestion.target_keywords.split(",").map(keyword => `
                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded">
-                  ${keyword.trim()}
+                  ${this.escapeHTML(keyword.trim())}
                 </span>
               `).join("")}
             </div>
@@ -101,7 +111,7 @@ export default class extends Controller {
           Meta Description
         </span>
         <p class="text-sm text-gray-600">
-          ${suggestion.suggested_meta_description}
+          ${this.escapeHTML(suggestion.suggested_meta_description)}
         </p>
       </div>
     ` : '';
@@ -121,7 +131,7 @@ export default class extends Controller {
           <div class="flex items-start justify-between mb-4">
             <div class="flex-1">
               <h4 class="text-lg font-semibold text-gray-900 mb-2">
-                ${suggestion.title}
+                ${this.escapeHTML(suggestion.title)}
               </h4>
 
               <!-- Status indicator -->
@@ -135,7 +145,7 @@ export default class extends Controller {
 
                 <!-- Category Badge -->
                 <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md">
-                  ${suggestion.category}
+                  ${this.escapeHTML(suggestion.category)}
                 </span>
               </div>
             </div>
@@ -157,7 +167,7 @@ export default class extends Controller {
 
           <!-- Description -->
           <p class="text-gray-700 leading-relaxed mb-4">
-            ${suggestion.description}
+            ${this.escapeHTML(suggestion.description)}
           </p>
 
           <!-- Keywords -->

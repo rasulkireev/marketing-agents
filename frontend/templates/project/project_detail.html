@@ -63,7 +63,7 @@
                       Share Content Ideas
                     </button>
 
-                    {% if project.blog_post_title_suggestions.exists %}
+                    {% if active_suggestions or posted_suggestions or archived_suggestions %}
                       <span class="text-gray-400">or</span>
 
                       <button

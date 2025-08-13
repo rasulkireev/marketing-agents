@@ -20,9 +20,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make test-webhook` - Test Stripe webhook functionality
 
 ### Frontend Build
-- `npm run build` - Production build of frontend assets
-- `npm run start` - Development server for frontend assets
-- `npm run watch` - Watch mode for frontend development
+- `pnpm run build` - Production build of frontend assets
+- `pnpm run start` - Development server for frontend assets
+- `pnpm run watch` - Watch mode for frontend development
 
 ### Code Quality
 - `poetry run ruff check` - Run Python linting
@@ -107,7 +107,7 @@ Uses django-q2 for async task processing:
 - Run tests with `make test` or `poetry run pytest`
 - Fixtures should be minimal, create test data in-context when possible
 - Don't write or execute tests unless directly told to do so.
-- Don't run npm commands.
+- Don't run pnpm commands.
 
 ### Key Conventions
 - Follow PEP 8 for Python code style

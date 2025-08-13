@@ -339,5 +339,6 @@ class GeneratedBlogPostDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "generated_post"
 
     def get_queryset(self):
-        # Ensure users can only see blog posts from their own projects
-        return GeneratedBlogPost.objects.filter(project__profile=self.request.user.profile)
+        return GeneratedBlogPost.objects.filter(
+            project__profile=self.request.user.profile, project__pk=self.kwargs["project_pk"]
+        )
