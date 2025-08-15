@@ -16,18 +16,23 @@ export default class extends Controller {
     }
     const keys = Object.keys(initial);
     if (keys.length > 0) {
-      keys.forEach(key => {
+      keys.forEach((key) => {
         this.addRow(key, initial[key]);
       });
     } else {
       this.addRow();
     }
     // On form submit, serialize to JSON
-    const form = this.element.closest("form");
-    if (form) {
-      form.addEventListener("submit", () => {
-        this.serializeRows();
-      });
+    this.form = this.element.closest("form");
+    if (this.form) {
+      this.boundSerialize = this.serializeRows.bind(this);
+      this.form.addEventListener("submit", this.boundSerialize);
+    }
+  }
+
+  disconnect() {
+    if (this.form && this.boundSerialize) {
+      this.form.removeEventListener("submit", this.boundSerialize);
     }
   }
 
@@ -71,20 +76,3 @@ export default class extends Controller {
     this.jsonInputTarget.value = JSON.stringify(obj);
   }
 }
-
-// Datalist for value suggestions (can be extended or made dynamic)
-document.addEventListener("DOMContentLoaded", function() {
-  if (!document.getElementById("body-value-suggestions")) {
-    const datalist = document.createElement("datalist");
-    datalist.id = "body-value-suggestions";
-    datalist.innerHTML = `
-      <option value="{{ post_title }}"></option>
-      <option value="{{ description }}"></option>
-      <option value="{{ slug }}"></option>
-      <option value="{{ tags }}"></option>
-      <option value="{{ content }}"></option>
-      <option value="{{ created_at }}"></option>
-    `;
-    document.body.appendChild(datalist);
-  }
-});

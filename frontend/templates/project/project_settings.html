@@ -245,9 +245,20 @@
         </div>
 
         <!-- Automatic Submission Form -->
-        <form method="post" class="mt-6 space-y-6" data-controller="auto-submit-body">
+        <form method="post" class="mt-6 space-y-6">
           {% csrf_token %}
           {{ auto_submission_settings_form.non_field_errors | safe }}
+
+          <!-- Datalist for dynamic value suggestions -->
+          <datalist id="body-value-suggestions">
+            <option value="{% templatetag openvariable %} post_title {% templatetag closevariable %}"></option>
+            <option value="{% templatetag openvariable %} description {% templatetag closevariable %}"></option>
+            <option value="{% templatetag openvariable %} slug {% templatetag closevariable %}"></option>
+            <option value="{% templatetag openvariable %} tags {% templatetag closevariable %}"></option>
+            <option value="{% templatetag openvariable %} content {% templatetag closevariable %}"></option>
+            <option value="{% templatetag openvariable %} created_at {% templatetag closevariable %}"></option>
+          </datalist>
+
           <div class="space-y-4">
               {% for field in auto_submission_settings_form.visible_fields %}
                 {% if field.name == "body" %}
@@ -313,6 +324,8 @@
                 {% endif %}
               {% endfor %}
           </div>
+
+          <!-- Form Submit Section -->
           <div class="pt-6 border-t border-gray-200">
             <div class="flex justify-end">
               <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-md shadow-sm transition-colors duration-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
