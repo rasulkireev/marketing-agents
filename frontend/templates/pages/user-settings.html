@@ -7,85 +7,157 @@
 {% endblock meta %}
 
 {% block content %}
-  <div class="container px-4 py-8 mx-auto max-w-3xl bg-white lg:min-w-0 md:pt-10 lg:flex-1">
-    {% include "components/confirm-email.html" with email_verified=email_verified %}
-    <div class="p-4 border-t border-b border-gray-200 sm:p-6 lg:p-8 xl:border-t-0">
-      <div class="flex justify-between items-center">
-        <h1 class="flex-1 pt-2 text-xl font-medium">Settings</h1>
-      </div>
-    </div>
+  <div class="py-12 min-h-screen bg-gray-50">
+    <div class="px-6 mx-auto max-w-4xl lg:px-8">
+      {% include "components/confirm-email.html" with email_verified=email_verified %}
 
-    {% if not has_subscription %}
-    <div class="p-6 mt-6 mb-8 bg-gray-50 rounded-lg">
-      <h3 class="mb-4 text-lg font-medium leading-6 text-gray-900">Upgrade Your Account</h3>
-      <div class="rounded-md shadow">
-        <a
-          href="{% url 'user_upgrade_checkout_session' pk=user.id plan='one-time-cheap' %}"
-          aria-describedby="tier-early-bird"
-          class="block px-3 py-2 text-sm font-semibold leading-6 text-center text-white bg-pink-600 rounded-md shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600"
-        >
-          One time $5 payment
-        </a>
+      <!-- Page Header -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Account Settings</h1>
+        <p class="mt-2 text-lg text-gray-600">Manage your account preferences and subscription.</p>
       </div>
-    </div>
-    {% else %}
-    <div class="p-6 mt-6 mb-8 bg-gray-50 rounded-lg">
-      <h3 class="mb-4 text-lg font-medium leading-6 text-gray-900">Manage Your Subscription</h3>
-      <div class="rounded-md shadow">
+
+      <!-- Upgrade/Subscription Section -->
+      {% if not has_subscription %}
+      <div class="p-8 mb-8 bg-white rounded-lg border border-gray-200 shadow-sm" data-controller="pricing-toggle">
+        <div class="flex gap-x-4 justify-between items-center">
+          <h3 class="font-semibold text-gray-900 text-lg/8">Upgrade to Pro</h3>
+        </div>
+        <p class="mt-4 text-gray-600 text-sm/6">Unlock AI-powered blog content generation and advanced features.</p>
+
+        <!-- Billing Toggle -->
+        <div class="flex justify-center mt-6">
+          <fieldset aria-label="Payment frequency" data-action="change->pricing-toggle#switch">
+            <div class="grid relative grid-cols-2 gap-x-1 p-1 font-semibold text-center bg-gray-100 rounded-full ring-1 ring-inset ring-gray-300 text-xs/5">
+              <label data-pricing-toggle-target="monthlyLabel" class="relative z-10 px-2.5 py-1 text-gray-900 bg-white rounded-full shadow-md transition-colors duration-200 cursor-pointer">
+                <input type="radio" name="frequency" value="monthly" class="sr-only" checked>
+                <span>Monthly</span>
+              </label>
+              <label data-pricing-toggle-target="yearlyLabel" class="relative z-10 px-2.5 py-1 text-gray-500 rounded-full transition-colors duration-200 cursor-pointer">
+                <input type="radio" name="frequency" value="annually" class="sr-only">
+                <span>Annually</span>
+              </label>
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Monthly Price Display -->
+        <div data-pricing-toggle-target="monthlyPriceDisplay">
+          <p class="flex gap-x-1 items-baseline mt-6">
+            <span class="text-4xl font-semibold tracking-tight text-gray-900">$100</span>
+            <span class="font-semibold text-gray-600 text-sm/6">/month</span>
+          </p>
+        </div>
+
+        <!-- Annual Price Display -->
+        <div data-pricing-toggle-target="yearlyPriceDisplay" class="hidden">
+          <p class="flex gap-x-1 items-baseline mt-6">
+            <span class="text-4xl font-semibold tracking-tight text-gray-900">$1000</span>
+            <span class="font-semibold text-gray-600 text-sm/6">/year</span>
+          </p>
+        </div>
+
+        <!-- Monthly Checkout Button -->
+        <div data-pricing-toggle-target="monthlyCheckout">
+          <a
+            href="{% url 'user_upgrade_checkout_session' pk=user.id plan='monthly-june-2025' %}"
+            class="block px-3 py-2 mt-6 font-semibold text-center text-white bg-gray-800 rounded-md shadow-sm text-sm/6 hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600"
+          >
+            Upgrade to Pro - Monthly
+          </a>
+        </div>
+
+        <!-- Annual Checkout Button -->
+        <div data-pricing-toggle-target="yearlyCheckout" class="hidden">
+          <a
+            href="{% url 'user_upgrade_checkout_session' pk=user.id plan='yearly-june-2025' %}"
+            class="block px-3 py-2 mt-6 font-semibold text-center text-white bg-gray-800 rounded-md shadow-sm text-sm/6 hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600"
+          >
+            Upgrade to Pro - Annual
+          </a>
+        </div>
+        <ul role="list" class="mt-8 space-y-3 text-gray-600 text-sm/6">
+          <li class="flex gap-x-3">
+            <svg class="flex-none w-5 h-6 text-gray-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+            </svg>
+            <span><strong class="text-gray-900">AI Blog Content Generation</strong> - Generate complete blog posts with SEO optimization</span>
+          </li>
+          <li class="flex gap-x-3">
+            <svg class="flex-none w-5 h-6 text-gray-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+            </svg>
+            <span><strong class="text-gray-900">Website Analysis & Content Strategy</strong> - Targeted blog post ideas</span>
+          </li>
+          <li class="flex gap-x-3">
+            <svg class="flex-none w-5 h-6 text-gray-700" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
+            </svg>
+            <span><strong class="text-gray-900">Priority Support</strong> - Get help when you need it</span>
+          </li>
+        </ul>
+      </div>
+      {% else %}
+      <div class="p-8 mb-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div class="flex gap-x-4 justify-between items-center">
+          <h3 class="font-semibold text-gray-900 text-lg/8">Pro Plan Active</h3>
+          <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-green-800 bg-green-100 rounded-full">
+            Active
+          </span>
+        </div>
+        <p class="mt-4 text-gray-600 text-sm/6">You have access to all Pro features including AI content generation and advanced analytics.</p>
         <a
           href="{% url 'create_customer_portal_session' %}"
-          class="flex justify-center items-center px-5 py-3 text-base font-medium text-white bg-pink-600 rounded-md border border-transparent hover:bg-pink-700">
-          Update Subscription
+          class="inline-flex items-center px-4 py-2 mt-6 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+        >
+          Manage Subscription
         </a>
       </div>
-    </div>
-    {% endif %}
+      {% endif %}
 
-    <div class="px-6 py-4">
-      <div class="flex flex-col">
-        <h3 class="mb-6 text-lg font-medium leading-6 text-gray-900">Personal Information</h3>
-        <div class="mt-5 md:mt-0">
-          <form action="" method="post">
-            {% csrf_token %}
-            <div class="overflow-hidden sm:rounded-md">
-              <div class="px-2 py-5">
-                <div class="grid grid-cols-6 gap-6">
-                  {{ form.non_field_errors }}
-                  <div class="col-span-6 sm:col-span-3">
-                    {{ form.first_name.errors | safe }}
-                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700">First name</label>
-                    {% render_field form.first_name id="first-name" name="first-name" type="text" autocomplete="given-name" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-{{ cookiecutter.project_main_color }}-500 focus:ring-{{ cookiecutter.project_main_color }}-500 sm:text-sm" %}
-                  </div>
+      <!-- Personal Information Section -->
+      <div class="p-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+        <h3 class="mb-6 text-xl font-semibold text-gray-900">Personal Information</h3>
+        <form action="" method="post" class="space-y-6">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
 
-                  <div class="col-span-6 sm:col-span-3">
-                    {{ form.last_name.errors | safe }}
-                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Last name</label>
-                    {% render_field form.last_name id="last-name" name="last-name" type="text" autocomplete="family-name" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-{{ cookiecutter.project_main_color }}-500 focus:ring-{{ cookiecutter.project_main_color }}-500 sm:text-sm" %}
-                  </div>
-
-                  <div class="col-span-6">
-                    {{ form.email.errors | safe }}
-                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email address</label>
-                    {% render_field form.email id="email-address" name="email-address" type="email" autocomplete="email" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-{{ cookiecutter.project_main_color }}-500 focus:ring-{{ cookiecutter.project_main_color }}-500 sm:text-sm" %}
-                  </div>
-                </div>
-              </div>
-              <div class="mt-6 text-right">
-                <button type="submit" class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent shadow-sm hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
-                  Save Changes
-                </button>
-              </div>
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              {{ form.first_name.errors | safe }}
+              <label for="{{ form.first_name.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-700">
+                First name
+              </label>
+              {% render_field form.first_name id="first-name" name="first-name" type="text" autocomplete="given-name" class="block px-3 py-2 w-full placeholder-gray-400 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm" %}
             </div>
-          </form>
-        </div>
+
+            <div>
+              {{ form.last_name.errors | safe }}
+              <label for="{{ form.last_name.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-700">
+                Last name
+              </label>
+              {% render_field form.last_name id="last-name" name="last-name" type="text" autocomplete="family-name" class="block px-3 py-2 w-full placeholder-gray-400 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm" %}
+            </div>
+          </div>
+
+          <div>
+            {{ form.email.errors | safe }}
+            <label for="{{ form.email.id_for_label }}" class="block mb-2 text-sm font-medium text-gray-700">
+              Email address
+            </label>
+            {% render_field form.email id="email-address" name="email-address" type="email" autocomplete="email" class="block px-3 py-2 w-full placeholder-gray-400 rounded-md border border-gray-300 shadow-sm focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm" %}
+          </div>
+
+          <div class="flex justify-end pt-6">
+            <button
+              type="submit"
+              class="inline-flex justify-center px-6 py-3 text-sm font-medium text-white bg-gray-800 rounded-md border border-transparent shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
     </div>
-
-    <div class="block" aria-hidden="true">
-      <div class="py-5">
-        <div class="border-t border-gray-200"></div>
-      </div>
-    </div>
-
   </div>
 {% endblock content %}
