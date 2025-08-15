@@ -16,18 +16,23 @@ export default class extends Controller {
     }
     const keys = Object.keys(initial);
     if (keys.length > 0) {
-      keys.forEach(key => {
+      keys.forEach((key) => {
         this.addRow(key, initial[key]);
       });
     } else {
       this.addRow();
     }
     // On form submit, serialize to JSON
-    const form = this.element.closest("form");
-    if (form) {
-      form.addEventListener("submit", () => {
-        this.serializeRows();
-      });
+    this.form = this.element.closest("form");
+    if (this.form) {
+      this.boundSerialize = this.serializeRows.bind(this);
+      this.form.addEventListener("submit", this.boundSerialize);
+    }
+  }
+
+  disconnect() {
+    if (this.form && this.boundSerialize) {
+      this.form.removeEventListener("submit", this.boundSerialize);
     }
   }
 
