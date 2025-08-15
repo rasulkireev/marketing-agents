@@ -304,6 +304,7 @@ def schedule_blog_post_posting():
 
 def generate_and_post_blog_post(project_id: int):
     project = Project.objects.get(id=project_id)
+    blog_post_to_post = None
 
     # first see if there are generated blog posts that are not posted yet
     blog_posts_to_post = GeneratedBlogPost.objects.filter(project=project, posted=False)
