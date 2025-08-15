@@ -11,7 +11,7 @@
                 </h2>
                 <p class="mt-2 text-sm text-center text-gray-600">
                     Or
-                    <a href="{% url 'account_signup' %}" class="font-medium text-pink-600 hover:text-pink-500">
+                    <a href="{% url 'account_signup' %}" class="font-medium text-gray-600 hover:text-gray-700">
                         sign up if you don't have one yet.
                     </a>
                 </p>
@@ -24,12 +24,12 @@
                     <div>
                         {{ form.login.errors | safe }}
                         <label for="username" class="sr-only">Username</label>
-                        {% render_field form.login placeholder="Username" id="username" name="username" type="text" autocomplete="username" required=True class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-none rounded-t-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" %}
+                        {% render_field form.login placeholder="Username" id="username" name="username" type="text" autocomplete="username" required=True class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-none rounded-t-md border border-gray-300 appearance-none focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm" %}
                     </div>
                     <div>
                         {{ form.password.errors | safe }}
                         <label for="password" class="sr-only">Password</label>
-                        {% render_field form.password id="password" name="password" type="password" autocomplete="current-password" required="True" class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-none rounded-b-md border border-gray-300 appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Password" %}
+                        {% render_field form.password id="password" name="password" type="password" autocomplete="current-password" required="True" class="block relative px-3 py-2 w-full placeholder-gray-500 text-gray-900 rounded-none rounded-b-md border border-gray-300 appearance-none focus:outline-none focus:ring-gray-500 focus:border-gray-500 focus:z-10 sm:text-sm" placeholder="Password" %}
                     </div>
                 </div>
 
@@ -39,10 +39,10 @@
 
                 <div>
                     <button type="submit"
-                            class="flex relative justify-center px-4 py-2 w-full text-sm font-medium text-white bg-pink-600 rounded-md border border-transparent border-solid group hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                            class="flex relative justify-center px-4 py-2 w-full text-sm font-medium text-white bg-gray-800 rounded-md border border-transparent border-solid group hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                         <span class="flex absolute inset-y-0 left-0 items-center pl-3">
                             <!-- Heroicon name: solid/lock-closed -->
-                            <svg class="w-5 h-5 text-pink-500 group-hover:text-pink-400"
+                            <svg class="w-5 h-5 text-gray-500 group-hover:text-gray-400"
                                  xmlns="http://www.w3.org/2000/svg"
                                  viewBox="0 0 20 20"
                                  fill="currentColor"

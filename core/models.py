@@ -123,7 +123,7 @@ class Profile(BaseModel):
 
     @property
     def has_product_or_subscription(self):
-        return self.product is not None or self.subscription is not None or self.user.is_superuser
+        return self.product is not None or self.subscription is not None
 
     @property
     def number_of_active_projects(self):

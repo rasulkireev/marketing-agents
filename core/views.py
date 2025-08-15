@@ -75,6 +75,9 @@ class HomeView(TemplateView):
 
             context["projects"] = projects_with_stats
 
+            email_address = EmailAddress.objects.get_for_user(user, user.email)
+            context["email_verified"] = email_address.verified
+
         return context
 
 

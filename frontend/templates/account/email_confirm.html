@@ -16,13 +16,13 @@
             {% user_display confirmation.email_address.user as user_display %}
             {% if can_confirm %}
                 <p class="mb-6 text-center">
-                    Please confirm that <a href="mailto:{{ confirmation.email_address.email }}" class="text-pink-600 hover:underline">{{ confirmation.email_address.email }}</a> is an email address for user {{ user_display }}.
+                    Please confirm that <a href="mailto:{{ confirmation.email_address.email }}" class="text-gray-600 hover:underline">{{ confirmation.email_address.email }}</a> is an email address for user {{ user_display }}.
                 </p>
                 {% url 'account_confirm_email' confirmation.key as action_url %}
                 <form method="post" action="{{ action_url }}" class="flex justify-center">
                   {% csrf_token %}
                     {{ redirect_field }}
-                    <button type="submit" class="px-4 py-2 text-white bg-pink-600 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                    <button type="submit" class="px-4 py-2 text-white bg-gray-800 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                         Confirm
                     </button>
                 </form>
@@ -34,7 +34,7 @@
         {% else %}
             {% url 'account_email' as email_url %}
             <p class="text-center">
-                This email confirmation link expired or is invalid. Please <a href="{{ email_url }}" class="text-pink-600 hover:underline">issue a new email confirmation request</a>.
+                This email confirmation link expired or is invalid. Please <a href="{{ email_url }}" class="text-gray-600 hover:underline">issue a new email confirmation request</a>.
             </p>
         {% endif %}
     </div>
