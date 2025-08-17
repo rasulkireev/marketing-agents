@@ -343,3 +343,7 @@ def generate_and_post_blog_post(project_id: int):
             return f"Failed to post blog post for {project.name}."
     else:
         return f"No blog post to post for {project.name}."
+
+
+def test_sentry_worker():
+    raise Exception("Test Sentry Worker")

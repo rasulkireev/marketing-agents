@@ -30,6 +30,7 @@ env = environ.Env(
 )
 
 ENVIRONMENT = env("ENVIRONMENT")
+SENTRY_DSN = env("SENTRY_DSN")
 
 logfire.configure(environment=ENVIRONMENT)
 
@@ -249,7 +250,11 @@ Q_CLUSTER = {
     "workers": 4,
     "max_attempts": 2,
     "redis": env("REDIS_URL"),
-    "error_reporter": {},
+    "error_reporter": {
+        "sentry": {
+            "dsn": SENTRY_DSN,
+        },
+    },
 }
 
 LOGGING = {
@@ -329,7 +334,6 @@ if ENVIRONMENT == "prod":
     LOGGING["loggers"]["django-q"]["handlers"] = ["json_console"]
     LOGGING["loggers"]["django-q"]["level"] = log_level
 
-SENTRY_DSN = env("SENTRY_DSN")
 if ENVIRONMENT == "prod" and SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN)
     Q_CLUSTER["error_reporter"]["sentry"] = {"dsn": SENTRY_DSN}
