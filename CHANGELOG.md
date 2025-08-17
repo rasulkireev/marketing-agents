@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [0.0.4] - 2025-08-17
+**Added**
+- Group name to submit blog post task
+
 **Fixed**
 - Error Reporting for Django-Q2
 

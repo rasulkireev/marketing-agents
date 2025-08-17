@@ -281,7 +281,9 @@ def schedule_blog_post_posting():
             continue
 
         if not project.last_posted_blog_post:
-            async_task("core.tasks.generate_and_post_blog_post", project.id)
+            async_task(
+                "core.tasks.generate_and_post_blog_post", project.id, group="Submit Blog Post"
+            )
             scheduled_posts += 1
             continue
 
@@ -296,7 +298,9 @@ def schedule_blog_post_posting():
         )
 
         if time_since_last_post_in_seconds > time_between_posts_in_seconds:
-            async_task("core.tasks.generate_and_post_blog_post", project.id)
+            async_task(
+                "core.tasks.generate_and_post_blog_post", project.id, group="Submit Blog Post"
+            )
             scheduled_posts += 1
 
     return f"Scheduled {scheduled_posts} blog posts"
