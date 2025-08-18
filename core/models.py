@@ -923,16 +923,54 @@ class GeneratedBlogPost(BaseModel):
             response = requests.post(url, json=body, headers=headers, timeout=15)
             response.raise_for_status()
             return True
-        except requests.RequestException as e:
-            logger.warning(
-                "Failed to submit blog post to endpoint",
+
+        except requests.exceptions.HTTPError as e:
+            # HTTP error responses (4xx, 5xx)
+            logger.error(
+                "HTTP error when submitting blog post to endpoint",
                 error=str(e),
-                exc_info=True,
+                status_code=response.status_code,
+                response_text=response.text[:1000],  # Truncate to avoid huge logs
+                response_headers=dict(response.headers),
                 url=url,
-                body=body,
-                headers=headers,
+                request_body=body,
+                request_headers=headers,
+                exc_info=True,
             )
-            return e
+            return False
+
+        except requests.exceptions.Timeout as e:
+            # Timeout errors
+            logger.error(
+                "Timeout error when submitting blog post to endpoint",
+                error=str(e),
+                timeout=15,
+                url=url,
+                exc_info=True,
+            )
+            return False
+
+        except requests.exceptions.ConnectionError as e:
+            # Connection errors
+            logger.error(
+                "Connection error when submitting blog post to endpoint",
+                error=str(e),
+                url=url,
+                exc_info=True,
+            )
+            return False
+
+        except requests.RequestException as e:
+            # Other request errors
+            logger.error(
+                "Request error when submitting blog post to endpoint",
+                error=str(e),
+                url=url,
+                request_body=body,
+                request_headers=headers,
+                exc_info=True,
+            )
+            return False
 
 
 class ProjectPage(BaseModel):
