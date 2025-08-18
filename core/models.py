@@ -924,7 +924,7 @@ class GeneratedBlogPost(BaseModel):
             response.raise_for_status()
             return True
         except requests.RequestException as e:
-            logger.error(
+            logger.warning(
                 "Failed to submit blog post to endpoint",
                 error=str(e),
                 exc_info=True,
@@ -932,7 +932,7 @@ class GeneratedBlogPost(BaseModel):
                 body=body,
                 headers=headers,
             )
-            return False
+            return e
 
 
 class ProjectPage(BaseModel):
