@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from ninja import NinjaAPI
 
-from core.api.auth import MultipleAuthSchema
+from core.api.auth import session_auth, superuser_api_auth
 from core.api.schemas import (
     AddCompetitorIn,
     AddKeywordIn,
@@ -45,10 +45,10 @@ from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
 
-api = NinjaAPI(auth=MultipleAuthSchema(), csrf=False)
+api = NinjaAPI(docs_url=None)
 
 
-@api.post("/scan", response=ProjectScanOut)
+@api.post("/scan", response=ProjectScanOut, auth=[session_auth])
 def scan_project(request: HttpRequest, data: ProjectScanIn):
     profile = request.auth
 
@@ -106,7 +106,7 @@ def scan_project(request: HttpRequest, data: ProjectScanIn):
         }
 
 
-@api.post("/generate-title-suggestions", response=GenerateTitleSuggestionsOut)
+@api.post("/generate-title-suggestions", response=GenerateTitleSuggestionsOut, auth=[session_auth])
 def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggestionsIn):
     profile = request.auth
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
@@ -137,7 +137,7 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
     return {"suggestions": suggestions, "status": "success", "message": ""}
 
 
-@api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut)
+@api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut, auth=[session_auth])
 def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestionsIn):
     profile = request.auth
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
@@ -186,7 +186,9 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
         raise e
 
 
-@api.post("/generate-blog-content/{suggestion_id}", response=GeneratedContentOut)
+@api.post(
+    "/generate-blog-content/{suggestion_id}", response=GeneratedContentOut, auth=[session_auth]
+)
 def generate_blog_content(request: HttpRequest, suggestion_id: int):
     profile = request.auth
     suggestion = get_object_or_404(
@@ -236,7 +238,7 @@ def generate_blog_content(request: HttpRequest, suggestion_id: int):
         }
 
 
-@api.post("/projects/{project_id}/update", response={200: dict})
+@api.post("/projects/{project_id}/update", response={200: dict}, auth=[session_auth])
 def update_project(request: HttpRequest, project_id: int):
     profile = request.auth
     logger.info("Updating project", project_id=project_id, profile_id=profile.id)
@@ -257,7 +259,11 @@ def update_project(request: HttpRequest, project_id: int):
     return {"status": "success"}
 
 
-@api.post("/projects/{project_id}/toggle-auto-submission", response=ToggleAutoSubmissionOut)
+@api.post(
+    "/projects/{project_id}/toggle-auto-submission",
+    response=ToggleAutoSubmissionOut,
+    auth=[session_auth],
+)
 def toggle_auto_submission(request: HttpRequest, project_id: int):
     profile = request.auth
     project = get_object_or_404(Project, id=project_id, profile=profile)
@@ -268,7 +274,7 @@ def toggle_auto_submission(request: HttpRequest, project_id: int):
     return {"status": "success", "enabled": project.enable_automatic_post_submission}
 
 
-@api.post("/update-title-score/{suggestion_id}", response={200: dict})
+@api.post("/update-title-score/{suggestion_id}", response={200: dict}, auth=[session_auth])
 def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTitleScoreIn):
     profile = request.auth
     suggestion = get_object_or_404(
@@ -294,7 +300,7 @@ def update_title_score(request: HttpRequest, suggestion_id: int, data: UpdateTit
         return {"status": "error", "message": f"Failed to update score: {str(e)}"}
 
 
-@api.post("/suggestions/{suggestion_id}/archive-status", response={200: dict})
+@api.post("/suggestions/{suggestion_id}/archive-status", response={200: dict}, auth=[session_auth])
 def update_archive_status(request: HttpRequest, suggestion_id: int, data: UpdateArchiveStatusIn):
     profile = request.auth
     suggestion = get_object_or_404(
@@ -315,7 +321,7 @@ def update_archive_status(request: HttpRequest, suggestion_id: int, data: Update
         return {"status": "error", "message": str(e)}
 
 
-@api.post("/add-pricing-page")
+@api.post("/add-pricing-page", auth=[session_auth])
 def add_pricing_page(request: HttpRequest, data: AddPricingPageIn):
     profile = request.auth
     project = Project.objects.get(id=data.project_id, profile=profile)
@@ -330,7 +336,7 @@ def add_pricing_page(request: HttpRequest, data: AddPricingPageIn):
     return {"status": "success", "message": "Pricing page added successfully"}
 
 
-@api.post("/add-competitor", response=CompetitorAnalysisOut)
+@api.post("/add-competitor", response=CompetitorAnalysisOut, auth=[session_auth])
 def add_competitor(request: HttpRequest, data: AddCompetitorIn):
     profile = request.auth
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
@@ -393,14 +399,14 @@ def add_competitor(request: HttpRequest, data: AddCompetitorIn):
         return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}
 
 
-@api.post("/submit-feedback")
+@api.post("/submit-feedback", auth=[session_auth])
 def submit_feedback(request: HttpRequest, data: SubmitFeedbackIn):
     profile = request.auth
     Feedback.objects.create(profile=profile, feedback=data.feedback, page=data.page)
     return {"status": "success"}
 
 
-@api.get("/user/settings", response=UserSettingsOut)
+@api.get("/user/settings", response=UserSettingsOut, auth=[session_auth])
 def user_settings(request: HttpRequest, project_id: int):
     profile = request.auth
     try:
@@ -430,7 +436,7 @@ def user_settings(request: HttpRequest, project_id: int):
         raise
 
 
-@api.post("/keywords/add", response=AddKeywordOut)
+@api.post("/keywords/add", response=AddKeywordOut, auth=[session_auth])
 def add_keyword_to_project(request: HttpRequest, data: AddKeywordIn):
     profile = request.auth
     project = get_object_or_404(Project, id=data.project_id, profile=profile)
@@ -496,7 +502,7 @@ def add_keyword_to_project(request: HttpRequest, data: AddKeywordIn):
         return {"status": "error", "message": f"An unexpected error occurred: {str(e)}"}
 
 
-@api.post("/keywords/toggle-use", response=ToggleProjectKeywordUseOut)
+@api.post("/keywords/toggle-use", response=ToggleProjectKeywordUseOut, auth=[session_auth])
 def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordUseIn):
     profile = request.auth
     try:
@@ -518,18 +524,8 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
         return ToggleProjectKeywordUseOut(status="error", message=f"Failed to toggle use: {str(e)}")
 
 
-@api.post("/blog-posts/submit", response=BlogPostOut, include_in_schema=False)
+@api.post("/blog-posts/submit", response=BlogPostOut, auth=[superuser_api_auth])
 def submit_blog_post(request: HttpRequest, data: BlogPostIn):
-    profile = request.auth
-    logger.info(
-        "[Submit Blog Post] Got Profile",
-        request=request.__dict__,
-        profile_id=profile.id if profile else None,
-        is_superuser=profile.user.is_superuser if profile else False,
-    )
-
-    if not profile or not getattr(profile.user, "is_superuser", False):
-        return BlogPostOut(status="error", message="Forbidden: superuser access required."), 403
     try:
         BlogPost.objects.create(
             title=data.title,
@@ -545,7 +541,7 @@ def submit_blog_post(request: HttpRequest, data: BlogPostIn):
         return BlogPostOut(status="error", message=f"Failed to submit blog post: {str(e)}")
 
 
-@api.post("/post-generated-blog-post", response=PostGeneratedBlogPostOut)
+@api.post("/post-generated-blog-post", response=PostGeneratedBlogPostOut, auth=[session_auth])
 def post_generated_blog_post(request: HttpRequest, data: PostGeneratedBlogPostIn):
     profile = request.auth
 
