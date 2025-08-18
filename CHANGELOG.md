@@ -14,7 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [0.0.4] - 2025-08-17
+## [0.0.4] - 2025-08-18
 **Added**
 - Added a couple of logs to Django Ninja Auth module and Submit Post endpoint
 
@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Changed**
 - Authneticate classes in auth.py to follow proper way from django-ninja docs
 - Genereate Content prompts
+- Design of the Title Suggestion card to be a little more visually appealing, plus added date
 
 
 
