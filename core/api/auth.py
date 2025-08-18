@@ -18,7 +18,7 @@ class APIKeyAuth(HttpBearer):
         try:
             return Profile.objects.get(key=token)
         except Profile.DoesNotExist:
-            logger.warning(f"Invalid API key: {token}")
+            logger.warning("[Django Ninja Auth] Invalid API key", token=token)
             return None
 
 
@@ -34,7 +34,7 @@ class SessionAuth:
             try:
                 return request.user.profile
             except Profile.DoesNotExist:
-                logger.warning(f"No profile for user: {request.user.id}")
+                logger.warning("[Django Ninja Auth] No profile for user", user_id=request.user.id)
                 return None
         return None
 
