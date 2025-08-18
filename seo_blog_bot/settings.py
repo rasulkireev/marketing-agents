@@ -299,11 +299,6 @@ LOGGING = {
             "handlers": ["console"],
             "propagate": False,
         },
-        "django-q": {
-            "level": "DEBUG",
-            "handlers": ["console"],
-            "propagate": False,
-        },
     },
 }
 
@@ -331,8 +326,6 @@ if ENVIRONMENT == "prod":
     LOGGING["loggers"]["django_structlog"]["handlers"] = ["json_console"]
     LOGGING["loggers"]["seo_blog_bot"]["level"] = log_level
     LOGGING["loggers"]["seo_blog_bot"]["handlers"] = ["json_console"]
-    LOGGING["loggers"]["django-q"]["handlers"] = ["json_console"]
-    LOGGING["loggers"]["django-q"]["level"] = log_level
 
 if ENVIRONMENT == "prod" and SENTRY_DSN:
     sentry_sdk.init(dsn=SENTRY_DSN)

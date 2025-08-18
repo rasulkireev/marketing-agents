@@ -521,6 +521,13 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
 @api.post("/blog-posts/submit", response=BlogPostOut, include_in_schema=False)
 def submit_blog_post(request: HttpRequest, data: BlogPostIn):
     profile = getattr(request, "auth", None)
+    logger.info(
+        "[Submit Blog Post] Got Profile",
+        request=request.__dict__,
+        profile_id=profile.id,
+        is_superuser=profile.user.is_superuser,
+    )
+
     if not profile or not getattr(profile.user, "is_superuser", False):
         return BlogPostOut(status="error", message="Forbidden: superuser access required."), 403
     try:
@@ -541,6 +548,7 @@ def submit_blog_post(request: HttpRequest, data: BlogPostIn):
 @api.post("/post-generated-blog-post", response=PostGeneratedBlogPostOut)
 def post_generated_blog_post(request: HttpRequest, data: PostGeneratedBlogPostIn):
     profile = getattr(request, "auth", None)
+
     blog_post_id = data.id
     if not blog_post_id:
         return {"status": "error", "message": "Missing generated blog post id."}

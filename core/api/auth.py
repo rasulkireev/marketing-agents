@@ -1,13 +1,20 @@
-from typing import Optional
-
 from django.http import HttpRequest
 from ninja.security import HttpBearer
 
 from core.models import Profile
+from seo_blog_bot.utils import get_seo_blog_bot_logger
+
+logger = get_seo_blog_bot_logger(__name__)
 
 
 class MultipleAuthSchema(HttpBearer):
-    def authenticate(self, request: HttpRequest, token: Optional[str] = None) -> Optional[Profile]:
+    def authenticate(self, request: HttpRequest, token: str | None = None) -> Profile | None:
+        logger.debug(
+            "[Django Ninja Auth] API Request",
+            request=request.__dict__,
+            token=token,
+        )
+
         # For session-based authentication (when using the web interface)
         if hasattr(request, "user") and request.user.is_authenticated:
             try:
