@@ -927,7 +927,7 @@ class GeneratedBlogPost(BaseModel):
         except requests.exceptions.HTTPError as e:
             # HTTP error responses (4xx, 5xx)
             logger.error(
-                "HTTP error when submitting blog post to endpoint",
+                "[Submit Blog Post to Endpoint] HTTP error",
                 error=str(e),
                 status_code=response.status_code,
                 response_text=response.text[:1000],  # Truncate to avoid huge logs
@@ -942,7 +942,7 @@ class GeneratedBlogPost(BaseModel):
         except requests.exceptions.Timeout as e:
             # Timeout errors
             logger.error(
-                "Timeout error when submitting blog post to endpoint",
+                "[Submit Blog Post to Endpoint] Timeout error",
                 error=str(e),
                 timeout=15,
                 url=url,
@@ -953,7 +953,7 @@ class GeneratedBlogPost(BaseModel):
         except requests.exceptions.ConnectionError as e:
             # Connection errors
             logger.error(
-                "Connection error when submitting blog post to endpoint",
+                "[Submit Blog Post to Endpoint] Connection error",
                 error=str(e),
                 url=url,
                 exc_info=True,
@@ -963,7 +963,7 @@ class GeneratedBlogPost(BaseModel):
         except requests.RequestException as e:
             # Other request errors
             logger.error(
-                "Request error when submitting blog post to endpoint",
+                "[Submit Blog Post to Endpoint] Request error",
                 error=str(e),
                 url=url,
                 request_body=body,
