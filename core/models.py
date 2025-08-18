@@ -742,7 +742,7 @@ class BlogPostTitleSuggestion(BaseModel):
         def add_title_details(ctx: RunContext[BlogPostGenerationContext]) -> str:
             title = ctx.deps.title_suggestion
             return f"""
-                Title Information:
+                This is the title suggestion gnerate by AI using project information:
                 - Title: {title.title}
                 - Description: {title.description}
                 - Category: {title.category}
@@ -778,10 +778,10 @@ class BlogPostTitleSuggestion(BaseModel):
         @agent.system_prompt
         def post_structure() -> str:
             return """
-                - Don't include blogpost title in the content. Start with the content.
-                - Don't start with a header or a subheader.
-                  Start with plain text as intro, then add subheaders as you see fit.
-            """
+                - Don't start with a title, header or a subheader (#, ##, ###). Instead start with a plain text as intro.
+                - Use '##' (h2 headers) for sections of the post where necessary.
+                - Don't use 3rd levle subheaders (###) or deeper. That should not be necessary for the post.
+            """  # noqa: E501
 
         @agent.system_prompt
         def filler_content() -> str:
