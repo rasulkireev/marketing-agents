@@ -1,5 +1,5 @@
 from django.http import HttpRequest
-from ninja.security import HttpBearer
+from ninja.security import APIKeyQuery
 
 from core.models import Profile
 from seo_blog_bot.utils import get_seo_blog_bot_logger
@@ -7,18 +7,18 @@ from seo_blog_bot.utils import get_seo_blog_bot_logger
 logger = get_seo_blog_bot_logger(__name__)
 
 
-class APIKeyAuth(HttpBearer):
-    """Authentication via API key in Bearer token"""
+class APIKeyAuth(APIKeyQuery):
+    param_name = "api_key"
 
-    def authenticate(self, request: HttpRequest, token: str) -> Profile | None:
+    def authenticate(self, request: HttpRequest, key: str) -> Profile | None:
         logger.info(
-            "[Django Ninja Auth] API Request with token",
-            token=token,
+            "[Django Ninja Auth] API Request with key",
+            key=key,
         )
         try:
-            return Profile.objects.get(key=token)
+            return Profile.objects.get(key=key)
         except Profile.DoesNotExist:
-            logger.warning("[Django Ninja Auth] Invalid API key", token=token)
+            logger.warning("[Django Ninja Auth] Invalid API key", key=key)
             return None
 
 
@@ -42,12 +42,12 @@ class SessionAuth:
         return self.authenticate(request)
 
 
-class SuperuserAPIKeyAuth(HttpBearer):
-    """Authentication via API key, but only for superusers"""
+class SuperuserAPIKeyAuth(APIKeyQuery):
+    param_name = "api_key"
 
-    def authenticate(self, request: HttpRequest, token: str) -> Profile | None:
+    def authenticate(self, request: HttpRequest, key: str) -> Profile | None:
         try:
-            profile = Profile.objects.get(key=token)
+            profile = Profile.objects.get(key=key)
             if profile.user.is_superuser:
                 return profile
             logger.warning(
@@ -56,7 +56,7 @@ class SuperuserAPIKeyAuth(HttpBearer):
             )
             return None
         except Profile.DoesNotExist:
-            logger.warning("[Django Ninja Auth] Profile does not exist", token=token)
+            logger.warning("[Django Ninja Auth] Profile does not exist", key=key)
             return None
 
 
