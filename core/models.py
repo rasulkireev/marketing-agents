@@ -286,9 +286,6 @@ class Project(BaseModel):
         if not markdown_content:
             logger.error(
                 "[Get Page Content] Failed to get page content",
-                title=title,
-                description=description,
-                markdown_content=markdown_content,
                 url=self.url,
             )
             return False
@@ -916,12 +913,6 @@ class GeneratedBlogPost(BaseModel):
             endpoint_url=url,
             headers_configured=bool(headers),
             body_configured=bool(body),
-            authorization_header_present=bool(
-                headers and ("authorization" in headers or "Authorization" in headers)
-            ),
-            content_type_header=headers.get("content-type") or headers.get("Content-Type")
-            if headers
-            else "Not set",
         )
 
         try:
@@ -943,8 +934,7 @@ class GeneratedBlogPost(BaseModel):
                 "[Submit Blog Post to Endpoint] Request error",
                 error=str(e),
                 url=url,
-                request_body=body,
-                request_headers=headers,
+                headers=headers,
                 exc_info=True,
             )
             return False
@@ -1385,11 +1375,6 @@ class Keyword(BaseModel):
                     if trends_to_create:
                         KeywordTrend.objects.bulk_create(trends_to_create)
 
-            logger.info(
-                "[KeywordFetch] Successfully fetched and updated metrics.",
-                keyword_id=self.id,
-                keyword_text=self.keyword_text,
-            )
             return True
 
         except requests.exceptions.HTTPError as e:
@@ -1398,6 +1383,7 @@ class Keyword(BaseModel):
                 keyword_id=self.id,
                 keyword_text=self.keyword_text,
                 error=str(e),
+                exc_info=True,
                 status_code=e.response.status_code if e.response else None,
                 response_content=e.response.text[:500] if e.response else None,
             )
@@ -1416,6 +1402,7 @@ class Keyword(BaseModel):
                 keyword_id=self.id,
                 keyword_text=self.keyword_text,
                 error=str(e),
+                exc_info=True,
             )
             return False
         except Exception as e:
@@ -1424,6 +1411,7 @@ class Keyword(BaseModel):
                 keyword_id=self.id,
                 keyword_text=self.keyword_text,
                 error=str(e),
+                exc_info=True,
             )
             return False
 
