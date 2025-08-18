@@ -520,12 +520,12 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
 
 @api.post("/blog-posts/submit", response=BlogPostOut, include_in_schema=False)
 def submit_blog_post(request: HttpRequest, data: BlogPostIn):
-    profile = getattr(request, "auth", None)
+    profile = request.auth
     logger.info(
         "[Submit Blog Post] Got Profile",
         request=request.__dict__,
-        profile_id=profile.id,
-        is_superuser=profile.user.is_superuser,
+        profile_id=profile.id if profile else None,
+        is_superuser=profile.user.is_superuser if profile else False,
     )
 
     if not profile or not getattr(profile.user, "is_superuser", False):
@@ -547,7 +547,7 @@ def submit_blog_post(request: HttpRequest, data: BlogPostIn):
 
 @api.post("/post-generated-blog-post", response=PostGeneratedBlogPostOut)
 def post_generated_blog_post(request: HttpRequest, data: PostGeneratedBlogPostIn):
-    profile = getattr(request, "auth", None)
+    profile = request.auth
 
     blog_post_id = data.id
     if not blog_post_id:

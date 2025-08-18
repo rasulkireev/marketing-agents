@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Removed**
 - Logging config for django-q module as I suspect it was messing with the Sentry Error logging
 
+**Fixed**
+- Get the token for API call authentication, before authenticating
+
 
 
 ## [0.0.4] - 2025-08-17
