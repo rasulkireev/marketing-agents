@@ -17,6 +17,11 @@ class MultipleAuthSchema(HttpBearer):
 
         # For API token authentication (when using the API directly)
         if token:
+            logger.info(
+                "[Django Ninja Auth] API Request with token",
+                request=request.__dict__,
+                token=token,
+            )
             try:
                 return Profile.objects.get(key=token)
             except Profile.DoesNotExist:
@@ -24,6 +29,11 @@ class MultipleAuthSchema(HttpBearer):
 
         # For session-based authentication (when using the web interface)
         if hasattr(request, "user") and request.user.is_authenticated:
+            logger.info(
+                "[Django Ninja Auth] API Request with user",
+                request=request.__dict__,
+                user=request.user.__dict__,
+            )
             try:
                 return request.user.profile
             except Profile.DoesNotExist:
