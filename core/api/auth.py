@@ -7,63 +7,58 @@ from seo_blog_bot.utils import get_seo_blog_bot_logger
 logger = get_seo_blog_bot_logger(__name__)
 
 
-class MultipleAuthSchema(HttpBearer):
-    def authenticate(self, request: HttpRequest, token: str | None = None) -> Profile | None:
-        if token:
-            logger.info(
-                "[Django Ninja Auth] API Request with token",
-                request=request.__dict__,
-                token=token,
-            )
-            try:
-                return Profile.objects.get(key=token)
-            except Profile.DoesNotExist:
-                return None
+class APIKeyAuth(HttpBearer):
+    """Authentication via API key in Bearer token"""
 
+    def authenticate(self, request: HttpRequest, token: str) -> Profile | None:
+        logger.info(
+            "[Django Ninja Auth] API Request with token",
+            token=token,
+        )
+        try:
+            return Profile.objects.get(key=token)
+        except Profile.DoesNotExist:
+            logger.warning(f"Invalid API key: {token}")
+            return None
+
+
+class SessionAuth:
+    """Authentication via Django session"""
+
+    def authenticate(self, request: HttpRequest) -> Profile | None:
         if hasattr(request, "user") and request.user.is_authenticated:
             logger.info(
-                "[Django Ninja Auth] API Request with user",
-                request=request.__dict__,
-                user=request.user.__dict__,
+                "[Django Ninja Auth] API Request with authenticated user",
+                user_id=request.user.id,
             )
             try:
                 return request.user.profile
             except Profile.DoesNotExist:
+                logger.warning(f"No profile for user: {request.user.id}")
                 return None
-
         return None
 
-    def __call__(self, request):
-        logger.info(
-            "[Django Ninja Auth] API Request",
-            request=request.__dict__,
-        )
+    def __call__(self, request: HttpRequest):
+        return self.authenticate(request)
 
-        authorization = request.headers.get("Authorization") or request.headers.get(
-            "authorization", ""
-        )
-        if authorization.startswith("Bearer "):
-            token = authorization.split(" ")[1]
-            logger.info(
-                "[Django Ninja Auth] Found Bearer token in headers",
-                token=token,
-                header_key_used="Authorization"
-                if request.headers.get("Authorization")
-                else "authorization",
+
+class SuperuserAPIKeyAuth(HttpBearer):
+    """Authentication via API key, but only for superusers"""
+
+    def authenticate(self, request: HttpRequest, token: str) -> Profile | None:
+        try:
+            profile = Profile.objects.get(key=token)
+            if profile.user.is_superuser:
+                return profile
+            logger.warning(
+                "[Django Ninja Auth] Non-superuser attempted admin access",
+                profile_id=profile.user.id,
             )
-            return self.authenticate(request, token)
+            return None
+        except Profile.DoesNotExist:
+            return None
 
-        if hasattr(request, "user") and request.user.is_authenticated:
-            logger.info(
-                "[Django Ninja Auth] No Bearer token found, falling back to session auth",
-                user_authenticated=request.user.is_authenticated,
-                available_headers=list(request.headers.keys()),
-            )
-            return self.authenticate(request)
 
-        logger.warning(
-            "[Django Ninja Auth] No authentication method found",
-            available_headers=list(request.headers.keys()),
-            user_authenticated=hasattr(request, "user") and request.user.is_authenticated,
-        )
-        return super().__call__(request)
+api_key_auth = APIKeyAuth()
+session_auth = SessionAuth()
+superuser_api_auth = SuperuserAPIKeyAuth()

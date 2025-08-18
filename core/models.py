@@ -938,73 +938,7 @@ class GeneratedBlogPost(BaseModel):
             response.raise_for_status()
             return True
 
-        except requests.exceptions.HTTPError as e:
-            # HTTP error responses (4xx, 5xx)
-            logger.error(
-                "[Submit Blog Post to Endpoint] HTTP error",
-                error=str(e),
-                status_code=response.status_code,
-                response_text=response.text[:1000],  # Truncate to avoid huge logs
-                response_headers=dict(response.headers),
-                url=url,
-                request_body=body,
-                request_headers=headers,
-                exc_info=True,
-            )
-
-            # Special handling for 401 Unauthorized to provide debugging info
-            if response.status_code == 401:
-                auth_header = (
-                    headers.get("authorization") or headers.get("Authorization")
-                    if headers
-                    else None
-                )
-                logger.error(
-                    "[Submit Blog Post to Endpoint] 401 Unauthorized - Authentication Debug",
-                    auth_header_key=(
-                        "authorization"
-                        if headers and "authorization" in headers
-                        else "Authorization"
-                        if headers and "Authorization" in headers
-                        else "MISSING"
-                    ),
-                    auth_header_value=auth_header,
-                    auth_header_starts_with_bearer=auth_header.startswith("Bearer ")
-                    if auth_header
-                    else False,
-                    token_from_header=auth_header.split(" ")[1]
-                    if auth_header and auth_header.startswith("Bearer ")
-                    else "INVALID",
-                    same_domain_request=settings.endpoint_url.startswith(
-                        "https://marketingagents.net/"
-                    ),
-                )
-
-            return False
-
-        except requests.exceptions.Timeout as e:
-            # Timeout errors
-            logger.error(
-                "[Submit Blog Post to Endpoint] Timeout error",
-                error=str(e),
-                timeout=15,
-                url=url,
-                exc_info=True,
-            )
-            return False
-
-        except requests.exceptions.ConnectionError as e:
-            # Connection errors
-            logger.error(
-                "[Submit Blog Post to Endpoint] Connection error",
-                error=str(e),
-                url=url,
-                exc_info=True,
-            )
-            return False
-
         except requests.RequestException as e:
-            # Other request errors
             logger.error(
                 "[Submit Blog Post to Endpoint] Request error",
                 error=str(e),
