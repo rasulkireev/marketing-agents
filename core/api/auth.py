@@ -56,6 +56,7 @@ class SuperuserAPIKeyAuth(HttpBearer):
             )
             return None
         except Profile.DoesNotExist:
+            logger.warning("[Django Ninja Auth] Profile does not exist", token=token)
             return None
 
 
