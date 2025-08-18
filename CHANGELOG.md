@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.4] - 2025-08-17
 **Added**
+- Added a couple of logs to Django Ninja Auth module and Submit Post endpoint
+
+**Removed**
+- Logging config for django-q module as I suspect it was messing with the Sentry Error logging
+
+
+
+## [0.0.4] - 2025-08-17
+**Added**
 - Group name to submit blog post task
 
 **Fixed**

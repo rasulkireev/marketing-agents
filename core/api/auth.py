@@ -9,7 +9,7 @@ logger = get_seo_blog_bot_logger(__name__)
 
 class MultipleAuthSchema(HttpBearer):
     def authenticate(self, request: HttpRequest, token: str | None = None) -> Profile | None:
-        logger.debug(
+        logger.info(
             "[Django Ninja Auth] API Request",
             request=request.__dict__,
             token=token,
