@@ -160,9 +160,9 @@
 
           <!-- Active Suggestions -->
           <div id="active-suggestions-list" data-controller="archived-list" class="archived-list" data-archived-list-name-value="active">
-            <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gray-50 rounded-lg border border-gray-200">
               <button
-                class="flex justify-between items-center px-4 py-3 w-full text-left rounded-t-lg hover:bg-gray-50 focus:outline-none"
+                class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-lg transition-colors hover:bg-gray-100 focus:outline-none"
                 data-action="click->archived-list#toggle"
               >
                 <h4 class="text-base font-medium text-gray-900">Active Ideas</h4>
@@ -170,7 +170,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
-              <div data-archived-list-target="list" class="border-t border-gray-200" data-title-suggestions-target="activeSuggestionsList">
+              <div data-archived-list-target="list" class="p-4 border-t border-gray-200" data-title-suggestions-target="activeSuggestionsList">
                 {% for suggestion in active_suggestions %}
                   {% include "components/blog_post_suggestion_card.html" with suggestion=suggestion %}
                 {% endfor %}
@@ -180,9 +180,9 @@
 
           <!-- Posted Suggestions -->
           <div data-controller="archived-list" class="archived-list" data-archived-list-name-value="posted">
-            <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gray-50 rounded-lg border border-gray-200">
               <button
-                class="flex justify-between items-center px-4 py-3 w-full text-left rounded-t-lg hover:bg-gray-50 focus:outline-none"
+                class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-lg transition-colors hover:bg-gray-100 focus:outline-none"
                 data-action="click->archived-list#toggle"
               >
                 <h4 class="text-base font-medium text-gray-900">Published Posts</h4>
@@ -190,7 +190,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
-              <div data-archived-list-target="list" class="hidden border-t border-gray-200">
+              <div data-archived-list-target="list" class="hidden p-4 border-t border-gray-200">
                 {% for suggestion in posted_suggestions %}
                   {% include "components/blog_post_suggestion_card.html" with suggestion=suggestion %}
                 {% endfor %}
@@ -200,9 +200,9 @@
 
           <!-- Archived Suggestions -->
           <div id="archived-suggestions-list" data-controller="archived-list" class="archived-list" data-archived-list-name-value="archived">
-            <div class="bg-white rounded-lg border border-gray-200">
+            <div class="bg-gray-50 rounded-lg border border-gray-200">
               <button
-                class="flex justify-between items-center px-4 py-3 w-full text-left rounded-t-lg hover:bg-gray-50 focus:outline-none"
+                class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-lg transition-colors hover:bg-gray-100 focus:outline-none"
                 data-action="click->archived-list#toggle"
               >
                 <h4 class="text-base font-medium text-gray-900">Archived Ideas</h4>
@@ -210,7 +210,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
-              <div data-archived-list-target="list" class="hidden border-t border-gray-200">
+              <div data-archived-list-target="list" class="hidden p-4 border-t border-gray-200">
                 {% for suggestion in archived_suggestions %}
                   {% include "components/blog_post_suggestion_card.html" with suggestion=suggestion %}
                 {% endfor %}

@@ -1,5 +1,5 @@
 <div
-  class="border-b border-gray-200 last:border-b-0"
+  class="mb-4 last:mb-0 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
   data-controller="generate-content archive-suggestion"
   data-generate-content-suggestion-id-value="{{ suggestion.id }}"
   data-generate-content-project-id-value="{{ suggestion.project.id }}"
@@ -8,42 +8,16 @@
   data-suggestion-type="{{ suggestion.content_type }}"
 >
   <div class="p-6">
-    <!-- Header with title and status -->
-    <div class="flex justify-between items-start mb-4">
+    <!-- Header with title and action button -->
+    <div class="flex justify-between items-start mb-1">
       <div class="flex-1">
-        <h4 class="mb-2 text-lg font-semibold text-gray-900">
+        <h4 class="text-lg font-semibold text-gray-900">
           {{ suggestion.title }}
         </h4>
-
-        <!-- Status indicator -->
-        <div class="flex gap-3 items-center">
-          <div data-generate-content-target="status">
-            {% with generated_post=suggestion.generated_blog_posts.first %}
-              {% if generated_post and generated_post.content %}
-                <div class="flex gap-1.5 items-center">
-                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span class="text-sm font-medium text-green-700">Generated</span>
-                </div>
-              {% elif generated_post %}
-                <div class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-gray-600"></div>
-              {% else %}
-                <div class="flex gap-1.5 items-center">
-                  <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  <span class="text-sm text-gray-600">Ready to generate</span>
-                </div>
-              {% endif %}
-            {% endwith %}
-          </div>
-
-          <!-- Category Badge -->
-          <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-md">
-            {{ suggestion.category }}
-          </span>
-        </div>
       </div>
 
       <!-- Action Button -->
-      <div class="ml-4">
+      <div class="flex-shrink-0 ml-4">
         <div data-generate-content-target="buttonContainer">
           {% with generated_post=suggestion.generated_blog_posts.first %}
             {% if not generated_post %}
@@ -71,38 +45,90 @@
       </div>
     </div>
 
+    <!-- Date and Status row -->
+    <div class="flex gap-4 items-center mb-4">
+      <!-- Creation date -->
+      <div class="flex gap-1 items-center">
+        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <span class="text-sm text-gray-500">
+          {{ suggestion.created_at|date:"M j, Y" }}
+        </span>
+      </div>
+
+      <!-- Status indicator -->
+      <div data-generate-content-target="status">
+        {% with generated_post=suggestion.generated_blog_posts.first %}
+          {% if generated_post and generated_post.content %}
+            <div class="flex gap-1.5 items-center">
+              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span class="text-sm font-medium text-green-700">Generated</span>
+            </div>
+          {% elif generated_post %}
+            <div class="w-5 h-5 rounded-full border-2 border-gray-300 animate-spin border-t-gray-600"></div>
+          {% else %}
+            <div class="flex gap-1.5 items-center">
+              <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+              <span class="text-sm text-gray-600">Ready to generate</span>
+            </div>
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+
+    <!-- Category row -->
+    <div class="flex gap-2 items-center pb-4 mb-4 border-b border-gray-100">
+      <span class="text-sm text-gray-500">Category:</span>
+      <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-full">
+        {{ suggestion.category }}
+      </span>
+    </div>
+
     <!-- Description -->
-    <p class="mb-4 leading-relaxed text-gray-700">
+    <p class="mb-6 leading-relaxed text-gray-700">
       {{ suggestion.description }}
     </p>
 
-    <!-- Keywords -->
-    {% if suggestion.target_keywords %}
-      <div class="mb-4">
-        <div class="flex flex-wrap gap-2">
-          {% for keyword in suggestion.target_keywords %}
-            <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 rounded border border-gray-200">
-              {{ keyword }}
-            </span>
-          {% endfor %}
+    <!-- Content sections -->
+    <div class="space-y-5">
+      <!-- Keywords -->
+      {% if suggestion.target_keywords %}
+        <div>
+          <h5 class="flex gap-2 items-center mb-3 text-sm font-medium text-gray-700">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+            </svg>
+            Keywords
+          </h5>
+          <div class="flex flex-wrap gap-2">
+            {% for keyword in suggestion.target_keywords %}
+              <span class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 rounded-full border border-gray-200 transition-colors hover:bg-gray-100">
+                {{ keyword }}
+              </span>
+            {% endfor %}
+          </div>
         </div>
-      </div>
-    {% endif %}
+      {% endif %}
 
-    <!-- Meta Description -->
-    {% if suggestion.suggested_meta_description %}
-      <div class="p-3 mb-4 bg-gray-50 rounded-md border border-gray-200">
-        <span class="block mb-1 text-xs font-medium text-gray-700">
-          Meta Description
-        </span>
-        <p class="text-sm text-gray-600">
-          {{ suggestion.suggested_meta_description }}
-        </p>
-      </div>
-    {% endif %}
+      <!-- Meta Description -->
+      {% if suggestion.suggested_meta_description %}
+        <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h5 class="flex gap-2 items-center mb-2 text-sm font-medium text-gray-700">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+            </svg>
+            Meta Description
+          </h5>
+          <p class="text-sm leading-relaxed text-gray-600">
+            {{ suggestion.suggested_meta_description }}
+          </p>
+        </div>
+      {% endif %}
+    </div>
 
     <!-- Actions Row -->
-    <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+    <div class="flex justify-between items-center pt-6 mt-6 border-t border-gray-100">
       <!-- Rating Actions -->
       <div class="flex items-center space-x-3"
            data-controller="title-score"
