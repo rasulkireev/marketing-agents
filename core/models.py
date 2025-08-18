@@ -913,14 +913,28 @@ class GeneratedBlogPost(BaseModel):
             "[Submit Blog Post] Submitting blog post to endpoint",
             project_id=project.id,
             profile_id=project.profile.id,
-            settings=settings.__dict__,
-            body=body,
-            headers=headers,
-            url=url,
+            endpoint_url=url,
+            headers_configured=bool(headers),
+            body_configured=bool(body),
+            authorization_header_present=bool(
+                headers and ("authorization" in headers or "Authorization" in headers)
+            ),
+            content_type_header=headers.get("content-type") or headers.get("Content-Type")
+            if headers
+            else "Not set",
         )
 
         try:
-            response = requests.post(url, json=body, headers=headers, timeout=15)
+            session = requests.Session()
+            session.cookies.clear()
+
+            if headers is None:
+                headers = {}
+
+            if "content-type" not in headers and "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+
+            response = session.post(url, json=body, headers=headers, timeout=15)
             response.raise_for_status()
             return True
 
@@ -937,6 +951,35 @@ class GeneratedBlogPost(BaseModel):
                 request_headers=headers,
                 exc_info=True,
             )
+
+            # Special handling for 401 Unauthorized to provide debugging info
+            if response.status_code == 401:
+                auth_header = (
+                    headers.get("authorization") or headers.get("Authorization")
+                    if headers
+                    else None
+                )
+                logger.error(
+                    "[Submit Blog Post to Endpoint] 401 Unauthorized - Authentication Debug",
+                    auth_header_key=(
+                        "authorization"
+                        if headers and "authorization" in headers
+                        else "Authorization"
+                        if headers and "Authorization" in headers
+                        else "MISSING"
+                    ),
+                    auth_header_value=auth_header,
+                    auth_header_starts_with_bearer=auth_header.startswith("Bearer ")
+                    if auth_header
+                    else False,
+                    token_from_header=auth_header.split(" ")[1]
+                    if auth_header and auth_header.startswith("Bearer ")
+                    else "INVALID",
+                    same_domain_request=settings.endpoint_url.startswith(
+                        "https://marketingagents.net/"
+                    ),
+                )
+
             return False
 
         except requests.exceptions.Timeout as e:
