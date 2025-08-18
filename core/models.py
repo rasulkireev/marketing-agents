@@ -898,6 +898,7 @@ class GeneratedBlogPost(BaseModel):
 
         project = self.project
         settings = AutoSubmissionSetting.objects.filter(project=project).order_by("-id").first()
+
         if not settings or not settings.endpoint_url:
             logger.warning(
                 "No AutoSubmissionSetting or endpoint_url found for project", project_id=project.id
@@ -908,6 +909,16 @@ class GeneratedBlogPost(BaseModel):
         headers = replace_placeholders(settings.header, self)
         body = replace_placeholders(settings.body, self)
 
+        logger.info(
+            "[Submit Blog Post] Submitting blog post to endpoint",
+            project_id=project.id,
+            profile_id=project.profile.id,
+            settings=settings.__dict__,
+            body=body,
+            headers=headers,
+            url=url,
+        )
+
         try:
             response = requests.post(url, json=body, headers=headers, timeout=15)
             response.raise_for_status()
@@ -916,6 +927,7 @@ class GeneratedBlogPost(BaseModel):
             logger.error(
                 "Failed to submit blog post to endpoint",
                 error=str(e),
+                exc_info=True,
                 url=url,
                 body=body,
                 headers=headers,
