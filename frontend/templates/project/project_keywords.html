@@ -133,7 +133,7 @@
                 {% for keyword in keywords %}
                   {% if keyword.volume and keyword.volume > 0 %}
                     <tr class="transition-colors hover:bg-gray-50"
-                        data-created-at="{{ keyword.created_at|date:'c' }}"
+                        data-created-at="{{ keyword.created_at|default:None|date:'c' }}"
                         data-volume="{{ keyword.volume|default:'' }}"
                         data-competition="{{ keyword.competition|default:'' }}"
                         data-cpc-value="{{ keyword.cpc_value|default:'' }}">
@@ -268,7 +268,7 @@
                     {% for keyword in keywords %}
                       {% if not keyword.volume or keyword.volume == 0 %}
                         <tr class="transition-colors hover:bg-gray-50"
-                            data-created-at="{{ keyword.created_at|date:'c' }}"
+                            data-created-at="{{ keyword.created_at|default:None|date:'c' }}"
                             data-volume="{{ keyword.volume|default:'' }}"
                             data-competition="{{ keyword.competition|default:'' }}"
                             data-cpc-value="{{ keyword.cpc_value|default:'' }}">
@@ -368,6 +368,7 @@
                 </h3>
                 <div class="mt-4">
                   <form id="modal-keyword-form" data-action="submit->keyword-trends#addKeyword">
+                    {% csrf_token %}
                     <input type="hidden" name="project_id" value="{{ project.id }}">
                     <div>
                       <label for="modal-keyword-input" class="block mb-2 text-sm font-medium text-gray-700">Keyword</label>
