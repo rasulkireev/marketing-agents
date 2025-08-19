@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DetailView, ListView, TemplateView, UpdateView
@@ -22,6 +22,7 @@ from core.models import (
     AutoSubmissionSetting,
     BlogPost,
     GeneratedBlogPost,
+    KeywordTrend,
     Profile,
     Project,
 )
@@ -344,19 +345,24 @@ class ProjectKeywordsView(LoginRequiredMixin, DetailView):
         # Get all keywords associated with this project with their metrics
         project_keywords = (
             project.project_keywords.select_related("keyword")
-            .prefetch_related("keyword__trends")
+            .prefetch_related(
+                Prefetch("keyword__trends", queryset=KeywordTrend.objects.order_by("year", "month"))
+            )
             .order_by("-keyword__volume", "keyword__keyword_text")
         )
 
-        # Prepare keywords with trend data for the template
+        # Prepare keywords with trend data for the template and calculate counts
         keywords_with_trends = []
+        total_keywords_count = 0
+        used_keywords_count = 0
+
         for project_keyword in project_keywords:
             keyword = project_keyword.keyword
 
             # Get trend data for this keyword
             trend_data = [
                 {"month": trend.month, "year": trend.year, "value": trend.value}
-                for trend in keyword.trends.all().order_by("year", "month")
+                for trend in keyword.trends.all()
             ]
 
             # Create keyword object with all necessary data
@@ -367,16 +373,22 @@ class ProjectKeywordsView(LoginRequiredMixin, DetailView):
                 "cpc_value": keyword.cpc_value,
                 "cpc_currency": keyword.cpc_currency,
                 "competition": keyword.competition,
+                "created_at": project_keyword.created_at,
                 "use": project_keyword.use,
                 "trend_data": trend_data,
                 "project_keyword_id": project_keyword.id,
             }
             keywords_with_trends.append(keyword_data)
 
+            # Count keywords while we're iterating
+            total_keywords_count += 1
+            if project_keyword.use:
+                used_keywords_count += 1
+
         context["keywords"] = keywords_with_trends
-        context["total_keywords_count"] = project_keywords.count()
-        context["used_keywords_count"] = project_keywords.filter(use=True).count()
-        context["available_keywords_count"] = project_keywords.filter(use=False).count()
+        context["total_keywords_count"] = total_keywords_count
+        context["used_keywords_count"] = used_keywords_count
+        context["available_keywords_count"] = total_keywords_count - used_keywords_count
 
         return context
 

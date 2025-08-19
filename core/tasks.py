@@ -154,7 +154,7 @@ def process_project_keywords(project_id: int):
             )
 
     logger.info(
-        "Keyword Proceesing Complete",
+        "Keyword Processing Complete",
         project_id=project.id,
         project_name=project.name,
         processed_count=processed_count,
