@@ -2,9 +2,21 @@
 
 <div data-controller="scan-progress">
   <div class="mx-auto max-w-md text-center">
-    <button data-action="click->scan-progress#toggleForm" data-scan-progress-target="addButton" class="px-6 py-3 text-sm font-medium text-white bg-gray-800 rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-      Add project
-    </button>
+    {% if not user.emailaddress_set.all.0.verified %}
+      <button
+        disabled
+        class="px-6 py-3 text-sm font-medium text-gray-400 bg-gray-100 rounded-md border border-gray-200 shadow-sm cursor-not-allowed"
+        data-controller="tooltip"
+        data-tooltip-message-value="Please confirm your email before you can create a project.\nIf you didn't receive an email, you can resend it in the account settings."
+        data-action="mouseenter->tooltip#show mouseleave->tooltip#hide"
+      >
+        Add project
+      </button>
+    {% else %}
+      <button data-action="click->scan-progress#toggleForm" data-scan-progress-target="addButton" class="px-6 py-3 text-sm font-medium text-white bg-gray-800 rounded-md shadow-sm transition-all duration-200 ease-in-out hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+        Add project
+      </button>
+    {% endif %}
   </div>
   <form data-action="submit->scan-progress#handleSubmit" data-scan-progress-target="form" class="hidden mx-auto mt-6 max-w-md animate-slide-up">
     {% csrf_token %}
