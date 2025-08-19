@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.4] - 2025-08-18
 **Added**
 - Added a couple of logs to Django Ninja Auth module and Submit Post endpoint
+- More info on the Generated Blog Post page, as well as the post button
 
 **Removed**
 - Logging config for django-q module as I suspect it was messing with the Sentry Error logging
@@ -26,8 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Authneticate classes in auth.py to follow proper way from django-ninja docs
 - Genereate Content prompts
 - Design of the Title Suggestion card to be a little more visually appealing, plus added date
-
-
 
 ## [0.0.4] - 2025-08-17
 **Added**
