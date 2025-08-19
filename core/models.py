@@ -1290,6 +1290,8 @@ class Keyword(BaseModel):
     last_fetched_at = models.DateTimeField(
         auto_now=True, help_text="Timestamp of when the data was last fetched"
     )
+    got_related_keywords = models.BooleanField(default=False)
+    got_people_also_search_for_keywords = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("keyword_text", "country", "data_source")
@@ -1317,7 +1319,7 @@ class Keyword(BaseModel):
 
         try:
             response = requests.post(api_url, data=payload, headers=headers, timeout=30)
-            response.raise_for_status()  # Raises HTTPError for bad responses (4XX or 5XX)
+            response.raise_for_status()
 
             response_data = response.json()
 

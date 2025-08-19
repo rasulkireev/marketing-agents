@@ -9,7 +9,7 @@
 
 {% block content %}
 <div class="py-16 bg-gray-50 sm:py-20">
-  <div class="px-6 mx-auto max-w-5xl lg:px-8">
+  <div class="px-6 mx-auto max-w-6xl lg:px-8">
 
     <!-- Back to Project Button -->
     <div class="mb-6">
@@ -36,7 +36,7 @@
     </div>
 
     <!-- Keywords Management -->
-    <div class="mt-12" data-controller="keyword-trends">
+    <div class="mt-12" data-controller="keyword">
       <!-- Main Keywords Table (with volume > 0) -->
       {% if keywords %}
         <!-- Filter keywords with volume > 0 -->
@@ -51,12 +51,12 @@
                      type="text"
                      placeholder="Search keywords..."
                      class="block px-3 py-2 w-full text-sm text-gray-900 bg-white rounded-md border border-gray-300 focus:ring-gray-500 focus:border-gray-500"
-                     data-keyword-trends-target="search"
-                     data-action="input->keyword-trends#filterKeywords">
+                     data-keyword-target="search"
+                     data-action="input->keyword#filterKeywords">
             </div>
             <button type="button"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md border border-gray-900 transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    data-action="click->keyword-trends#showModal">
+                    data-action="click->keyword#showModal">
               <svg class="mr-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -71,7 +71,7 @@
                 <tr>
                   <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                     <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                            data-action="click->keyword-trends#sortByColumn"
+                            data-action="click->keyword#sortByColumn"
                             data-column="keyword"
                             data-sort-type="alphabetical">
                       <span class="font-medium">Keyword</span>
@@ -84,7 +84,7 @@
                   </th>
                   <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                     <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                            data-action="click->keyword-trends#sortByColumn"
+                            data-action="click->keyword#sortByColumn"
                             data-column="volume"
                             data-sort-type="numerical">
                       <span class="font-medium">Volume</span>
@@ -97,7 +97,7 @@
                   </th>
                   <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                     <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                            data-action="click->keyword-trends#sortByColumn"
+                            data-action="click->keyword#sortByColumn"
                             data-column="cpc"
                             data-sort-type="numerical">
                       <span class="font-medium">CPC</span>
@@ -110,7 +110,7 @@
                   </th>
                   <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                     <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                            data-action="click->keyword-trends#sortByColumn"
+                            data-action="click->keyword#sortByColumn"
                             data-column="competition"
                             data-sort-type="numerical">
                       <span class="font-medium">Competition</span>
@@ -129,7 +129,7 @@
                   </th>
                 </tr>
               </thead>
-              <tbody class="bg-white divide-y divide-gray-200" data-keyword-trends-target="list">
+              <tbody class="bg-white divide-y divide-gray-200" data-keyword-target="list">
                 {% for keyword in keywords %}
                   {% if keyword.volume and keyword.volume > 0 %}
                     <tr class="transition-colors hover:bg-gray-50"
@@ -156,7 +156,7 @@
                         {% with keyword.id|stringformat:"s" as keyword_id_str %}
                         {% with prefix_str|add:keyword_id_str as final_trend_id %}
                           {{ keyword.trend_data|json_script:final_trend_id }}
-                          <div data-keyword-trends-target="graph"
+                          <div data-keyword-target="graph"
                                data-trend-data-id="{{ final_trend_id }}"
                                class="w-24 h-12 bg-gray-50 rounded border border-gray-100"></div>
                         {% endwith %}
@@ -164,15 +164,28 @@
                         {% endwith %}
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap">
-                        <button type="button"
-                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
-                                {% if keyword.use %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %}"
-                                data-action="click->keyword-trends#toggleUse"
-                                data-keyword-id="{{ keyword.id }}"
-                                data-project-id="{{ project.id }}"
-                                data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
-                          {% if keyword.use %}In Use{% else %}Use{% endif %}
-                        </button>
+                        <div class="flex items-center space-x-2">
+                          <button type="button"
+                                  class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                                  {% if keyword.use %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %}"
+                                  data-action="click->keyword#toggleUse"
+                                  data-keyword-id="{{ keyword.id }}"
+                                  data-project-id="{{ project.id }}"
+                                  data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
+                            {% if keyword.use %}In Use{% else %}Use{% endif %}
+                          </button>
+                          <button type="button"
+                                  class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-white rounded-md border border-red-300 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                  data-action="click->keyword#deleteKeyword"
+                                  data-keyword-id="{{ keyword.id }}"
+                                  data-project-id="{{ project.id }}"
+                                  data-keyword-text="{{ keyword.keyword_text }}"
+                                  title="Remove keyword from project">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   {% endif %}
@@ -206,7 +219,7 @@
                     <tr>
                       <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                         <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                                data-action="click->keyword-trends#sortByColumn"
+                                data-action="click->keyword#sortByColumn"
                                 data-column="keyword"
                                 data-sort-type="alphabetical">
                           <span class="font-medium">Keyword</span>
@@ -219,7 +232,7 @@
                       </th>
                       <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                         <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                                data-action="click->keyword-trends#sortByColumn"
+                                data-action="click->keyword#sortByColumn"
                                 data-column="volume"
                                 data-sort-type="numerical">
                           <span class="font-medium">Volume</span>
@@ -232,7 +245,7 @@
                       </th>
                       <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                         <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                                data-action="click->keyword-trends#sortByColumn"
+                                data-action="click->keyword#sortByColumn"
                                 data-column="cpc"
                                 data-sort-type="numerical">
                           <span class="font-medium">CPC</span>
@@ -245,7 +258,7 @@
                       </th>
                       <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                         <button class="inline-flex items-center px-2 py-1 -ml-2 rounded-md transition-all duration-150 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 group"
-                                data-action="click->keyword-trends#sortByColumn"
+                                data-action="click->keyword#sortByColumn"
                                 data-column="competition"
                                 data-sort-type="numerical">
                           <span class="font-medium">Competition</span>
@@ -291,7 +304,7 @@
                             {% with keyword.id|stringformat:"s" as keyword_id_str %}
                             {% with prefix_str|add:keyword_id_str as final_trend_id %}
                               {{ keyword.trend_data|json_script:final_trend_id }}
-                              <div data-keyword-trends-target="graph"
+                              <div data-keyword-target="graph"
                                    data-trend-data-id="{{ final_trend_id }}"
                                    class="w-24 h-12 bg-gray-50 rounded border border-gray-100"></div>
                             {% endwith %}
@@ -299,15 +312,28 @@
                             {% endwith %}
                           </td>
                           <td class="px-6 py-4 whitespace-nowrap">
-                            <button type="button"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
-                                    {% if keyword.use %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %}"
-                                    data-action="click->keyword-trends#toggleUse"
-                                    data-keyword-id="{{ keyword.id }}"
-                                    data-project-id="{{ project.id }}"
-                                    data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
-                              {% if keyword.use %}In Use{% else %}Use{% endif %}
-                            </button>
+                            <div class="flex items-center space-x-2">
+                              <button type="button"
+                                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                                      {% if keyword.use %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %}"
+                                      data-action="click->keyword#toggleUse"
+                                      data-keyword-id="{{ keyword.id }}"
+                                      data-project-id="{{ project.id }}"
+                                      data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
+                                {% if keyword.use %}In Use{% else %}Use{% endif %}
+                              </button>
+                              <button type="button"
+                                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-700 bg-white rounded-md border border-red-300 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                      data-action="click->keyword#deleteKeyword"
+                                      data-keyword-id="{{ keyword.id }}"
+                                      data-project-id="{{ project.id }}"
+                                      data-keyword-text="{{ keyword.keyword_text }}"
+                                      title="Remove keyword from project">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       {% endif %}
@@ -330,12 +356,12 @@
                      type="text"
                      placeholder="Search keywords..."
                      class="block px-3 py-2 w-full text-sm text-gray-900 bg-white rounded-md border border-gray-300 focus:ring-gray-500 focus:border-gray-500"
-                     data-keyword-trends-target="search"
-                     data-action="input->keyword-trends#filterKeywords">
+                     data-keyword-target="search"
+                     data-action="input->keyword#filterKeywords">
             </div>
             <button type="button"
                     class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md border border-gray-900 transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    data-action="click->keyword-trends#showModal">
+                    data-action="click->keyword#showModal">
               <svg class="mr-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -353,10 +379,10 @@
       {% endif %}
 
       <!-- Add Keyword Modal -->
-      <div class="flex hidden fixed inset-0 z-50 justify-center items-center p-4" data-keyword-trends-target="modal" style="background-color: rgba(0, 0, 0, 0.5);">
+      <div class="flex hidden fixed inset-0 z-50 justify-center items-center p-4" data-keyword-target="modal" style="background-color: rgba(0, 0, 0, 0.5);">
         <!-- Background overlay -->
         <div class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-             data-action="click->keyword-trends#hideModal"></div>
+             data-action="click->keyword#hideModal"></div>
 
         <!-- Modal content -->
         <div class="overflow-y-auto relative w-full max-w-lg max-h-screen bg-white rounded-lg shadow-xl">
@@ -367,7 +393,7 @@
                   Add New Keyword
                 </h3>
                 <div class="mt-4">
-                  <form id="modal-keyword-form" data-action="submit->keyword-trends#addKeyword">
+                  <form id="modal-keyword-form" data-action="submit->keyword#addKeyword">
                     {% csrf_token %}
                     <input type="hidden" name="project_id" value="{{ project.id }}">
                     <div>
@@ -375,7 +401,7 @@
                       <input id="modal-keyword-input" name="keyword_text" type="text" required
                              placeholder="Enter keyword..."
                              class="block px-3 py-2 w-full text-gray-900 bg-white rounded-md border border-gray-300 focus:ring-gray-500 focus:border-gray-500"
-                             data-keyword-trends-target="modalInput" />
+                             data-keyword-target="modalInput" />
                     </div>
                   </form>
                 </div>
@@ -384,9 +410,9 @@
           </div>
           <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
             <button type="submit" form="modal-keyword-form"
-                    data-keyword-trends-target="addButton"
+                    data-keyword-target="addButton"
                     class="inline-flex justify-center px-4 py-2 ml-3 w-full text-base font-medium text-white bg-gray-900 rounded-md border border-gray-900 shadow-sm transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 sm:ml-3 sm:w-auto sm:text-sm"
-                    data-action="click->keyword-trends#submitModal">
+                    data-action="click->keyword#submitModal">
               <svg class="mr-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
@@ -394,7 +420,7 @@
             </button>
             <button type="button"
                     class="inline-flex justify-center px-4 py-2 mt-3 w-full text-base font-medium text-gray-700 bg-white rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                    data-action="click->keyword-trends#hideModal">
+                    data-action="click->keyword#hideModal">
               Cancel
             </button>
           </div>

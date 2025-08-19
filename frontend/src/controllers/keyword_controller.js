@@ -263,6 +263,61 @@ export default class extends Controller {
     }, 400);
   }
 
+  async deleteKeyword(event) {
+    const button = event.currentTarget;
+    const projectId = button.getAttribute("data-project-id");
+    const keywordId = button.getAttribute("data-keyword-id");
+    const keywordText = button.getAttribute("data-keyword-text");
+
+    if (!projectId || !keywordId) {
+      showMessage("Error: Missing project or keyword ID", "error");
+      return;
+    }
+
+    // Show confirmation dialog
+    if (!confirm(`Are you sure you want to remove "${keywordText || 'this keyword'}" from your project?`)) {
+      return;
+    }
+
+    const originalIcon = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `<svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg>`;
+
+    try {
+      const response = await fetch("/api/keywords/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": this.getCSRFToken(),
+        },
+        body: JSON.stringify({ project_id: parseInt(projectId), keyword_id: parseInt(keywordId) })
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        showMessage(data.message || "Keyword removed successfully!", "success");
+        // Find the row containing this button and remove it
+        const row = button.closest("tr");
+        if (row) {
+          row.style.transition = "opacity 0.3s ease";
+          row.style.opacity = "0";
+          setTimeout(() => {
+            row.remove();
+          }, 300);
+        }
+      } else {
+        showMessage(data.message || "Failed to delete keyword", "error");
+        button.disabled = false;
+        button.innerHTML = originalIcon;
+      }
+    } catch (e) {
+      showMessage("An error occurred. Please try again.", "error");
+      button.disabled = false;
+      button.innerHTML = originalIcon;
+    }
+  }
+
   filterKeywords() {
     if (!this.hasSearchTarget || !this.hasListTarget) return;
     const searchValue = this.searchTarget.value.trim().toLowerCase();
@@ -340,7 +395,7 @@ export default class extends Controller {
     if (!this.hasListTarget) return;
 
     // Get all table bodies (both main table and zero volume table)
-    const tableBodies = this.element.querySelectorAll("tbody[data-keyword-trends-target='list'], tbody.bg-white.divide-y.divide-gray-200");
+    const tableBodies = this.element.querySelectorAll("tbody[data-keyword-target='list'], tbody.bg-white.divide-y.divide-gray-200");
 
     tableBodies.forEach(tbody => {
       const rows = Array.from(tbody.querySelectorAll("tr"));

@@ -159,6 +159,16 @@ class ToggleProjectKeywordUseOut(Schema):
     use: bool | None = None
 
 
+class DeleteProjectKeywordIn(Schema):
+    project_id: int
+    keyword_id: int
+
+
+class DeleteProjectKeywordOut(Schema):
+    status: str
+    message: str | None = None
+
+
 class BlogPostIn(Schema):
     title: str
     description: str = ""
