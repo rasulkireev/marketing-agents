@@ -1,7 +1,8 @@
 import posthog
 from django.forms.utils import ErrorList
 
-from core.models import Profile, Project
+from core.choices import KeywordDataSource
+from core.models import Keyword, Profile, Project, ProjectKeyword
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -82,3 +83,25 @@ def get_or_create_project(profile_id, url, source=None):
         logger.info("[Get or Create Project] Got existing project", **project_metadata)
 
     return project
+
+
+def save_keyword(keyword_text: str, project: Project):
+    """Helper function to save a related keyword with metrics and project association."""
+    keyword_obj, created = Keyword.objects.get_or_create(
+        keyword_text=keyword_text,
+        country="us",
+        data_source=KeywordDataSource.GOOGLE_KEYWORD_PLANNER,
+    )
+
+    # Fetch metrics if newly created
+    if created:
+        metrics_fetched = keyword_obj.fetch_and_update_metrics()
+        if not metrics_fetched:
+            logger.warning(
+                "[Save Keyword] Failed to fetch metrics for keyword",
+                keyword_id=keyword_obj.id,
+                keyword_text=keyword_text,
+            )
+
+    # Associate with project
+    ProjectKeyword.objects.get_or_create(project=project, keyword=keyword_obj)

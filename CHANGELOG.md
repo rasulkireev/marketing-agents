@@ -22,8 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ability to select which keywords will be used in post generation
   - Ablity to sort the table
   - Converted keyword addition form to modal interface for cleaner UI
+  - Get more "People also search for" and "Related" keywords
+  - allow users to delete keywords
 - My name to generated blog posts
 - Disbale project creation for unverified users
+- More logs for content generation to better track progress
 
 **Changed**
 

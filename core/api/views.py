@@ -13,6 +13,8 @@ from core.api.schemas import (
     BlogPostIn,
     BlogPostOut,
     CompetitorAnalysisOut,
+    DeleteProjectKeywordIn,
+    DeleteProjectKeywordOut,
     GeneratedContentOut,
     GenerateTitleSuggestionOut,
     GenerateTitleSuggestionsIn,
@@ -550,6 +552,32 @@ def toggle_project_keyword_use(request: HttpRequest, data: ToggleProjectKeywordU
             profile_id=profile.id,
         )
         return ToggleProjectKeywordUseOut(status="error", message=f"Failed to toggle use: {str(e)}")
+
+
+@api.post("/keywords/delete", response=DeleteProjectKeywordOut, auth=[session_auth])
+def delete_project_keyword(request: HttpRequest, data: DeleteProjectKeywordIn):
+    profile = request.auth
+    try:
+        project = get_object_or_404(Project, id=data.project_id, profile=profile)
+        project_keyword = get_object_or_404(
+            ProjectKeyword, project=project, keyword_id=data.keyword_id
+        )
+        keyword_text = project_keyword.keyword.keyword_text
+        project_keyword.delete()
+        return DeleteProjectKeywordOut(
+            status="success", message=f"Keyword '{keyword_text}' removed from project"
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to delete ProjectKeyword",
+            error=str(e),
+            project_id=data.project_id,
+            keyword_id=data.keyword_id,
+            profile_id=profile.id,
+        )
+        return DeleteProjectKeywordOut(
+            status="error", message=f"Failed to delete keyword: {str(e)}"
+        )
 
 
 @api.post("/blog-posts/submit", response=BlogPostOut, auth=[superuser_api_auth])

@@ -9,17 +9,17 @@ from django.conf import settings
 from django.utils import timezone
 from django_q.tasks import async_task
 
-from core.choices import ContentType, KeywordDataSource
+from core.choices import ContentType
 from core.models import (
     BlogPostTitleSuggestion,
     Competitor,
     GeneratedBlogPost,
-    Keyword,
     Profile,
     Project,
     ProjectKeyword,
     ProjectPage,
 )
+from core.utils import save_keyword
 from seo_blog_bot.utils import get_seo_blog_bot_logger
 
 logger = get_seo_blog_bot_logger(__name__)
@@ -114,35 +114,9 @@ def process_project_keywords(project_id: int):
     processed_count = 0
     failed_count = 0
 
-    # Determine country code from project language, default to 'us'
-    # Keywords Everywhere API uses 2-letter lowercase country codes.
-    # Project language codes (e.g., 'en', 'es') fit this.
-    country_code = "us"  # Default
-    # if project.language and len(project.language) >= 2:
-    #     country_code = project.language[:2].lower()
-
     for keyword_str in keyword_strings:
         try:
-            keyword_obj, created = Keyword.objects.get_or_create(
-                keyword_text=keyword_str,
-                country=country_code,
-                data_source=KeywordDataSource.GOOGLE_KEYWORD_PLANNER,
-            )
-            if created:
-                logger.info(
-                    "[KeywordProcessing] Created new keyword",
-                    keyword_text=keyword_str,
-                )
-
-            metrics_fetched = keyword_obj.fetch_and_update_metrics()
-            if not metrics_fetched:
-                logger.warning(
-                    "[KeywordProcessing] Failed to fetch metrics for keyword",
-                    keyword_id=keyword_obj.id,
-                    keyword_text=keyword_str,
-                )
-
-            ProjectKeyword.objects.get_or_create(project=project, keyword=keyword_obj)
+            save_keyword(keyword_str, project)
             processed_count += 1
         except Exception as e:
             failed_count += 1
@@ -160,6 +134,10 @@ def process_project_keywords(project_id: int):
         processed_count=processed_count,
         failed_count=failed_count,
     )
+
+    async_task(get_and_save_related_keywords, project_id, group="Get Related Keywords")
+    async_task(get_and_save_pasf_keywords, project_id, group="Get PASF Keywords")
+
     return f"""
     Keyword processing for project {project.name} (ID: {project.id})
     Processed {processed_count} keywords
@@ -385,5 +363,255 @@ def generate_and_post_blog_post(project_id: int):
         return f"No blog post to post for {project.name}."
 
 
-def test_sentry_worker():
-    raise Exception("Test Sentry Worker")
+def get_and_save_related_keywords(
+    project_id: int,
+    limit: int = 10,
+    num_related_keywords: int = 5,
+    volume_threshold: int = 10000,
+):
+    """
+    Expands project keywords by finding and saving related keywords from Keywords Everywhere API.
+
+    Process:
+    1. Finds high-volume keywords (>volume_threshold) that haven't been processed yet
+    2. For each keyword, calls Keywords Everywhere API to get related keywords
+    3. Saves each related keyword to database with metrics and project association
+    4. Marks parent keyword as processed to avoid duplicate API calls
+
+    Args:
+        project_id: ID of the project to process keywords for
+        limit: Maximum number of parent keywords to process (default: 10)
+        num_related_keywords: Number of related keywords to request per keyword (default: 5)
+        volume_threshold: Minimum search volume for parent keywords (default: 10000)
+
+    Returns:
+        String summary of processing results
+    """
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        logger.error(f"[GetRelatedKeywords] Project {project_id} not found.")
+        return f"Project {project_id} not found."
+
+    keywords_to_process = ProjectKeyword.objects.filter(
+        project=project,
+        keyword__volume__gt=volume_threshold,
+        keyword__volume__isnull=False,
+        keyword__got_related_keywords=False,
+    ).select_related("keyword")[:limit]
+
+    if not keywords_to_process.exists():
+        return f"No unprocessed high-volume keywords found for {project.name}."
+
+    stats = {
+        "processed": 0,
+        "failed": 0,
+        "total": keywords_to_process.count(),
+        "credits_used": 0,
+        "related_found": 0,
+        "related_saved": 0,
+    }
+
+    logger.info(f"[GetRelatedKeywords] Processing {stats['total']} keywords for {project.name}")
+
+    api_url = "https://api.keywordseverywhere.com/v1/get_related_keywords"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {settings.KEYWORDS_EVERYWHERE_API_KEY}",
+    }
+
+    for project_keyword in keywords_to_process:
+        keyword = project_keyword.keyword
+
+        try:
+            response = requests.post(
+                api_url,
+                data={"keyword": keyword.keyword_text, "num": num_related_keywords},
+                headers=headers,
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                related_keywords = data.get("data", [])
+                stats["credits_used"] += data.get("credits_consumed", 0)
+                stats["related_found"] += len(related_keywords)
+                stats["processed"] += 1
+
+                for keyword_text in related_keywords:
+                    if keyword_text and keyword_text.strip():
+                        try:
+                            save_keyword(keyword_text.strip(), project)
+                            stats["related_saved"] += 1
+                        except Exception as e:
+                            logger.error(
+                                "[GetRelatedKeywords] Failed to save keyword",
+                                keyword_text=keyword_text,
+                                error=str(e),
+                                exc_info=True,
+                            )
+
+                keyword.got_related_keywords = True
+                keyword.save(update_fields=["got_related_keywords"])
+
+            else:
+                stats["failed"] += 1
+                logger.warning(
+                    "[GetRelatedKeywords] API error for Keyword",
+                    keyword_text=keyword.keyword_text,
+                    response_status_code=response.status_code,
+                    exc_info=True,
+                )
+
+        except Exception as e:
+            stats["failed"] += 1
+            logger.error(
+                "[GetRelatedKeywords] Error processing Keyword",
+                keyword_text=keyword.keyword_text,
+                error=str(e),
+                exc_info=True,
+            )
+
+    logger.info(
+        "[GetRelatedKeywords] Completed",
+        project_id=project_id,
+        project_name=project.name,
+        processed=stats["processed"],
+        total=stats["total"],
+        failed=stats["failed"],
+        credits_used=stats["credits_used"],
+        related_found=stats["related_found"],
+        related_saved=stats["related_saved"],
+    )
+
+    return f"""Related Keywords Processing Results for {project.name}:
+    Keywords processed: {stats["processed"]}/{stats["total"]}
+    Failed: {stats["failed"]}
+    API credits used: {stats["credits_used"]}
+    Related keywords found: {stats["related_found"]}
+    Related keywords saved: {stats["related_saved"]}"""
+
+
+def get_and_save_pasf_keywords(
+    project_id: int,
+    limit: int = 10,
+    num_pasf_keywords: int = 5,
+    volume_threshold: int = 10000,
+):
+    """
+    Expands project keywords by finding and saving "People Also Search For"
+    keywords from Keywords Everywhere API.
+
+    Process:
+    1. Finds high-volume keywords (>volume_threshold) that haven't been processed for PASF yet
+    2. For each keyword, calls Keywords Everywhere PASF API to get related search queries
+    3. Saves each PASF keyword to database with metrics and project association
+    4. Marks parent keyword as processed to avoid duplicate API calls
+
+    Args:
+        project_id: ID of the project to process keywords for
+        limit: Maximum number of parent keywords to process (default: 10)
+        num_pasf_keywords: Number of PASF keywords to request per keyword (default: 5)
+        volume_threshold: Minimum search volume for parent keywords (default: 10000)
+
+    Returns:
+        String summary of processing results
+    """
+    try:
+        project = Project.objects.get(id=project_id)
+    except Project.DoesNotExist:
+        logger.error(f"[GetPASFKeywords] Project {project_id} not found.")
+        return f"Project {project_id} not found."
+
+    keywords_to_process = ProjectKeyword.objects.filter(
+        project=project,
+        keyword__volume__gt=volume_threshold,
+        keyword__volume__isnull=False,
+        keyword__got_people_also_search_for_keywords=False,
+    ).select_related("keyword")[:limit]
+
+    if not keywords_to_process.exists():
+        return f"No unprocessed high-volume keywords found for PASF processing in {project.name}."
+
+    stats = {
+        "processed": 0,
+        "failed": 0,
+        "total": keywords_to_process.count(),
+        "credits_used": 0,
+        "pasf_found": 0,
+        "pasf_saved": 0,
+    }
+
+    logger.info(f"[GetPASFKeywords] Processing {stats['total']} keywords for {project.name}")
+
+    api_url = "https://api.keywordseverywhere.com/v1/get_pasf_keywords"
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {settings.KEYWORDS_EVERYWHERE_API_KEY}",
+    }
+
+    for project_keyword in keywords_to_process:
+        keyword = project_keyword.keyword
+
+        try:
+            response = requests.post(
+                api_url,
+                data={"keyword": keyword.keyword_text, "num": num_pasf_keywords},
+                headers=headers,
+                timeout=30,
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                pasf_keywords = data.get("data", [])
+                stats["credits_used"] += data.get("credits_consumed", 0)
+                stats["pasf_found"] += len(pasf_keywords)
+                stats["processed"] += 1
+
+                for keyword_text in pasf_keywords:
+                    if keyword_text and keyword_text.strip():
+                        try:
+                            save_keyword(keyword_text.strip(), project)
+                            stats["pasf_saved"] += 1
+                        except Exception as e:
+                            logger.error(
+                                "[GetPASFKeywords] Failed to save keyword",
+                                keyword_text=keyword_text,
+                                error=str(e),
+                                exc_info=True,
+                            )
+
+                keyword.got_people_also_search_for_keywords = True
+                keyword.save(update_fields=["got_people_also_search_for_keywords"])
+
+            else:
+                stats["failed"] += 1
+                logger.warning(
+                    "[GetPASFKeywords] API error for Keyword",
+                    keyword_text=keyword.keyword_text,
+                    response_status_code=response.status_code,
+                    response_content=response.content.decode("utf-8")
+                    if response.content
+                    else "No content",
+                    exc_info=True,
+                )
+
+        except Exception as e:
+            stats["failed"] += 1
+            logger.error(
+                "[GetPASFKeywords] Error processing Keyword",
+                keyword_text=keyword.keyword_text,
+                error=str(e),
+                exc_info=True,
+            )
+
+    logger.info(
+        f"[GetPASFKeywords] Completed: {stats['processed']}/{stats['total']} keywords processed"
+    )
+
+    return f"""PASF Keywords Processing Results for {project.name}:
+    Keywords processed: {stats["processed"]}/{stats["total"]}
+    Failed: {stats["failed"]}
+    API credits used: {stats["credits_used"]}
+    PASF keywords found: {stats["pasf_found"]}
+    PASF keywords saved: {stats["pasf_saved"]}"""
