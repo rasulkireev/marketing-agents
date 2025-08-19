@@ -54,10 +54,12 @@ class GenerateTitleSuggestionOut(Schema):
     status: str
     message: str = ""
     suggestion: TitleSuggestionOut = {}
+    suggestion_html: str = ""  # Rendered HTML for the suggestion
 
 
 class GenerateTitleSuggestionsOut(Schema):
     suggestions: list[TitleSuggestionOut] = []
+    suggestions_html: list[str] = []  # Rendered HTML for each suggestion
     status: str
     message: str = ""
 

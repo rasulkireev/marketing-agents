@@ -1,5 +1,5 @@
 <div
-  class="mb-4 last:mb-0 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+  class="mb-4 bg-white rounded-lg border border-gray-200 shadow-sm transition-shadow last:mb-0 hover:shadow-md"
   data-controller="generate-content archive-suggestion"
   data-generate-content-suggestion-id-value="{{ suggestion.id }}"
   data-generate-content-project-id-value="{{ suggestion.project.id }}"
@@ -16,6 +16,7 @@
         </h4>
       </div>
 
+      {% if page != "generated_post" %}
       <!-- Action Button -->
       <div class="flex-shrink-0 ml-4">
         <div data-generate-content-target="buttonContainer">
@@ -43,6 +44,8 @@
           {% endwith %}
         </div>
       </div>
+      {% endif %}
+
     </div>
 
     <!-- Date and Status row -->

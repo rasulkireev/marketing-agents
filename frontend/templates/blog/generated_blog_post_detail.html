@@ -12,7 +12,7 @@
 
     <!-- Header -->
     <div class="mb-8">
-      <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+      <nav class="flex items-center mb-4 space-x-2 text-sm text-gray-500">
         <a href="{% url 'project_detail' generated_post.project.id %}" class="hover:text-gray-700">
           {{ generated_post.project.name }}
         </a>
@@ -22,7 +22,7 @@
         <span>Generated Blog Post</span>
       </nav>
 
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">
+      <h1 class="mb-2 text-3xl font-bold text-gray-900">
         {{ generated_post.title.title }}
       </h1>
 
@@ -31,28 +31,46 @@
           {{ generated_post.description }}
         </p>
       {% endif %}
-    </div>
+          </div>
 
-    <!-- Post Metadata -->
-    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Post Details</h2>
+      <!-- Title Suggestion Details -->
+      <div data-controller="archived-list" class="mb-6 archived-list" data-archived-list-name-value="title-suggestion">
+        <div class="bg-gray-50 rounded-lg border border-gray-200">
+          <button
+            class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-lg transition-colors hover:bg-gray-100 focus:outline-none"
+            data-action="click->archived-list#toggle"
+          >
+            <h4 class="text-base font-medium text-gray-900">Title Suggestion Details</h4>
+            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <div data-archived-list-target="list" class="hidden p-4 border-t border-gray-200">
+            {% include "components/blog_post_suggestion_card.html" with suggestion=generated_post.title page="generated_post" %}
+          </div>
+        </div>
+      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Post Metadata -->
+    <div class="p-6 mb-6 bg-white rounded-lg border border-gray-200">
+      <h2 class="mb-4 text-lg font-semibold text-gray-900">Post Details</h2>
+
+      <div class="grid grid-cols-1 gap-6">
         <!-- Slug -->
         <div data-controller="copy">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Slug</label>
+          <label class="block mb-2 text-sm font-medium text-gray-700">Slug</label>
           <div class="relative">
             <input
               type="text"
               value="{{ generated_post.slug }}"
               data-copy-target="source"
-              class="block w-full pr-20 text-sm font-mono bg-gray-50 border border-gray-300 rounded-md py-2 px-3 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              class="block px-3 py-2 pr-20 w-full font-mono text-sm bg-gray-50 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               readonly
             >
             <button
               data-action="copy#copy"
               data-copy-target="button"
-              class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800"
+              class="absolute right-2 top-1/2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded transform -translate-y-1/2 hover:bg-gray-800"
             >
               Copy
             </button>
@@ -62,19 +80,19 @@
         <!-- Tags -->
         {% if generated_post.tags %}
         <div data-controller="copy">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+          <label class="block mb-2 text-sm font-medium text-gray-700">Tags</label>
           <div class="relative">
             <input
               type="text"
               value="{{ generated_post.tags }}"
               data-copy-target="source"
-              class="block w-full pr-20 text-sm font-mono bg-gray-50 border border-gray-300 rounded-md py-2 px-3 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              class="block px-3 py-2 pr-20 w-full font-mono text-sm bg-gray-50 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
               readonly
             >
             <button
               data-action="copy#copy"
               data-copy-target="button"
-              class="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded hover:bg-gray-800"
+              class="absolute right-2 top-1/2 px-3 py-1 text-xs font-medium text-white bg-gray-900 rounded transform -translate-y-1/2 hover:bg-gray-800"
             >
               Copy
             </button>
@@ -86,11 +104,11 @@
       <!-- Full Description -->
       {% if generated_post.description %}
       <div class="mt-6" data-controller="copy">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+        <label class="block mb-2 text-sm font-medium text-gray-700">Description</label>
         <div class="relative">
           <textarea
             data-copy-target="source"
-            class="block w-full pr-20 text-sm bg-gray-50 border border-gray-300 rounded-md py-3 px-3 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+            class="block px-3 py-3 pr-20 w-full text-sm bg-gray-50 rounded-md border border-gray-300 focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
             rows="3"
             readonly
           >{{ generated_post.description }}</textarea>
@@ -107,16 +125,16 @@
     </div>
 
     <!-- Blog Content -->
-    <div class="bg-white border border-gray-200 rounded-lg p-6">
-      <div class="flex items-center justify-between mb-4">
+    <div class="p-6 bg-white rounded-lg border border-gray-200">
+      <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold text-gray-900">Content</h2>
         <div data-controller="copy">
           <button
             data-action="copy#copy"
             data-copy-target="button"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 border border-gray-900 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-md border border-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
             </svg>
             Copy All Content
@@ -129,18 +147,18 @@
         </div>
       </div>
 
-      <div class="prose prose-gray max-w-none">
-        <div class="bg-gray-50 border border-gray-200 rounded-md p-4 font-mono text-sm whitespace-pre-wrap">{{ generated_post.content }}</div>
+      <div class="max-w-none prose prose-gray">
+        <div class="p-4 font-mono text-sm whitespace-pre-wrap bg-gray-50 rounded-md border border-gray-200">{{ generated_post.content }}</div>
       </div>
     </div>
 
     <!-- Action Buttons -->
-    <div class="mt-8 flex justify-between items-center">
+    <div class="flex justify-between items-center mt-8">
       <a
         href="{% url 'project_detail' generated_post.project.id %}"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
       >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
         </svg>
         Back to Project
