@@ -302,6 +302,11 @@ def schedule_blog_post_posting():
         )
 
         if time_since_last_post_in_seconds > time_between_posts_in_seconds:
+            logger.info(
+                "[Schedule Blog Post Posting] Scheduling blog post for {project.name}",
+                project_id=project.id,
+                project_name=project.name,
+            )
             async_task(
                 "core.tasks.generate_and_post_blog_post", project.id, group="Submit Blog Post"
             )
@@ -314,10 +319,21 @@ def generate_and_post_blog_post(project_id: int):
     project = Project.objects.get(id=project_id)
     blog_post_to_post = None
 
+    logger.info(
+        "[Generate and Post Blog Post] Generating blog post for {project.name}",
+        project_id=project_id,
+        project_name=project.name,
+    )
+
     # first see if there are generated blog posts that are not posted yet
     blog_posts_to_post = GeneratedBlogPost.objects.filter(project=project, posted=False)
 
     if blog_posts_to_post.exists():
+        logger.info(
+            "[Generate and Post Blog Post] Found BlogPost to posts for {project.name}",
+            project_id=project_id,
+            project_name=project.name,
+        )
         blog_post_to_post = blog_posts_to_post.first()
 
     # then see if there are blog post title suggestions without generated blog posts
@@ -326,6 +342,11 @@ def generate_and_post_blog_post(project_id: int):
             project=project, generated_blog_posts__isnull=True
         )
         if ungenerated_blog_post_suggestions.exists():
+            logger.info(
+                "[Generate and Post Blog Post] Found BlogPostTitleSuggestion to generate and post for {project.name}",  # noqa: E501
+                project_id=project_id,
+                project_name=project.name,
+            )
             ungenerated_blog_post_suggestion = ungenerated_blog_post_suggestions.first()
             blog_post_to_post = ungenerated_blog_post_suggestion.generate_content(
                 content_type=ungenerated_blog_post_suggestion.content_type
@@ -333,6 +354,11 @@ def generate_and_post_blog_post(project_id: int):
 
     # if neither, create a new blog post title suggestion, generate the blog post
     if not blog_post_to_post:
+        logger.info(
+            "[Generate and Post Blog Post] No BlogPost or BlogPostTitleSuggestion found for {project.name}, so generatin both.",  # noqa: E501
+            project_id=project_id,
+            project_name=project.name,
+        )
         content_type = random.choice([choice[0] for choice in ContentType.choices])
         suggestions = project.generate_title_suggestions(content_type=content_type, num_titles=1)
         blog_post_to_post = suggestions[0].generate_content(
@@ -341,6 +367,12 @@ def generate_and_post_blog_post(project_id: int):
 
     # once you have the generated blog post, submit it to the endpoint
     if blog_post_to_post:
+        logger.info(
+            "[Generate and Post Blog Post] Submitting blog post to endpoint for {project.name}",
+            project_id=project_id,
+            project_name=project.name,
+            blog_post_title=blog_post_to_post.title,
+        )
         result = blog_post_to_post.submit_blog_post_to_endpoint()
         if result is True:
             blog_post_to_post.posted = True
