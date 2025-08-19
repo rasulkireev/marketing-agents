@@ -1,5 +1,6 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils import timezone
 from ninja import NinjaAPI
 
@@ -116,6 +117,7 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
     except KeyError:
         return {
             "suggestions": [],
+            "suggestions_html": [],
             "status": "error",
             "message": f"Invalid content type: {data.content_type}",
         }
@@ -126,6 +128,7 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
     ):
         return {
             "suggestions": [],
+            "suggestions_html": [],
             "status": "error",
             "message": "Title generation limit reached. Consider <a class='underline' href='/pricing'>upgrading</a>?",  # noqa: E501
         }
@@ -134,7 +137,23 @@ def generate_title_suggestions(request: HttpRequest, data: GenerateTitleSuggesti
         content_type=content_type, num_titles=data.num_titles
     )
 
-    return {"suggestions": suggestions, "status": "success", "message": ""}
+    # Render HTML for each suggestion using the Django template
+    suggestions_html = []
+    for suggestion in suggestions:
+        context = {
+            "suggestion": suggestion,
+            "has_pro_subscription": profile.has_active_subscription,
+            "has_auto_submission_setting": project.has_auto_submission_setting,
+        }
+        html = render_to_string("components/blog_post_suggestion_card.html", context)
+        suggestions_html.append(html)
+
+    return {
+        "suggestions": suggestions,
+        "suggestions_html": suggestions_html,
+        "status": "success",
+        "message": "",
+    }
 
 
 @api.post("/generate-title-from-idea", response=GenerateTitleSuggestionOut, auth=[session_auth])
@@ -163,6 +182,14 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
 
         suggestion = suggestions[0]
 
+        # Render HTML for the suggestion using the Django template
+        context = {
+            "suggestion": suggestion,
+            "has_pro_subscription": profile.has_active_subscription,
+            "has_auto_submission_setting": project.has_auto_submission_setting,
+        }
+        suggestion_html = render_to_string("components/blog_post_suggestion_card.html", context)
+
         return {
             "status": "success",
             "suggestion": {
@@ -174,6 +201,7 @@ def generate_title_from_idea(request: HttpRequest, data: GenerateTitleSuggestion
                 "suggested_meta_description": suggestion.suggested_meta_description,
                 "content_type": suggestion.content_type,
             },
+            "suggestion_html": suggestion_html,
         }
 
     except Exception as e:
