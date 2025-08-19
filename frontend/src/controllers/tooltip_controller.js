@@ -6,7 +6,9 @@ export default class extends Controller {
   connect() {
     this.tooltipElement = document.createElement("div");
     this.tooltipElement.className = "hidden absolute z-10 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm dark:bg-gray-700";
-    this.tooltipElement.textContent = this.messageValue;
+    // Convert line breaks to HTML breaks for multi-line support
+    const messageWithBreaks = this.messageValue.replace(/\\n/g, "<br>");
+    this.tooltipElement.innerHTML = messageWithBreaks;
     document.body.appendChild(this.tooltipElement);
   }
 

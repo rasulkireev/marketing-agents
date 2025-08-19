@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ablity to sort the table
   - Converted keyword addition form to modal interface for cleaner UI
 - My name to generated blog posts
+- Disbale project creation for unverified users
 
 **Changed**
 
