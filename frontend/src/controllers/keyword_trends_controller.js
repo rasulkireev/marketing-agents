@@ -4,15 +4,14 @@ import { showMessage } from "../utils/messages";
 
 // Controller to handle rendering of D3 trend graphs for keywords
 export default class extends Controller {
-  static targets = [ "graph", "formMessage", "search", "list", "addButton", "sort" ];
+  static targets = [ "graph", "formMessage", "search", "list", "addButton", "modal", "modalInput" ];
 
   connect() {
     this.renderAllGraphs();
-    // Default sort on connect
-    if (this.hasSortTarget) {
-      this.sortTarget.value = "volume_desc";
-      this.sortKeywords();
-    }
+    // Default sort state
+    this.currentSort = { column: "volume", direction: "desc" };
+    this.updateColumnHeaders();
+    this.sortByCurrentState();
   }
 
   renderAllGraphs() {
@@ -26,7 +25,7 @@ export default class extends Controller {
     const trendScriptElement = document.getElementById(trendDataId);
 
     if (!trendScriptElement) {
-      graphElement.innerHTML = "<p class=\"text-xs text-gray-400 text-center p-1\">Trend data script not found.</p>";
+      graphElement.innerHTML = "<div class=\"flex items-center justify-center h-full text-xs text-gray-400\">No data</div>";
       return;
     }
 
@@ -34,117 +33,117 @@ export default class extends Controller {
     try {
       trendDataObjects = JSON.parse(trendScriptElement.textContent);
     } catch (e) {
-      graphElement.innerHTML = "<p class=\"text-xs text-gray-400 text-center p-1\">Error parsing trend data.</p>";
+      graphElement.innerHTML = "<div class=\"flex items-center justify-center h-full text-xs text-gray-400\">Error</div>";
       console.error("Error parsing trend data JSON:", e);
       return;
     }
 
     if (!trendDataObjects || trendDataObjects.length === 0) {
-      graphElement.innerHTML = "<p class=\"text-xs text-gray-400 text-center p-1\">No trend data available.</p>";
+      graphElement.innerHTML = "<div class=\"flex items-center justify-center h-full text-xs text-gray-400\">No data</div>";
       return;
     }
 
     graphElement.innerHTML = ""; // Clear previous content
 
     const { width, height } = graphElement.getBoundingClientRect();
-    const padding = { top: 10, right: 10, bottom: 50, left: 30 }; // Increased bottom for rotated x labels
+    const padding = { top: 2, right: 2, bottom: 2, left: 2 }; // Minimal padding for sparkline
 
     const svg = d3.select(graphElement)
       .append("svg")
       .attr("width", width)
       .attr("height", height);
 
-    const plotWidth = width - padding.left - padding.right;
+    // X Scale (for sparkline positioning)
+    const xScale = d3.scaleLinear()
+      .domain([0, trendDataObjects.length - 1])
+      .range([padding.left, width - padding.right]);
 
-    // X Scale (Band for bars)
-    const xScale = d3.scaleBand()
-      .domain(trendDataObjects.map(d => `${d.month.substring(0,3)}/${String(d.year).slice(-2)}`))
-      .range([padding.left, width - padding.right])
-      .paddingInner(0.2)
-      .paddingOuter(0.1);
-
-    // Y Scale (Linear for bar height)
+    // Y Scale (Linear for line/area height)
     let yMin = d3.min(trendDataObjects, d => d.value);
     let yMax = d3.max(trendDataObjects, d => d.value);
 
-    yMin = yMin > 0 ? 0 : yMin - (yMax - yMin) * 0.05;
-    yMax = yMax < 0 ? 0 : yMax + (yMax - yMin) * 0.05;
+    // Handle edge cases
     if (yMin === yMax) {
-        yMin = yMin > 0 ? 0 : yMin -1;
-        yMax = yMax === 0 ? 1 : yMax +1;
+      yMin = yMin > 0 ? yMin * 0.9 : yMin * 1.1;
+      yMax = yMax > 0 ? yMax * 1.1 : yMax * 0.9;
     }
-    if (yMax < yMin) yMax = yMin +1;
 
     const yScale = d3.scaleLinear()
       .domain([yMin, yMax])
       .range([height - padding.bottom, padding.top]);
 
-    const yAxisTickFormat = (d) => {
-        if (d === null || d === undefined) return "";
-        if (Math.abs(d) >= 1000000) return d3.format(".1s")(d).replace('G', 'B');
-        if (Math.abs(d) >= 1000) return d3.format(".1s")(d);
-        return d3.format(".0f")(d);
-    };
+    // Create line generator for sparkline
+    const line = d3.line()
+      .x((d, i) => xScale(i))
+      .y(d => yScale(d.value))
+      .curve(d3.curveMonotoneX);
 
-    const yAxis = d3.axisLeft(yScale)
-      .ticks(3)
-      .tickSizeInner(3)
-      .tickSizeOuter(0)
-      .tickFormat(yAxisTickFormat);
+    // Create area generator for sparkline
+    const area = d3.area()
+      .x((d, i) => xScale(i))
+      .y0(height - padding.bottom)
+      .y1(d => yScale(d.value))
+      .curve(d3.curveMonotoneX);
 
-    svg.append("g")
-      .attr("class", "y-axis")
-      .attr("transform", `translate(${padding.left}, 0)`)
-      .call(yAxis)
-      .selectAll("text")
-      .style("font-size", "8px") // Slightly larger for y-axis for better readability if space allows
-      .style("fill", "#9ca3af");
-    svg.selectAll("g.y-axis path.domain").style("stroke", "#d1d5db");
-    svg.selectAll("g.y-axis .tick line").style("stroke", "#d1d5db");
+    // Add area fill
+    svg.append("path")
+      .datum(trendDataObjects)
+      .attr("class", "area")
+      .attr("d", area)
+      .attr("fill", "#374151")
+      .attr("fill-opacity", 0.1);
 
-    const gridLines = d3.axisLeft(yScale)
-      .ticks(3)
-      .tickSize(-(plotWidth))
-      .tickFormat("");
+    // Add line
+    svg.append("path")
+      .datum(trendDataObjects)
+      .attr("class", "line")
+      .attr("d", line)
+      .attr("fill", "none")
+      .attr("stroke", "#374151")
+      .attr("stroke-width", 1.5);
 
-    svg.append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(${padding.left}, 0)`)
-      .call(gridLines)
-      .selectAll("line")
-      .style("stroke", "#e5e7eb")
-      .style("stroke-opacity", 1);
-    svg.selectAll("g.grid path.domain").remove();
+    // Add tooltip functionality
+    const tooltip = d3.select("body").append("div")
+      .attr("class", "tooltip")
+      .style("opacity", 0)
+      .style("position", "absolute")
+      .style("background", "rgba(0, 0, 0, 0.8)")
+      .style("color", "white")
+      .style("padding", "8px")
+      .style("border-radius", "4px")
+      .style("font-size", "12px")
+      .style("pointer-events", "none");
 
-    const xAxis = d3.axisBottom(xScale);
-      // .tickFormat((d) => d); // d is already month/year string from xScale.domain()
+    // Add invisible overlay for tooltip
+    svg.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("fill", "transparent")
+      .on("mousemove", (event) => {
+        const [mouseX] = d3.pointer(event);
+        const index = Math.round(xScale.invert(mouseX));
 
-    svg.append("g")
-      .attr("class", "x-axis")
-      .attr("transform", `translate(0, ${height - padding.bottom})`)
-      .call(xAxis)
-      .selectAll("text")
-      .style("font-size", "8px")
-      .style("fill", "#9ca3af")
-      .attr("text-anchor", "start")
-      .attr("transform", "rotate(45)")
-      .attr("dx", "0.5em")
-      .attr("dy", "0.8em");
-    svg.selectAll("g.x-axis path.domain").style("stroke", "#d1d5db");
-    svg.selectAll("g.x-axis .tick line").style("stroke", "#d1d5db");
+        if (index >= 0 && index < trendDataObjects.length) {
+          const data = trendDataObjects[index];
+          const formatValue = (val) => {
+            if (Math.abs(val) >= 1000000) return d3.format(".1s")(val).replace("G", "B");
+            if (Math.abs(val) >= 1000) return d3.format(".1s")(val);
+            return d3.format(".0f")(val);
+          };
 
-    svg.selectAll(".bar")
-      .data(trendDataObjects)
-      .enter()
-      .append("rect")
-      .attr("class", "bar")
-      .attr("x", d => xScale(`${d.month.substring(0,3)}/${String(d.year).slice(-2)}`))
-      .attr("y", d => yScale(Math.max(0, d.value)))
-      .attr("width", xScale.bandwidth())
-      .attr("height", d => Math.abs(yScale(Math.max(0,d.value)) - yScale(0)))
-      .attr("fill", "#ec4899")
-      .append("title")
-      .text(d => `${d.month} ${d.year}: ${yAxisTickFormat(d.value)}`);
+          tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+          tooltip.html(`${data.month} ${data.year}: ${formatValue(data.value)}`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px");
+        }
+      })
+      .on("mouseout", () => {
+        tooltip.transition()
+          .duration(500)
+          .style("opacity", 0);
+      });
   }
 
   async addKeyword(event) {
@@ -178,6 +177,7 @@ export default class extends Controller {
       const data = await response.json();
       if (data.status === "success") {
         showMessage("Keyword added successfully!", "success");
+        this.hideModal(); // Hide the modal on success
         setTimeout(() => { window.location.reload(); }, 800);
       } else {
         showMessage(data.message || "Failed to add keyword.", "error");
@@ -232,12 +232,12 @@ export default class extends Controller {
       const data = await response.json();
       if (data.status === "success") {
         if (data.use === true) {
-          button.textContent = "Unuse";
-          button.className = "px-3 py-1.5 text-xs font-semibold text-white bg-pink-600 rounded-md shadow-sm transition focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 hover:bg-pink-700";
+          button.textContent = "In Use";
+          button.className = "inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 hover:bg-gray-800";
           button.setAttribute("data-keyword-use", "true");
         } else {
           button.textContent = "Use";
-          button.className = "px-3 py-1.5 text-xs font-semibold text-pink-700 bg-white rounded-md border border-pink-300 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 hover:bg-pink-50";
+          button.className = "inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white rounded-md border border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 hover:bg-gray-50";
           button.setAttribute("data-keyword-use", "false");
         }
       } else {
@@ -266,77 +266,178 @@ export default class extends Controller {
   filterKeywords() {
     if (!this.hasSearchTarget || !this.hasListTarget) return;
     const searchValue = this.searchTarget.value.trim().toLowerCase();
-    const items = this.listTarget.querySelectorAll("li");
-    items.forEach(item => {
-      const keywordTextElem = item.querySelector(".text-lg.font-bold");
+    const rows = this.listTarget.querySelectorAll("tr");
+    rows.forEach(row => {
+      const keywordTextElem = row.querySelector(".text-sm.font-medium");
       if (!keywordTextElem) {
-        item.style.display = "";
+        row.style.display = "";
         return;
       }
       const keywordText = keywordTextElem.textContent.trim().toLowerCase();
       if (keywordText.includes(searchValue)) {
-        item.style.display = "";
+        row.style.display = "";
       } else {
-        item.style.display = "none";
+        row.style.display = "none";
       }
     });
   }
 
-  sortKeywords() {
-    if (!this.hasListTarget || !this.hasSortTarget) return;
-    const sortValue = this.sortTarget.value;
-    const items = Array.from(this.listTarget.querySelectorAll("li"));
-    let getSortValue;
-    let direction = 1;
-    switch (sortValue) {
-      case "created_asc":
-        getSortValue = li => new Date(li.getAttribute("data-created-at"));
-        direction = 1;
-        break;
-      case "created_desc":
-        getSortValue = li => new Date(li.getAttribute("data-created-at"));
-        direction = -1;
-        break;
-      case "volume_desc":
-        getSortValue = li => parseInt(li.getAttribute("data-volume")) || 0;
-        direction = -1;
-        break;
-      case "volume_asc":
-        getSortValue = li => parseInt(li.getAttribute("data-volume")) || 0;
-        direction = 1;
-        break;
-      case "competition_desc":
-        getSortValue = li => parseFloat(li.getAttribute("data-competition")) || 0;
-        direction = -1;
-        break;
-      case "competition_asc":
-        getSortValue = li => parseFloat(li.getAttribute("data-competition")) || 0;
-        direction = 1;
-        break;
-      case "cpc_desc":
-        getSortValue = li => parseFloat(li.getAttribute("data-cpc-value")) || 0;
-        direction = -1;
-        break;
-      case "cpc_asc":
-        getSortValue = li => parseFloat(li.getAttribute("data-cpc-value")) || 0;
-        direction = 1;
-        break;
-      default:
-        getSortValue = li => new Date(li.getAttribute("data-created-at"));
-        direction = -1;
+  sortByColumn(event) {
+    const button = event.currentTarget;
+    const column = button.getAttribute("data-column");
+    const sortType = button.getAttribute("data-sort-type");
+
+    // Toggle direction if clicking the same column, otherwise default to desc for numerical, asc for alphabetical
+    if (this.currentSort.column === column) {
+      this.currentSort.direction = this.currentSort.direction === "asc" ? "desc" : "asc";
+    } else {
+      this.currentSort.column = column;
+      this.currentSort.direction = sortType === "alphabetical" ? "asc" : "desc";
     }
-    items.sort((a, b) => {
-      const aVal = getSortValue(a);
-      const bVal = getSortValue(b);
-      if (aVal < bVal) return -1 * direction;
-      if (aVal > bVal) return 1 * direction;
-      return 0;
+
+    this.updateColumnHeaders();
+    this.sortByCurrentState();
+  }
+
+    updateColumnHeaders() {
+    // Find all sort buttons and update their appearance
+    const sortButtons = this.element.querySelectorAll("button[data-column]");
+
+    sortButtons.forEach(button => {
+      const column = button.getAttribute("data-column");
+      const upArrow = button.querySelector("svg:first-of-type");
+      const downArrow = button.querySelector("svg:last-of-type");
+
+      if (column === this.currentSort.column) {
+        // Active column - highlight button and show appropriate arrow
+        button.classList.add("bg-gray-200", "text-gray-800");
+        button.classList.remove("hover:bg-gray-100");
+
+        if (this.currentSort.direction === "asc") {
+          upArrow.classList.remove("opacity-60");
+          upArrow.classList.add("opacity-100");
+          downArrow.classList.remove("opacity-100");
+          downArrow.classList.add("opacity-30");
+        } else {
+          upArrow.classList.remove("opacity-100");
+          upArrow.classList.add("opacity-30");
+          downArrow.classList.remove("opacity-60");
+          downArrow.classList.add("opacity-100");
+        }
+      } else {
+        // Inactive column - reset to default state
+        button.classList.remove("bg-gray-200", "text-gray-800");
+        button.classList.add("hover:bg-gray-100");
+        upArrow.classList.remove("opacity-100", "opacity-30");
+        upArrow.classList.add("opacity-60");
+        downArrow.classList.remove("opacity-100", "opacity-30");
+        downArrow.classList.add("opacity-60");
+      }
     });
-    // Remove all <li> and re-append in sorted order
-    items.forEach(li => this.listTarget.appendChild(li));
+  }
+
+  sortByCurrentState() {
+    if (!this.hasListTarget) return;
+
+    // Get all table bodies (both main table and zero volume table)
+    const tableBodies = this.element.querySelectorAll("tbody[data-keyword-trends-target='list'], tbody.bg-white.divide-y.divide-gray-200");
+
+    tableBodies.forEach(tbody => {
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      let getSortValue;
+
+      switch (this.currentSort.column) {
+        case "keyword":
+          getSortValue = row => {
+            const keywordElem = row.querySelector(".text-sm.font-medium");
+            return keywordElem ? keywordElem.textContent.trim().toLowerCase() : "";
+          };
+          break;
+        case "volume":
+          getSortValue = row => parseInt(row.getAttribute("data-volume")) || 0;
+          break;
+        case "competition":
+          getSortValue = row => parseFloat(row.getAttribute("data-competition")) || 0;
+          break;
+        case "cpc":
+          getSortValue = row => parseFloat(row.getAttribute("data-cpc-value")) || 0;
+          break;
+        default:
+          getSortValue = row => parseInt(row.getAttribute("data-volume")) || 0;
+      }
+
+      const direction = this.currentSort.direction === "asc" ? 1 : -1;
+
+      rows.sort((a, b) => {
+        const aVal = getSortValue(a);
+        const bVal = getSortValue(b);
+
+        if (this.currentSort.column === "keyword") {
+          // String comparison for keywords
+          if (aVal < bVal) return -1 * direction;
+          if (aVal > bVal) return 1 * direction;
+          return 0;
+        } else {
+          // Numerical comparison
+          if (aVal < bVal) return -1 * direction;
+          if (aVal > bVal) return 1 * direction;
+          return 0;
+        }
+      });
+
+      // Remove all rows and re-append in sorted order
+      rows.forEach(row => tbody.appendChild(row));
+    });
+  }
+
+  showModal() {
+    if (this.hasModalTarget) {
+      this.modalTarget.classList.remove("hidden");
+      // Focus on the input field when modal opens
+      if (this.hasModalInputTarget) {
+        setTimeout(() => {
+          this.modalInputTarget.focus();
+        }, 100);
+      }
+      // Add escape key listener
+      this.escapeKeyHandler = (event) => {
+        if (event.key === "Escape") {
+          this.hideModal();
+        }
+      };
+      document.addEventListener("keydown", this.escapeKeyHandler);
+    }
+  }
+
+  hideModal() {
+    if (this.hasModalTarget) {
+      this.modalTarget.classList.add("hidden");
+      // Clear the input field
+      if (this.hasModalInputTarget) {
+        this.modalInputTarget.value = "";
+      }
+      // Remove escape key listener
+      if (this.escapeKeyHandler) {
+        document.removeEventListener("keydown", this.escapeKeyHandler);
+        this.escapeKeyHandler = null;
+      }
+    }
+  }
+
+  submitModal() {
+    // Find the form within the modal and trigger its submission
+    const form = this.modalTarget.querySelector("form");
+    if (form) {
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    }
   }
 
   disconnect() {
+    // Clean up escape key listener if modal is open
+    if (this.escapeKeyHandler) {
+      document.removeEventListener("keydown", this.escapeKeyHandler);
+      this.escapeKeyHandler = null;
+    }
     // console.log("KeywordTrendsController disconnected");
   }
 }

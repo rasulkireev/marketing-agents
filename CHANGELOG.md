@@ -16,8 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.4] - 2025-08-19
 **Added**
-- More info on the Generated Blog Post page, as well as the post button
+- More info on the Generated Blog Post page, as well as the post button.
+- Keywords:
+  - Separate page with keywords for each project
+  - Ability to select which keywords will be used in post generation
+  - Ablity to sort the table
+  - Converted keyword addition form to modal interface for cleaner UI
 - My name to generated blog posts
+
+**Changed**
 
 ## [0.0.4] - 2025-08-18
 **Added**

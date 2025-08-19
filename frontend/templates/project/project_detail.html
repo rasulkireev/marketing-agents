@@ -22,7 +22,16 @@
         {{ project.name }}
       </h1>
 
-      <div class="mt-6">
+      <div class="flex gap-4 justify-center mt-6">
+        <a
+          href="{% url 'project_keywords' project.id %}"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          Keywords
+        </a>
         <a
           href="{% url 'project_settings' project.id %}"
           class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
