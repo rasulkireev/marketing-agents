@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.4] - 2025-08-19
 **Added**
 - More info on the Generated Blog Post page, as well as the post button
+- My name to generated blog posts
 
 ## [0.0.4] - 2025-08-18
 **Added**

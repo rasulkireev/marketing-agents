@@ -41,6 +41,12 @@
   <div class="mx-auto max-w-3xl">
     <h1 class="mb-6 text-3xl font-bold">{{ blog_post.title }}</h1>
 
+    <div class="mb-6 text-sm text-gray-600">
+      By <a href="https://rasulkireev.com" class="text-blue-600 hover:text-blue-800 hover:underline" target="_blank" rel="noopener noreferrer">Rasul Kireev</a>
+      <span class="mx-2">•</span>
+      <time datetime="{{ blog_post.created_at|date:'c' }}">{{ blog_post.created_at|date:'F j, Y' }}</time>
+    </div>
+
     <div class="max-w-none prose prose-lg">
       {{ blog_post.content|markdown|safe }}
     </div>
