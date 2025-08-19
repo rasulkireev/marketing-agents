@@ -4,15 +4,14 @@ import { showMessage } from "../utils/messages";
 
 // Controller to handle rendering of D3 trend graphs for keywords
 export default class extends Controller {
-  static targets = [ "graph", "formMessage", "search", "list", "addButton", "sort" ];
+  static targets = [ "graph", "formMessage", "search", "list", "addButton", "modal", "modalInput" ];
 
   connect() {
     this.renderAllGraphs();
-    // Default sort on connect
-    if (this.hasSortTarget) {
-      this.sortTarget.value = "volume_desc";
-      this.sortKeywords();
-    }
+    // Default sort state
+    this.currentSort = { column: "volume", direction: "desc" };
+    this.updateColumnHeaders();
+    this.sortByCurrentState();
   }
 
   renderAllGraphs() {
@@ -178,6 +177,7 @@ export default class extends Controller {
       const data = await response.json();
       if (data.status === "success") {
         showMessage("Keyword added successfully!", "success");
+        this.hideModal(); // Hide the modal on success
         setTimeout(() => { window.location.reload(); }, 800);
       } else {
         showMessage(data.message || "Failed to add keyword.", "error");
@@ -282,61 +282,162 @@ export default class extends Controller {
     });
   }
 
-  sortKeywords() {
-    if (!this.hasListTarget || !this.hasSortTarget) return;
-    const sortValue = this.sortTarget.value;
-    const rows = Array.from(this.listTarget.querySelectorAll("tr"));
-    let getSortValue;
-    let direction = 1;
-    switch (sortValue) {
-      case "created_asc":
-        getSortValue = row => new Date(row.getAttribute("data-created-at"));
-        direction = 1;
-        break;
-      case "created_desc":
-        getSortValue = row => new Date(row.getAttribute("data-created-at"));
-        direction = -1;
-        break;
-      case "volume_desc":
-        getSortValue = row => parseInt(row.getAttribute("data-volume")) || 0;
-        direction = -1;
-        break;
-      case "volume_asc":
-        getSortValue = row => parseInt(row.getAttribute("data-volume")) || 0;
-        direction = 1;
-        break;
-      case "competition_desc":
-        getSortValue = row => parseFloat(row.getAttribute("data-competition")) || 0;
-        direction = -1;
-        break;
-      case "competition_asc":
-        getSortValue = row => parseFloat(row.getAttribute("data-competition")) || 0;
-        direction = 1;
-        break;
-      case "cpc_desc":
-        getSortValue = row => parseFloat(row.getAttribute("data-cpc-value")) || 0;
-        direction = -1;
-        break;
-      case "cpc_asc":
-        getSortValue = row => parseFloat(row.getAttribute("data-cpc-value")) || 0;
-        direction = 1;
-        break;
-      default:
-        getSortValue = row => new Date(row.getAttribute("data-created-at"));
-        direction = -1;
+  sortByColumn(event) {
+    const button = event.currentTarget;
+    const column = button.getAttribute("data-column");
+    const sortType = button.getAttribute("data-sort-type");
+
+    // Toggle direction if clicking the same column, otherwise default to desc for numerical, asc for alphabetical
+    if (this.currentSort.column === column) {
+      this.currentSort.direction = this.currentSort.direction === "asc" ? "desc" : "asc";
+    } else {
+      this.currentSort.column = column;
+      this.currentSort.direction = sortType === "alphabetical" ? "asc" : "desc";
     }
-    rows.sort((a, b) => {
-      const aVal = getSortValue(a);
-      const bVal = getSortValue(b);
-      if (aVal < bVal) return -1 * direction;
-      if (aVal > bVal) return 1 * direction;
-      return 0;
+
+    this.updateColumnHeaders();
+    this.sortByCurrentState();
+  }
+
+    updateColumnHeaders() {
+    // Find all sort buttons and update their appearance
+    const sortButtons = this.element.querySelectorAll("button[data-column]");
+
+    sortButtons.forEach(button => {
+      const column = button.getAttribute("data-column");
+      const upArrow = button.querySelector("svg:first-of-type");
+      const downArrow = button.querySelector("svg:last-of-type");
+
+      if (column === this.currentSort.column) {
+        // Active column - highlight button and show appropriate arrow
+        button.classList.add("bg-gray-200", "text-gray-800");
+        button.classList.remove("hover:bg-gray-100");
+
+        if (this.currentSort.direction === "asc") {
+          upArrow.classList.remove("opacity-60");
+          upArrow.classList.add("opacity-100");
+          downArrow.classList.remove("opacity-100");
+          downArrow.classList.add("opacity-30");
+        } else {
+          upArrow.classList.remove("opacity-100");
+          upArrow.classList.add("opacity-30");
+          downArrow.classList.remove("opacity-60");
+          downArrow.classList.add("opacity-100");
+        }
+      } else {
+        // Inactive column - reset to default state
+        button.classList.remove("bg-gray-200", "text-gray-800");
+        button.classList.add("hover:bg-gray-100");
+        upArrow.classList.remove("opacity-100", "opacity-30");
+        upArrow.classList.add("opacity-60");
+        downArrow.classList.remove("opacity-100", "opacity-30");
+        downArrow.classList.add("opacity-60");
+      }
     });
-    // Remove all rows and re-append in sorted order
-    rows.forEach(row => this.listTarget.appendChild(row));
+  }
+
+  sortByCurrentState() {
+    if (!this.hasListTarget) return;
+
+    // Get all table bodies (both main table and zero volume table)
+    const tableBodies = this.element.querySelectorAll("tbody[data-keyword-trends-target='list'], tbody.bg-white.divide-y.divide-gray-200");
+
+    tableBodies.forEach(tbody => {
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      let getSortValue;
+
+      switch (this.currentSort.column) {
+        case "keyword":
+          getSortValue = row => {
+            const keywordElem = row.querySelector(".text-sm.font-medium");
+            return keywordElem ? keywordElem.textContent.trim().toLowerCase() : "";
+          };
+          break;
+        case "volume":
+          getSortValue = row => parseInt(row.getAttribute("data-volume")) || 0;
+          break;
+        case "competition":
+          getSortValue = row => parseFloat(row.getAttribute("data-competition")) || 0;
+          break;
+        case "cpc":
+          getSortValue = row => parseFloat(row.getAttribute("data-cpc-value")) || 0;
+          break;
+        default:
+          getSortValue = row => parseInt(row.getAttribute("data-volume")) || 0;
+      }
+
+      const direction = this.currentSort.direction === "asc" ? 1 : -1;
+
+      rows.sort((a, b) => {
+        const aVal = getSortValue(a);
+        const bVal = getSortValue(b);
+
+        if (this.currentSort.column === "keyword") {
+          // String comparison for keywords
+          if (aVal < bVal) return -1 * direction;
+          if (aVal > bVal) return 1 * direction;
+          return 0;
+        } else {
+          // Numerical comparison
+          if (aVal < bVal) return -1 * direction;
+          if (aVal > bVal) return 1 * direction;
+          return 0;
+        }
+      });
+
+      // Remove all rows and re-append in sorted order
+      rows.forEach(row => tbody.appendChild(row));
+    });
+  }
+
+  showModal() {
+    if (this.hasModalTarget) {
+      this.modalTarget.classList.remove("hidden");
+      // Focus on the input field when modal opens
+      if (this.hasModalInputTarget) {
+        setTimeout(() => {
+          this.modalInputTarget.focus();
+        }, 100);
+      }
+      // Add escape key listener
+      this.escapeKeyHandler = (event) => {
+        if (event.key === "Escape") {
+          this.hideModal();
+        }
+      };
+      document.addEventListener("keydown", this.escapeKeyHandler);
+    }
+  }
+
+  hideModal() {
+    if (this.hasModalTarget) {
+      this.modalTarget.classList.add("hidden");
+      // Clear the input field
+      if (this.hasModalInputTarget) {
+        this.modalInputTarget.value = "";
+      }
+      // Remove escape key listener
+      if (this.escapeKeyHandler) {
+        document.removeEventListener("keydown", this.escapeKeyHandler);
+        this.escapeKeyHandler = null;
+      }
+    }
+  }
+
+  submitModal() {
+    // Find the form within the modal and trigger its submission
+    const form = this.modalTarget.querySelector("form");
+    if (form) {
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    }
   }
 
   disconnect() {
+    // Clean up escape key listener if modal is open
+    if (this.escapeKeyHandler) {
+      document.removeEventListener("keydown", this.escapeKeyHandler);
+      this.escapeKeyHandler = null;
+    }
     // console.log("KeywordTrendsController disconnected");
   }
 }
