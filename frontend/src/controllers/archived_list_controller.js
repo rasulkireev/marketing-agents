@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["list"];
+  static targets = ["list", "icon"];
   static values = { name: String };
 
   connect() {
@@ -15,6 +15,17 @@ export default class extends Controller {
 
   toggle() {
     this.listTarget.classList.toggle("hidden");
+
+    // Rotate the chevron icon if it exists
+    if (this.hasIconTarget) {
+      if (this.listTarget.classList.contains("hidden")) {
+        // Collapsed state - no rotation
+        this.iconTarget.classList.remove("rotate-180");
+      } else {
+        // Expanded state - rotate 180 degrees
+        this.iconTarget.classList.add("rotate-180");
+      }
+    }
   }
 
   add(element) {

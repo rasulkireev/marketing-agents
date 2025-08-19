@@ -182,6 +182,7 @@ class BlogPostGenerationContext(BaseModel):
 
     project_details: ProjectDetails
     title_suggestion: TitleSuggestion
+    project_keywords: list[str] = []
     project_pages: list[ProjectPageContext] = []
     content_type: str = Field(description="Type of content to generate (SEO or SHARING)")
 

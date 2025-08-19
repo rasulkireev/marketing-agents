@@ -142,7 +142,6 @@ def process_project_keywords(project_id: int):
                     keyword_text=keyword_str,
                 )
 
-            # Associate with project
             ProjectKeyword.objects.get_or_create(project=project, keyword=keyword_obj)
             processed_count += 1
         except Exception as e:
@@ -154,13 +153,18 @@ def process_project_keywords(project_id: int):
                 keyword_text=keyword_str,
             )
 
-    result_message = f"""
+    logger.info(
+        "Keyword Proceesing Complete",
+        project_id=project.id,
+        project_name=project.name,
+        processed_count=processed_count,
+        failed_count=failed_count,
+    )
+    return f"""
     Keyword processing for project {project.name} (ID: {project.id})
     Processed {processed_count} keywords
     Failed: {failed_count}
     """
-    logger.info(result_message)
-    return result_message
 
 
 def generate_blog_post_suggestions(project_id: int):

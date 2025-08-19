@@ -765,6 +765,21 @@ class BlogPostTitleSuggestion(BaseModel):
             """
 
         @agent.system_prompt
+        def add_target_keywords(ctx: RunContext[BlogPostGenerationContext]) -> str:
+            if ctx.deps.project_keywords:
+                keywords_list = ", ".join(ctx.deps.project_keywords)
+                return f"""
+                    Focus Keywords for SEO
+                    The user wants to focus on these specific keywords in the blog post:
+                    {keywords_list}
+
+                    Please incorporate these keywords naturally throughout the content where appropriate.
+                    Don't force them in, but use them when they fit contextually and help improve the readability and SEO value of the post.
+                """  # noqa: E501
+            else:
+                return ""
+
+        @agent.system_prompt
         def valid_markdown_format() -> str:
             return """
                 IMPORTANT: Generate the content in valid markdown format.
@@ -803,11 +818,17 @@ class BlogPostTitleSuggestion(BaseModel):
             for page in self.project.project_pages.all()
         ]
 
+        project_keywords = [
+            pk.keyword.keyword_text
+            for pk in self.project.project_keywords.filter(use=True).select_related("keyword")
+        ]
+
         deps = BlogPostGenerationContext(
             project_details=self.project.project_details,
             title_suggestion=self.title_suggestion,
             project_pages=project_pages,
             content_type=content_type,
+            project_keywords=project_keywords,
         )
 
         result = run_agent_synchronously(

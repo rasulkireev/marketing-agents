@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+  <title>Marketing Agents - Keywords for {{ project.name }}</title>
+  <meta name="description"
+        content="Keywords for {{ project.name }}." />
+{% endblock meta %}
+
+{% block content %}
+<div class="py-16 bg-gray-50 sm:py-20">
+  <div class="px-6 mx-auto max-w-4xl lg:px-8">
+
+    <!-- Back to Project Button -->
+    <div class="mb-6">
+      <a
+        href="{% url 'project_detail' project.id %}"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+      >
+        <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Back to Project
+      </a>
+    </div>
+
+    <!-- Project Header -->
+    <div class="text-center">
+      <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">
+        Keywords for {{ project.name }}
+      </h1>
+
+      <p class="mt-4 text-lg text-gray-600">
+        Manage and track keyword performance for your project
+      </p>
+    </div>
+
+    <!-- Keywords Management -->
+    <div class="mt-12" data-controller="keyword-trends">
+
+      <!-- Add Keyword Section -->
+      <div class="mb-8">
+        <div class="p-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <h2 class="mb-4 text-lg font-semibold text-gray-900">Add New Keyword</h2>
+          <form data-action="submit->keyword-trends#addKeyword" class="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <input type="hidden" name="project_id" value="{{ project.id }}">
+            <div class="flex-1">
+              <label for="add-keyword-input" class="block mb-2 text-sm font-medium text-gray-700">Keyword</label>
+              <input id="add-keyword-input" name="keyword_text" type="text" required
+                     placeholder="Enter keyword..."
+                     class="block px-3 py-2 w-full text-gray-900 bg-white rounded-md border border-gray-300 focus:ring-gray-500 focus:border-gray-500" />
+            </div>
+            <button type="submit" data-keyword-trends-target="addButton"
+                    class="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-gray-900 rounded-md border border-gray-900 transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500">
+              <svg class="mr-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Keyword
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Controls Section -->
+      <div class="mb-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end">
+          <div class="flex-1 max-w-sm">
+            <label for="search-keywords" class="block mb-2 text-sm font-medium text-gray-700">Search Keywords</label>
+            <input id="search-keywords"
+                   type="text"
+                   placeholder="Search keywords..."
+                   class="block px-3 py-2 w-full text-sm text-gray-900 bg-white rounded-md border border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                   data-keyword-trends-target="search"
+                   data-action="input->keyword-trends#filterKeywords">
+          </div>
+          <div class="max-w-sm">
+            <label for="sort-keywords" class="block mb-2 text-sm font-medium text-gray-700">Sort By</label>
+            <select id="sort-keywords"
+                    class="block px-3 py-2 w-full text-sm bg-white rounded-md border border-gray-300 focus:ring-gray-500 focus:border-gray-500"
+                    data-keyword-trends-target="sort"
+                    data-action="change->keyword-trends#sortKeywords">
+              <option value="volume_desc">Volume (High to Low)</option>
+              <option value="volume_asc">Volume (Low to High)</option>
+              <option value="created_desc">Newest First</option>
+              <option value="created_asc">Oldest First</option>
+              <option value="competition_desc">Competition (High to Low)</option>
+              <option value="competition_asc">Competition (Low to High)</option>
+              <option value="cpc_desc">CPC (High to Low)</option>
+              <option value="cpc_asc">CPC (Low to High)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Keywords Table (with volume > 0) -->
+      {% if keywords %}
+        <!-- Filter keywords with volume > 0 -->
+        {% comment %}Split keywords into two groups{% endcomment %}
+        <div class="overflow-hidden bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Keyword
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Volume
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    CPC
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Competition
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Trend
+                  </th>
+                  <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200" data-keyword-trends-target="list">
+                {% for keyword in keywords %}
+                  {% if keyword.volume and keyword.volume > 0 %}
+                    <tr class="transition-colors hover:bg-gray-50"
+                        data-created-at="{{ keyword.created_at|date:'c' }}"
+                        data-volume="{{ keyword.volume|default:'' }}"
+                        data-competition="{{ keyword.competition|default:'' }}"
+                        data-cpc-value="{{ keyword.cpc_value|default:'' }}">
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ keyword.keyword_text }}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ keyword.volume|default:"N/A" }}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">
+                          {{ keyword.cpc_value|default:"N/A" }}{% if keyword.cpc_value %} {{ keyword.cpc_currency|default:"" }}{% endif %}
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ keyword.competition|default:"N/A" }}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        {% with "trend-data-" as prefix_str %}
+                        {% with keyword.id|stringformat:"s" as keyword_id_str %}
+                        {% with prefix_str|add:keyword_id_str as final_trend_id %}
+                          {{ keyword.trend_data|json_script:final_trend_id }}
+                          <div data-keyword-trends-target="graph"
+                               data-trend-data-id="{{ final_trend_id }}"
+                               class="w-24 h-12 bg-gray-50 rounded border border-gray-100"></div>
+                        {% endwith %}
+                        {% endwith %}
+                        {% endwith %}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <button type="button"
+                                class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                                {% if keyword.use %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %}"
+                                data-action="click->keyword-trends#toggleUse"
+                                data-keyword-id="{{ keyword.id }}"
+                                data-project-id="{{ project.id }}"
+                                data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
+                          {% if keyword.use %}In Use{% else %}Use{% endif %}
+                        </button>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Zero Volume Keywords Section (Collapsible) -->
+        <div data-controller="archived-list" class="mt-6 archived-list" data-archived-list-name-value="zero-volume-keywords">
+          <div class="bg-gray-50 rounded-lg border border-gray-200">
+            <button
+              class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-lg transition-colors hover:bg-gray-100 focus:outline-none"
+              data-action="click->archived-list#toggle"
+            >
+              <h4 class="text-base font-medium text-gray-900">
+                Zero Volume Keywords
+                <span class="ml-2 text-sm font-normal text-gray-500">
+                  (Low search volume keywords)
+                </span>
+              </h4>
+              <svg class="w-5 h-5 text-gray-400 transition-transform duration-200 transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" data-archived-list-target="icon">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div data-archived-list-target="list" class="hidden border-t border-gray-200">
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Keyword
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Volume
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        CPC
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Competition
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Trend
+                      </th>
+                      <th scope="col" class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    {% for keyword in keywords %}
+                      {% if not keyword.volume or keyword.volume == 0 %}
+                        <tr class="transition-colors hover:bg-gray-50"
+                            data-created-at="{{ keyword.created_at|date:'c' }}"
+                            data-volume="{{ keyword.volume|default:'' }}"
+                            data-competition="{{ keyword.competition|default:'' }}"
+                            data-cpc-value="{{ keyword.cpc_value|default:'' }}">
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ keyword.keyword_text }}</div>
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">{{ keyword.volume|default:"0" }}</div>
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                              {{ keyword.cpc_value|default:"N/A" }}{% if keyword.cpc_value %} {{ keyword.cpc_currency|default:"" }}{% endif %}
+                            </div>
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ keyword.competition|default:"N/A" }}</div>
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            {% with "trend-data-zero-" as prefix_str %}
+                            {% with keyword.id|stringformat:"s" as keyword_id_str %}
+                            {% with prefix_str|add:keyword_id_str as final_trend_id %}
+                              {{ keyword.trend_data|json_script:final_trend_id }}
+                              <div data-keyword-trends-target="graph"
+                                   data-trend-data-id="{{ final_trend_id }}"
+                                   class="w-24 h-12 bg-gray-50 rounded border border-gray-100"></div>
+                            {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+                          </td>
+                          <td class="px-6 py-4 whitespace-nowrap">
+                            <button type="button"
+                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                                    {% if keyword.use %}bg-gray-900 text-white hover:bg-gray-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %}"
+                                    data-action="click->keyword-trends#toggleUse"
+                                    data-keyword-id="{{ keyword.id }}"
+                                    data-project-id="{{ project.id }}"
+                                    data-keyword-use="{{ keyword.use|yesno:'true,false' }}">
+                              {% if keyword.use %}In Use{% else %}Use{% endif %}
+                            </button>
+                          </td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      {% else %}
+        <div class="p-8 text-center bg-white rounded-lg border border-gray-200 shadow-sm">
+          <svg class="mx-auto w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">No keywords found</h3>
+          <p class="mt-1 text-sm text-gray-500">Get started by adding your first keyword to this project.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock content %}

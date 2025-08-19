@@ -17,6 +17,9 @@ urlpatterns = [
         "project/<int:pk>/settings/", views.ProjectSettingsView.as_view(), name="project_settings"
     ),
     path(
+        "project/<int:pk>/keywords/", views.ProjectKeywordsView.as_view(), name="project_keywords"
+    ),
+    path(
         "project/<int:project_pk>/post/<int:pk>/",
         views.GeneratedBlogPostDetailView.as_view(),
         name="generated_blog_post_detail",

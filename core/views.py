@@ -328,6 +328,59 @@ class ProjectSettingsView(LoginRequiredMixin, DetailView):
             return self.render_to_response(context)
 
 
+class ProjectKeywordsView(LoginRequiredMixin, DetailView):
+    model = Project
+    template_name = "project/project_keywords.html"
+    context_object_name = "project"
+
+    def get_queryset(self):
+        # Ensure users can only see their own projects
+        return Project.objects.filter(profile=self.request.user.profile)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project = self.object
+
+        # Get all keywords associated with this project with their metrics
+        project_keywords = (
+            project.project_keywords.select_related("keyword")
+            .prefetch_related("keyword__trends")
+            .order_by("-keyword__volume", "keyword__keyword_text")
+        )
+
+        # Prepare keywords with trend data for the template
+        keywords_with_trends = []
+        for project_keyword in project_keywords:
+            keyword = project_keyword.keyword
+
+            # Get trend data for this keyword
+            trend_data = [
+                {"month": trend.month, "year": trend.year, "value": trend.value}
+                for trend in keyword.trends.all().order_by("year", "month")
+            ]
+
+            # Create keyword object with all necessary data
+            keyword_data = {
+                "id": keyword.id,
+                "keyword_text": keyword.keyword_text,
+                "volume": keyword.volume,
+                "cpc_value": keyword.cpc_value,
+                "cpc_currency": keyword.cpc_currency,
+                "competition": keyword.competition,
+                "use": project_keyword.use,
+                "trend_data": trend_data,
+                "project_keyword_id": project_keyword.id,
+            }
+            keywords_with_trends.append(keyword_data)
+
+        context["keywords"] = keywords_with_trends
+        context["total_keywords_count"] = project_keywords.count()
+        context["used_keywords_count"] = project_keywords.filter(use=True).count()
+        context["available_keywords_count"] = project_keywords.filter(use=False).count()
+
+        return context
+
+
 class GeneratedBlogPostDetailView(LoginRequiredMixin, DetailView):
     model = GeneratedBlogPost
     template_name = "blog/generated_blog_post_detail.html"
