@@ -4,18 +4,28 @@
 
 {% block content %}
 <div class="px-6 py-12 mx-auto max-w-7xl sm:py-16">
-  <div class="mx-auto max-w-2xl">
+  <div class="mx-auto max-w-4xl">
     <!-- Page Header -->
     <div class="mb-8">
       <h1 class="text-2xl font-bold tracking-tight text-gray-900">Project Settings</h1>
       <p class="mt-2 text-sm text-gray-600">Configure your project details and automation preferences.</p>
     </div>
     <!-- Project Details Section -->
-    <div class="p-6 bg-white rounded-md border border-gray-200 shadow-sm" id="project-details">
-      <div class="mb-6">
-        <h2 class="text-xl font-bold tracking-tight text-gray-900">Project Details</h2>
-        <p class="mt-1 text-sm text-gray-600">Configure your project settings and preferences</p>
-      </div>
+    <div class="bg-white rounded-md border border-gray-200 shadow-sm" id="project-details">
+      <div data-controller="archived-list" class="archived-list" data-archived-list-name-value="project-details">
+        <button
+          class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-md transition-colors hover:bg-gray-100 focus:outline-none"
+          data-action="click->archived-list#toggle"
+        >
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-gray-900">Project Details</h2>
+            <p class="mt-1 text-sm text-gray-600">Configure your project settings and preferences</p>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div data-archived-list-target="list" class="p-6 border-t border-gray-200">
       <div class="p-4 mb-6 bg-gray-50 rounded-md border border-gray-200">
         <div class="flex gap-3">
           <div class="flex-shrink-0">
@@ -206,15 +216,27 @@
           </div>
         </div>
       </form>
+        </div>
+      </div>
     </div>
 
     <!-- Blogging Agent Settings Section -->
     <div id="blogging-agent-settings" class="mt-8">
-      <div class="p-6 bg-white rounded-md border border-gray-200 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-xl font-bold tracking-tight text-gray-900">Blogging Agent</h2>
-          <p class="mt-1 text-sm text-gray-600">Configure automatic blog post submission settings</p>
-        </div>
+      <div class="bg-white rounded-md border border-gray-200 shadow-sm">
+        <div data-controller="archived-list" class="archived-list" data-archived-list-name-value="blogging-agent">
+          <button
+            class="flex justify-between items-center px-6 py-4 w-full text-left rounded-t-md transition-colors hover:bg-gray-100 focus:outline-none"
+            data-action="click->archived-list#toggle"
+          >
+            <div>
+              <h2 class="text-xl font-bold tracking-tight text-gray-900">Blogging Agent</h2>
+              <p class="mt-1 text-sm text-gray-600">Configure automatic blog post submission settings</p>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <div data-archived-list-target="list" class="p-6 border-t border-gray-200">
 
         <h3 class="mb-4 text-lg font-semibold text-gray-900">Automatic Submission Configuration</h3>
 
@@ -337,6 +359,8 @@
             </div>
           </div>
         </form>
+          </div>
+        </div>
       </div>
     </div>
 
