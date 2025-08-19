@@ -14,10 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.4] - 2025-08-19
+**Added**
+- More info on the Generated Blog Post page, as well as the post button
+
 ## [0.0.4] - 2025-08-18
 **Added**
 - Added a couple of logs to Django Ninja Auth module and Submit Post endpoint
-- More info on the Generated Blog Post page, as well as the post button
 
 **Removed**
 - Logging config for django-q module as I suspect it was messing with the Sentry Error logging
