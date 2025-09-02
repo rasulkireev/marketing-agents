@@ -245,7 +245,7 @@ else:
 
 Q_CLUSTER = {
     "name": "seo_blog_bot-q",
-    "timeout": 90,
+    "timeout": 300,  # Increased from 90 to 300 seconds (5 minutes) to handle long-running tasks
     "retry": 120,
     "workers": 4,
     "max_attempts": 2,
