@@ -1,7 +1,7 @@
 services:
   - type: web
     name: marketingagents-web
-    runtime: python3
+    runtime: python
     buildCommand: |
       pip install -r requirements.txt &&
       npm ci &&

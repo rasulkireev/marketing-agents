@@ -4,14 +4,15 @@
 services:
   - type: web
     name: marketingagents-web-minimal
-    runtime: python3
+    runtime: python
     buildCommand: |
       pip install -r requirements.txt &&
       npm ci &&
       npm run build &&
       python manage.py collectstatic --noinput
     startCommand: |
-      python manage.py migrate &&
+      python manage.py migrate
+      python manage.py qcluster &
       gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
     plan: starter
     healthCheckPath: /
