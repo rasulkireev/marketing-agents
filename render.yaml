@@ -14,7 +14,7 @@ services:
       python manage.py migrate
       python manage.py qcluster &
       gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
-    plan: starter
+    plan: free
     healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
@@ -94,4 +94,4 @@ databases:
   - name: marketingagents-db-minimal
     databaseName: marketingagents
     user: marketingagents_user
-    plan: starter
+    plan: free
