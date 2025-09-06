@@ -1,0 +1,180 @@
+services:
+  - type: web
+    name: marketingagents-web
+    runtime: python3
+    buildCommand: |
+      pip install -r requirements.txt &&
+      npm ci &&
+      npm run build &&
+      python manage.py collectstatic --noinput
+    startCommand: |
+      python manage.py migrate &&
+      gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: NODE_VERSION
+        value: "18"
+      - key: ENVIRONMENT
+        value: prod
+      - key: DEBUG
+        value: "False"
+
+      # Auto-configure hosts from Render service
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+
+      # Database connection
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db
+          property: connectionString
+
+      # Redis connection for task queue
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: marketingagents-redis
+          property: connectionString
+
+      # Auto-generated secret key
+      - key: SECRET_KEY
+        generateValue: true
+
+      # Email Configuration - REQUIRED for user accounts
+      # Get your API key from https://www.mailgun.com
+      - key: MAILGUN_API_KEY
+        value: "REPLACE_WITH_YOUR_MAILGUN_API_KEY"
+
+      # AI API Keys - REQUIRED for core AI features
+      # Get from https://console.anthropic.com
+      - key: ANTHROPIC_API_KEY
+        value: "REPLACE_WITH_YOUR_ANTHROPIC_API_KEY"
+
+      # Get from https://aistudio.google.com/app/apikey
+      - key: GEMINI_API_KEY
+        value: "REPLACE_WITH_YOUR_GEMINI_API_KEY"
+
+      # Get from https://www.perplexity.ai
+      - key: PERPLEXITY_API_KEY
+        value: "REPLACE_WITH_YOUR_PERPLEXITY_API_KEY"
+
+      # SEO & Content API Keys - Optional but recommended
+      - key: JINA_READER_API_KEY
+        value: "REPLACE_WITH_YOUR_JINA_API_KEY"
+      - key: KEYWORDS_EVERYWHERE_API_KEY
+        value: "REPLACE_WITH_YOUR_KEYWORDS_API_KEY"
+
+      # File Storage - REQUIRED for media uploads
+      # Use AWS S3, Backblaze B2, or DigitalOcean Spaces
+      - key: AWS_S3_ENDPOINT_URL
+        value: "https://s3.amazonaws.com"
+      - key: AWS_ACCESS_KEY_ID
+        value: "REPLACE_WITH_YOUR_AWS_ACCESS_KEY"
+      - key: AWS_SECRET_ACCESS_KEY
+        value: "REPLACE_WITH_YOUR_AWS_SECRET_KEY"
+
+      # Payment Processing - Optional (for premium features)
+      - key: STRIPE_TEST_SECRET_KEY
+        value: "REPLACE_WITH_YOUR_STRIPE_TEST_KEY"
+      - key: STRIPE_LIVE_SECRET_KEY
+        value: "REPLACE_WITH_YOUR_STRIPE_LIVE_KEY"
+      - key: DJSTRIPE_WEBHOOK_SECRET
+        value: "REPLACE_WITH_YOUR_STRIPE_WEBHOOK_SECRET"
+
+      # OAuth - Optional (for GitHub login)
+      - key: GITHUB_CLIENT_ID
+        value: "REPLACE_WITH_YOUR_GITHUB_CLIENT_ID"
+      - key: GITHUB_CLIENT_SECRET
+        value: "REPLACE_WITH_YOUR_GITHUB_CLIENT_SECRET"
+
+      # Monitoring & Analytics - Optional
+      - key: SENTRY_DSN
+        value: ""
+      - key: POSTHOG_API_KEY
+        value: ""
+      - key: BUTTONDOWN_API_KEY
+        value: ""
+
+      # Logging
+      - key: DJANGO_LOG_LEVEL
+        value: "INFO"
+
+  # Background worker for Django Q2 task processing
+  - type: worker
+    name: marketingagents-worker
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py qcluster
+    plan: starter
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: ENVIRONMENT
+        value: prod
+      - key: DEBUG
+        value: "False"
+
+      # Database connection
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db
+          property: connectionString
+
+      # Redis connection for task queue
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: marketingagents-redis
+          property: connectionString
+
+      # Auto-generated secret key
+      - key: SECRET_KEY
+        generateValue: true
+
+      # AI API Keys - Same as web service
+      - key: ANTHROPIC_API_KEY
+        value: "REPLACE_WITH_YOUR_ANTHROPIC_API_KEY"
+      - key: GEMINI_API_KEY
+        value: "REPLACE_WITH_YOUR_GEMINI_API_KEY"
+      - key: PERPLEXITY_API_KEY
+        value: "REPLACE_WITH_YOUR_PERPLEXITY_API_KEY"
+      - key: JINA_READER_API_KEY
+        value: "REPLACE_WITH_YOUR_JINA_API_KEY"
+      - key: KEYWORDS_EVERYWHERE_API_KEY
+        value: "REPLACE_WITH_YOUR_KEYWORDS_API_KEY"
+
+      # File Storage - Same as web service
+      - key: AWS_S3_ENDPOINT_URL
+        value: "https://s3.amazonaws.com"
+      - key: AWS_ACCESS_KEY_ID
+        value: "REPLACE_WITH_YOUR_AWS_ACCESS_KEY"
+      - key: AWS_SECRET_ACCESS_KEY
+        value: "REPLACE_WITH_YOUR_AWS_SECRET_KEY"
+
+      # Email Configuration
+      - key: MAILGUN_API_KEY
+        value: "REPLACE_WITH_YOUR_MAILGUN_API_KEY"
+
+      # Monitoring
+      - key: SENTRY_DSN
+        value: ""
+
+      # Logging
+      - key: DJANGO_LOG_LEVEL
+        value: "INFO"
+
+databases:
+  - name: marketingagents-db
+    databaseName: marketingagents
+    user: marketingagents_user
+    plan: starter
+
+  - name: marketingagents-redis
+    type: redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
