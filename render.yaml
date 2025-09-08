@@ -20,8 +20,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.6"
-      - key: NODE_VERSION
-        value: "18"
       - key: ENVIRONMENT
         value: prod
       - key: DEBUG
@@ -39,10 +37,16 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com"
 
-      # Social Auth
-      - key: GITHUB_CLIENT_ID
+      # Optional. If not specified, local FileSystemStorage is used for media files.
+      - key: AWS_S3_ENDPOINT_URL
         value: ""
-      - key: GITHUB_CLIENT_SECRET
+      - key: AWS_ACCESS_KEY_ID
+        value: ""
+      - key: AWS_SECRET_ACCESS_KEY
+        value: ""
+
+      # Basic email setup - can be configured later
+      - key: MAILGUN_API_KEY
         value: ""
 
       # AI Keys
@@ -53,22 +57,6 @@ services:
       - key: JINA_READER_API_KEY
         value: ""
       - key: KEYWORDS_EVERYWHERE_API_KEY
-        value: ""
-
-      # Basic email setup - can be configured later
-      - key: MAILGUN_API_KEY
-        value: ""
-
-      # Optional. If not specified, local FileSystemStorage is used for media files.
-      - key: AWS_S3_ENDPOINT_URL
-        value: ""
-      - key: AWS_ACCESS_KEY_ID
-        value: ""
-      - key: AWS_SECRET_ACCESS_KEY
-        value: ""
-
-      # Optional
-      - key: LOGFIRE_TOKEN
         value: ""
 
 

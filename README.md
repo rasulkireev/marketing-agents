@@ -1,12 +1,41 @@
 
 # Marketing Agents
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rasulkireev/marketing-agents)
-
 ## Deployment
 
-1. Rename .env.example to .env and update all the relevant variables.
-2. You should be able to run `docker compose up -d` on the server or your local machine.
+### Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rasulkireev/marketing-agents)
+
+The only required env vars are:
+- GEMINI_API_KEY
+- PERPLEXITY_API_KEY
+- JINA_READER_API_KEY
+- KEYWORDS_EVERYWHERE_API_KEY
+
+The rest are optional.
+
+### Custom Deployment on Caprover
+
+1. Create 4 apps on CapRover.
+  - `seo-blog-bot`
+  - `seo-blog-bot-workers`
+  - `seo-blog-bot-postgres`
+  - `seo-blog-bot-redis`
+
+2. Create a new CapRover app token for:
+   - `seo-blog-bot`
+   - `seo-blog-bot-workers`
+
+3. Add Environment Variables to those same apps from `.env`.
+
+4. Create a new GitHub Actions secret with the following:
+   - `CAPROVER_SERVER`
+   - `CAPROVER_APP_TOKEN`
+   - `WORKERS_APP_TOKEN`
+   - `REGISTRY_TOKEN`
+
+5. Then just push main branch.
 
 ## Local Development
 
@@ -46,28 +75,6 @@ The following notes are applicable only after you got the app running locally vi
 - Current (`user-settings.html` and `pricing.html`) template assumes you have 3 products: monthly, annual and one-time.
   I haven't found a reliable way to programmatcialy set this template. When you have created your products in Stripe and synced them, update the template with the correct plan id.
 
-
-### Deployment
-
-1. Create 4 apps on CapRover.
-  - `seo-blog-bot`
-  - `seo-blog-bot-workers`
-  - `seo-blog-bot-postgres`
-  - `seo-blog-bot-redis`
-
-2. Create a new CapRover app token for:
-   - `seo-blog-bot`
-   - `seo-blog-bot-workers`
-
-3. Add Environment Variables to those same apps from `.env`.
-
-4. Create a new GitHub Actions secret with the following:
-   - `CAPROVER_SERVER`
-   - `CAPROVER_APP_TOKEN`
-   - `WORKERS_APP_TOKEN`
-   - `REGISTRY_TOKEN`
-
-5. Then just push main branch.
 
 ### Notes
 - Don't forget to update the site domain and name on the Admin Panel.
