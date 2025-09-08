@@ -30,6 +30,11 @@ services:
         fromDatabase:
           name: marketingagents-db
           property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: marketingagents-redis
+          property: connectionString
 
       # Auto-configure hosts
       - key: ALLOWED_HOSTS
@@ -59,6 +64,11 @@ services:
       - key: KEYWORDS_EVERYWHERE_API_KEY
         value: ""
 
+  - type: redis
+    name: marketingagents-redis
+    plan: free
+    ipAllowList: [] # only allow internal connections
+    maxmemoryPolicy: allkeys-lfu
 
 databases:
   - name: marketingagents-db

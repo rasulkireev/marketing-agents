@@ -266,25 +266,19 @@ if DEBUG:
 else:
     EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 
-
-REDIS_URL = env("REDIS_URL")
 Q_CLUSTER = {
     "name": "seo_blog_bot-q",
     "timeout": 90,
     "retry": 120,
     "workers": 4,
     "max_attempts": 2,
-}
-
-if REDIS_URL == "":
-    Q_CLUSTER["orm"] = "default"
-else:
-    Q_CLUSTER["redis"] = env("REDIS_URL")
-    Q_CLUSTER["error_reporter"] = {
+    "redis": env("REDIS_URL"),
+    "error_reporter": {
         "sentry": {
             "dsn": SENTRY_DSN,
         },
-    }
+    },
+}
 
 LOGGING = {
     "version": 1,
