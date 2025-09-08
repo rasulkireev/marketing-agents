@@ -7,13 +7,22 @@ services:
       npm ci &&
       npm run build &&
       python manage.py collectstatic --noinput
-    preDeployCommand: python manage.py migrate
-    startCommand: gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
+    startCommand: python manage.py migrate && gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
     plan: free
     healthCheckPath: /
 
     envVars:
       - fromGroup: app-env
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: marketingagents-redis
+          property: connectionString
+
 
   - type: web
     name: marketingagents-web-workers
@@ -24,6 +33,16 @@ services:
     healthCheckPath: /
     envVars:
       - fromGroup: app-env
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: marketingagents-redis
+          property: connectionString
+
 
   - type: redis
     name: marketingagents-redis
@@ -49,15 +68,6 @@ envVarGroups:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: marketingagents-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: marketingagents-redis
-          property: connectionString
 
       # Auto-configure hosts
       - key: ALLOWED_HOSTS
