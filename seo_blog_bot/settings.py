@@ -29,10 +29,15 @@ env = environ.Env(
     DEBUG=(bool, False)
 )
 
+# Options: dev, prod
 ENVIRONMENT = env("ENVIRONMENT")
-SENTRY_DSN = env("SENTRY_DSN")
 
-logfire.configure(environment=ENVIRONMENT)
+SENTRY_DSN = env("SENTRY_DSN", default="")
+
+LOGFIRE_TOKEN = env("LOGFIRE_TOKEN", default="")
+
+if LOGFIRE_TOKEN != "":
+    logfire.configure(environment=ENVIRONMENT)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -99,6 +104,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.pro_subscription_status",
+                "core.context_processors.posthog_api_key",
             ],
         },
     },
@@ -156,29 +162,44 @@ STATICFILES_DIRS = [
     BASE_DIR.joinpath("frontend/build"),
 ]
 
-bucket_name = f"seo-blog-bot-{ENVIRONMENT}"
 
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "bucket_name": bucket_name,
-            "default_acl": "public-read",
-            "region_name": "eu-east-1",
-            "endpoint_url": env("AWS_S3_ENDPOINT_URL"),
-            "access_key": env("AWS_ACCESS_KEY_ID"),
-            "secret_key": env("AWS_SECRET_ACCESS_KEY"),
-            "querystring_auth": False,
-            "file_overwrite": False,
-        },
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+folder_name = f"seo-blog-bot-{ENVIRONMENT}"
+aws_s3_endpoint_url = env("AWS_S3_ENDPOINT_URL")
 
-MEDIA_URL = f"{env('AWS_S3_ENDPOINT_URL')}/{bucket_name}/"
+MEDIA_URL = f"{aws_s3_endpoint_url}/{folder_name}/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
+
+if not aws_s3_endpoint_url:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": MEDIA_ROOT,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": folder_name,
+                "default_acl": "public-read",
+                "region_name": "eu-east-1",
+                "endpoint_url": aws_s3_endpoint_url,
+                "access_key": env("AWS_ACCESS_KEY_ID"),
+                "secret_key": env("AWS_SECRET_ACCESS_KEY"),
+                "querystring_auth": False,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 WEBPACK_LOADER = {
     "MANIFEST_FILE": BASE_DIR.joinpath("frontend/build/manifest.json"),
@@ -211,20 +232,22 @@ ACCOUNT_FORMS = {
     "login": "core.forms.CustomLoginForm",
 }
 
-if ENVIRONMENT == "prod":
+if ENVIRONMENT != "dev":
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
-SOCIALACCOUNT_PROVIDERS = {
-    "github": {
-        "VERIFIED_EMAIL": True,
-        "EMAIL_AUTHENTICATION": True,
-        "AUTO_SIGNUP": True,
-        "APP": {
-            "client_id": env("GITHUB_CLIENT_ID"),
-            "secret": env("GITHUB_CLIENT_SECRET"),
+GITHUB_CLIENT_ID = env("GITHUB_CLIENT_ID")
+if GITHUB_CLIENT_ID != "":
+    SOCIALACCOUNT_PROVIDERS = {
+        "github": {
+            "VERIFIED_EMAIL": True,
+            "EMAIL_AUTHENTICATION": True,
+            "AUTO_SIGNUP": True,
+            "APP": {
+                "client_id": env("GITHUB_CLIENT_ID"),
+                "secret": env("GITHUB_CLIENT_SECRET"),
+            },
         },
-    },
-}
+    }
 
 ANYMAIL = {
     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
@@ -243,19 +266,25 @@ if DEBUG:
 else:
     EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 
+
+REDIS_URL = env("REDIS_URL")
 Q_CLUSTER = {
     "name": "seo_blog_bot-q",
     "timeout": 90,
     "retry": 120,
     "workers": 4,
     "max_attempts": 2,
-    "redis": env("REDIS_URL"),
-    "error_reporter": {
+}
+
+if REDIS_URL == "":
+    Q_CLUSTER["orm"] = "default"
+else:
+    Q_CLUSTER["redis"] = env("REDIS_URL")
+    Q_CLUSTER["error_reporter"] = {
         "sentry": {
             "dsn": SENTRY_DSN,
         },
-    },
-}
+    }
 
 LOGGING = {
     "version": 1,
@@ -302,21 +331,33 @@ LOGGING = {
     },
 }
 
-structlog.configure(
-    processors=[
-        structlog.contextvars.merge_contextvars,
-        structlog.stdlib.filter_by_level,
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        SentryProcessor(event_level=logging.ERROR),
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        logfire.StructlogProcessor(),
+structlog_processors = [
+    structlog.contextvars.merge_contextvars,
+    structlog.stdlib.filter_by_level,
+    structlog.processors.TimeStamper(fmt="iso"),
+    structlog.stdlib.add_logger_name,
+    structlog.stdlib.add_log_level,
+]
+
+if SENTRY_DSN:
+    structlog_processors.append(SentryProcessor(event_level=logging.ERROR))
+
+structlog_processors.append(structlog.stdlib.PositionalArgumentsFormatter())
+
+if LOGFIRE_TOKEN:
+    structlog_processors.append(logfire.StructlogProcessor())
+
+structlog_processors.extend(
+    [
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
         structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-    ],
+    ]
+)
+
+structlog.configure(
+    processors=structlog_processors,
     logger_factory=structlog.stdlib.LoggerFactory(),
     cache_logger_on_first_use=True,
 )
@@ -348,7 +389,6 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
 JINA_READER_API_KEY = env("JINA_READER_API_KEY")
 
-ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
 GEMINI_API_KEY = env("GEMINI_API_KEY")
 PERPLEXITY_API_KEY = env("PERPLEXITY_API_KEY")
 

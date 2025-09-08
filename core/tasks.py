@@ -153,6 +153,9 @@ def generate_blog_post_suggestions(project_id: int):
 
 
 def try_create_posthog_alias(profile_id: int, cookies: dict, source_function: str = None) -> str:
+    if not settings.POSTHOG_API_KEY:
+        return "PostHog API key not found."
+
     base_log_data = {
         "profile_id": profile_id,
         "cookies": cookies,
@@ -199,16 +202,17 @@ def track_event(
         logger.error("[TrackEvent] Profile not found.", **base_log_data)
         return f"Profile with id {profile_id} not found."
 
-    posthog.capture(
-        profile.user.email,
-        event=event_name,
-        properties={
-            "profile_id": profile.id,
-            "email": profile.user.email,
-            "current_state": profile.state,
-            **properties,
-        },
-    )
+    if settings.POSTHOG_API_KEY:
+        posthog.capture(
+            profile.user.email,
+            event=event_name,
+            properties={
+                "profile_id": profile.id,
+                "email": profile.user.email,
+                "current_state": profile.state,
+                **properties,
+            },
+        )
 
     logger.info("[TrackEvent] Tracked event", **base_log_data)
 

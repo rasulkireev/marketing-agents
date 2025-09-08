@@ -16,15 +16,22 @@ services:
       gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
     plan: free
     healthCheckPath: /
+
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11"
+        value: "3.11.6"
       - key: NODE_VERSION
         value: "18"
       - key: ENVIRONMENT
         value: prod
       - key: DEBUG
         value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db-minimal
+          property: connectionString
 
       # Auto-configure hosts
       - key: ALLOWED_HOSTS
@@ -32,37 +39,13 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com"
 
-      # Database connection
-      - key: DATABASE_URL
-        fromDatabase:
-          name: marketingagents-db-minimal
-          property: connectionString
+      # Social Auth
+      - key: GITHUB_CLIENT_ID
+        value: ""
+      - key: GITHUB_CLIENT_SECRET
+        value: ""
 
-      # Essential: Auto-generated secret key
-      - key: SECRET_KEY
-        generateValue: true
-
-      # Minimal Redis setup (using external Redis URL for simplicity)
-      - key: REDIS_URL
-        value: "redis://localhost:6379/0"
-
-      # Essential API Keys - MUST BE REPLACED
-      - key: ANTHROPIC_API_KEY
-        value: "REPLACE_WITH_YOUR_ANTHROPIC_API_KEY"
-
-      # Basic email setup - can be configured later
-      - key: MAILGUN_API_KEY
-        value: "dummy-key-replace-for-production"
-
-      # Basic S3 setup - can be configured later
-      - key: AWS_S3_ENDPOINT_URL
-        value: "https://s3.amazonaws.com"
-      - key: AWS_ACCESS_KEY_ID
-        value: "dummy-access-key"
-      - key: AWS_SECRET_ACCESS_KEY
-        value: "dummy-secret-key"
-
-      # Empty optional keys
+      # AI Keys
       - key: GEMINI_API_KEY
         value: ""
       - key: PERPLEXITY_API_KEY
@@ -71,24 +54,23 @@ services:
         value: ""
       - key: KEYWORDS_EVERYWHERE_API_KEY
         value: ""
-      - key: STRIPE_TEST_SECRET_KEY
+
+      # Basic email setup - can be configured later
+      - key: MAILGUN_API_KEY
         value: ""
-      - key: STRIPE_LIVE_SECRET_KEY
+
+      # Optional. If not specified, local FileSystemStorage is used for media files.
+      - key: AWS_S3_ENDPOINT_URL
         value: ""
-      - key: DJSTRIPE_WEBHOOK_SECRET
+      - key: AWS_ACCESS_KEY_ID
         value: ""
-      - key: GITHUB_CLIENT_ID
+      - key: AWS_SECRET_ACCESS_KEY
         value: ""
-      - key: GITHUB_CLIENT_SECRET
+
+      # Optional
+      - key: LOGFIRE_TOKEN
         value: ""
-      - key: SENTRY_DSN
-        value: ""
-      - key: POSTHOG_API_KEY
-        value: ""
-      - key: BUTTONDOWN_API_KEY
-        value: ""
-      - key: DJANGO_LOG_LEVEL
-        value: "INFO"
+
 
 databases:
   - name: marketingagents-db-minimal

@@ -15,8 +15,9 @@ class CoreConfig(AppConfig):
         import core.signals  # noqa
         import core.webhooks  # noqa
 
-        posthog.api_key = settings.POSTHOG_API_KEY
-        posthog.host = "https://us.i.posthog.com"
+        if settings.POSTHOG_API_KEY:
+            posthog.api_key = settings.POSTHOG_API_KEY
+            posthog.host = "https://us.i.posthog.com"
 
-        if settings.ENVIRONMENT == "dev":
-            posthog.debug = True
+            if settings.ENVIRONMENT == "dev":
+                posthog.debug = True

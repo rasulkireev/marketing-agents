@@ -71,3 +71,8 @@ The following notes are applicable only after you got the app running locally vi
 
 ### Notes
 - Don't forget to update the site domain and name on the Admin Panel.
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=rasulkireev/marketing-agents&type=Date)](https://www.star-history.com/#rasulkireev/marketing-agents&Date)
