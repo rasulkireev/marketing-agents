@@ -15,6 +15,24 @@ services:
     healthCheckPath: /
 
     envVars:
+      - fromGroup: app-env
+
+  - type: redis
+    name: marketingagents-redis
+    plan: free
+    ipAllowList: [] # only allow internal connections
+    maxmemoryPolicy: allkeys-lfu
+
+databases:
+  - name: marketingagents-db
+    databaseName: marketingagents
+    user: marketingagents_user
+    plan: free
+
+
+envVarGroups:
+  - name: app-env
+    envVars:
       - key: PYTHON_VERSION
         value: "3.11.6"
       - key: ENVIRONMENT
@@ -60,15 +78,3 @@ services:
         value: ""
       - key: KEYWORDS_EVERYWHERE_API_KEY
         value: ""
-
-  - type: redis
-    name: marketingagents-redis
-    plan: free
-    ipAllowList: [] # only allow internal connections
-    maxmemoryPolicy: allkeys-lfu
-
-databases:
-  - name: marketingagents-db
-    databaseName: marketingagents
-    user: marketingagents_user
-    plan: free
