@@ -26,6 +26,9 @@ logger = get_seo_blog_bot_logger(__name__)
 
 
 def add_email_to_buttondown(email, tag):
+    if not settings.BUTTONDOWN_API_KEY:
+        return "Buttondown API key not found."
+
     data = {
         "email_address": str(email),
         "metadata": {"source": tag},
