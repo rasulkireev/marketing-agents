@@ -1,6 +1,3 @@
-# Minimal Marketing Agents deployment - just the essentials to get started
-# For full features, use render.yaml instead
-
 services:
   - type: web
     name: marketingagents-web
