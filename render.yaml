@@ -19,13 +19,13 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: marketingagents-redis
           property: connectionString
 
 
-  - type: web
-    name: marketingagents-web-workers
+  - type: worker
+    name: marketingagents-workers
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py qcluster
@@ -44,7 +44,7 @@ services:
           property: connectionString
 
 
-  - type: redis
+  - type: keyvalue
     name: marketingagents-redis
     plan: free
     ipAllowList: [] # only allow internal connections
