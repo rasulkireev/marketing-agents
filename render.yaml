@@ -7,13 +7,21 @@ services:
       npm ci &&
       npm run build &&
       python manage.py collectstatic --noinput
-    startCommand: |
-      python manage.py migrate
-      python manage.py qcluster &
-      gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
+    preDeployCommand: python manage.py migrate
+    startCommand: gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
     plan: free
     healthCheckPath: /
 
+    envVars:
+      - fromGroup: app-env
+
+  - type: web
+    name: marketingagents-web-workers
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py qcluster
+    plan: free
+    healthCheckPath: /
     envVars:
       - fromGroup: app-env
 
