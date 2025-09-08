@@ -30,7 +30,6 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python manage.py qcluster
     plan: free
-    healthCheckPath: /
     envVars:
       - fromGroup: app-env
       - key: DATABASE_URL
@@ -47,7 +46,7 @@ services:
   - type: keyvalue
     name: marketingagents-redis
     plan: free
-    ipAllowList: [] # only allow internal connections
+    ipAllowList: []
     maxmemoryPolicy: allkeys-lfu
 
 databases:
