@@ -250,8 +250,10 @@ if GITHUB_CLIENT_ID != "":
         },
     }
 
+
+MAILGUN_API_KEY = env("MAILGUN_API_KEY", default="")
 ANYMAIL = {
-    "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
+    "MAILGUN_API_KEY": MAILGUN_API_KEY,
     "MAILGUN_SENDER_DOMAIN": "mg.marketingagents.net",
 }
 DEFAULT_FROM_EMAIL = "Rasul from Marketing Agents <rasul@marketingagents.net>"
@@ -265,7 +267,10 @@ if DEBUG:
     EMAIL_HOST_USER = ""
     EMAIL_HOST_PASSWORD = ""
 else:
-    EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+    if MAILGUN_API_KEY == "":
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    else:
+        EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 
 Q_CLUSTER = {
     "name": "seo_blog_bot-q",
