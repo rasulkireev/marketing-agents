@@ -912,7 +912,27 @@ class GeneratedBlogPost(BaseModel):
         return self.title.title
 
     def submit_blog_post_to_endpoint(self):
-        from core.utils import replace_placeholders
+        from core.utils import replace_placeholders, check_blog_post_before_sending
+
+        # Validate blog post before sending
+        try:
+            is_valid, error_message = check_blog_post_before_sending(self)
+            if not is_valid:
+                logger.warning(
+                    "[Submit Blog Post] Validation failed",
+                    project_id=self.project.id if self.project else None,
+                    blog_post_id=self.id,
+                    error=error_message,
+                )
+                return False
+        except ValueError as e:
+            logger.error(
+                "[Submit Blog Post] Validation error",
+                project_id=self.project.id if self.project else None,
+                blog_post_id=self.id,
+                error=str(e),
+            )
+            return False
 
         project = self.project
         settings = AutoSubmissionSetting.objects.filter(project=project).order_by("-id").first()

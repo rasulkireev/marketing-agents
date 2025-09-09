@@ -107,3 +107,38 @@ def save_keyword(keyword_text: str, project: Project):
 
     # Associate with project
     ProjectKeyword.objects.get_or_create(project=project, keyword=keyword_obj)
+
+
+def check_blog_post_before_sending(blog_post):
+    """
+    Validate a blog post before sending it to an endpoint.
+    
+    Args:
+        blog_post: The GeneratedBlogPost instance to validate
+        
+    Returns:
+        tuple: (is_valid: bool, error_message: str or None)
+        
+    Raises:
+        ValueError: If blog_post is None or missing required attributes
+    """
+    if not blog_post:
+        raise ValueError("Blog post cannot be None")
+    
+    if not hasattr(blog_post, "content"):
+        raise ValueError("Blog post must have a content attribute")
+    
+    # Check if content exists and has sufficient length
+    content = blog_post.content or ""
+    
+    if len(content.strip()) < 3000:
+        return False, f"Blog post content is too short ({len(content.strip())} characters). Minimum required: 3000 characters."
+    
+    # Future checks can be added here
+    # For example:
+    # - Check for required sections
+    # - Validate image presence
+    # - Check for proper formatting
+    # - Validate SEO requirements
+    
+    return True, None
