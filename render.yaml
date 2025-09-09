@@ -7,7 +7,7 @@ services:
       npm ci &&
       npm run build &&
       python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate && python manage.py qcluster & gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
+    startCommand: python manage.py migrate && gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
     plan: free
     healthCheckPath: /
 
@@ -28,7 +28,7 @@ services:
     runtime: python
     buildCommand: |
       pip install -r requirements.txt
-    startCommand: python manage.py qcluster
+    startCommand: python manage.py qcluster & python -m http.server 8000
     plan: free
     healthCheckPath: /
 
@@ -43,8 +43,6 @@ services:
           type: keyvalue
           name: marketingagents-redis
           property: connectionString
-      - key: PORT
-        value: 10001
 
   - type: keyvalue
     name: marketingagents-redis
