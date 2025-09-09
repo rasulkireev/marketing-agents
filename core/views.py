@@ -91,13 +91,14 @@ class AccountSignupView(SignupView):
         user = self.user
         profile = user.profile
 
-        async_task(
-            try_create_posthog_alias,
-            profile_id=profile.id,
-            cookies=self.request.COOKIES,
-            source_function="AccountSignupView - form_valid",
-            group="Create Posthog Alias",
-        )
+        if settings.POSTHOG_API_KEY:
+            async_task(
+                try_create_posthog_alias,
+                profile_id=profile.id,
+                cookies=self.request.COOKIES,
+                source_function="AccountSignupView - form_valid",
+                group="Create Posthog Alias",
+            )
 
         async_task(
             track_event,

@@ -3,8 +3,51 @@
 
 ## Deployment
 
-1. Rename .env.example to .env and update all the relevant variables.
-2. You should be able to run `docker compose up -d` on the server or your local machine.
+### Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rasulkireev/marketing-agents)
+
+The only required env vars are:
+- GEMINI_API_KEY
+- PERPLEXITY_API_KEY
+- JINA_READER_API_KEY
+- KEYWORDS_EVERYWHERE_API_KEY
+
+The rest are optional.
+
+**Note:** This should work out of the box with Render's free tier if you provide the AI API keys, but I can't guarantee it will work well. Render's free resources have significant limitations:
+
+- **Worker Service Limitation**: The worker service is not a dedicated worker type (those are only available on paid plans). For the free tier, I had to use a web service through a small hack, but it works fine. The only problem is that Django's queuing is not super memory efficient.
+
+- **Memory Constraints**: The free web service has a 512 MB RAM limit, which often causes failures. You will likely need to upgrade to at least the starter version for reliable operation.
+
+- **Upgrade Recommendation**: If you do upgrade to a paid plan, use the actual worker service instead of the web service workaround.
+
+**Reality Check**: For this to work reliably, you'll probably need the paid service. The free tier sort of works, but it's not super reliable, unfortunately.
+
+If you know of any other services like Render that allow deployment via a button and provide free Redis, Postgres, and web services, please let me know in the [Issues](https://github.com/rasulkireev/marketing-agents/issues) section. I can try to create deployments for those. Bear in mind that free services are usually not large enough to run this application reliably.
+
+### Custom Deployment on Caprover
+
+1. Create 4 apps on CapRover.
+  - `seo-blog-bot`
+  - `seo-blog-bot-workers`
+  - `seo-blog-bot-postgres`
+  - `seo-blog-bot-redis`
+
+2. Create a new CapRover app token for:
+   - `seo-blog-bot`
+   - `seo-blog-bot-workers`
+
+3. Add Environment Variables to those same apps from `.env`.
+
+4. Create a new GitHub Actions secret with the following:
+   - `CAPROVER_SERVER`
+   - `CAPROVER_APP_TOKEN`
+   - `WORKERS_APP_TOKEN`
+   - `REGISTRY_TOKEN`
+
+5. Then just push main branch.
 
 ## Local Development
 
@@ -45,27 +88,10 @@ The following notes are applicable only after you got the app running locally vi
   I haven't found a reliable way to programmatcialy set this template. When you have created your products in Stripe and synced them, update the template with the correct plan id.
 
 
-### Deployment
-
-1. Create 4 apps on CapRover.
-  - `seo-blog-bot`
-  - `seo-blog-bot-workers`
-  - `seo-blog-bot-postgres`
-  - `seo-blog-bot-redis`
-
-2. Create a new CapRover app token for:
-   - `seo-blog-bot`
-   - `seo-blog-bot-workers`
-
-3. Add Environment Variables to those same apps from `.env`.
-
-4. Create a new GitHub Actions secret with the following:
-   - `CAPROVER_SERVER`
-   - `CAPROVER_APP_TOKEN`
-   - `WORKERS_APP_TOKEN`
-   - `REGISTRY_TOKEN`
-
-5. Then just push main branch.
-
 ### Notes
 - Don't forget to update the site domain and name on the Admin Panel.
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=rasulkireev/marketing-agents&type=Date)](https://www.star-history.com/#rasulkireev/marketing-agents&Date)

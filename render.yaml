@@ -1,0 +1,98 @@
+services:
+  - type: web
+    name: marketingagents-web
+    runtime: python
+    buildCommand: |
+      pip install -r requirements.txt &&
+      npm ci &&
+      npm run build &&
+      python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate && gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120
+    plan: free
+    healthCheckPath: /
+
+    envVars:
+      - fromGroup: app-env
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: marketingagents-redis
+          property: connectionString
+
+  - type: web
+    name: marketingagents-workers
+    runtime: python
+    buildCommand: |
+      pip install -r requirements.txt
+    startCommand: python manage.py qcluster & python -m http.server $PORT
+    plan: free
+    healthCheckPath: /
+
+    envVars:
+      - fromGroup: app-env
+      - key: DATABASE_URL
+        fromDatabase:
+          name: marketingagents-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: marketingagents-redis
+          property: connectionString
+
+  - type: keyvalue
+    name: marketingagents-redis
+    plan: free
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lfu
+
+databases:
+  - name: marketingagents-db
+    databaseName: marketingagents
+    user: marketingagents_user
+    plan: free
+
+
+envVarGroups:
+  - name: app-env
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: ENVIRONMENT
+        value: prod
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+
+      # Auto-configure hosts
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+
+      # Optional. If not specified, local FileSystemStorage is used for media files.
+      - key: AWS_S3_ENDPOINT_URL
+        value: ""
+      - key: AWS_ACCESS_KEY_ID
+        value: ""
+      - key: AWS_SECRET_ACCESS_KEY
+        value: ""
+
+      # Basic email setup - can be configured later
+      - key: MAILGUN_API_KEY
+        value: ""
+
+      # AI Keys
+      - key: GEMINI_API_KEY
+        value: ""
+      - key: PERPLEXITY_API_KEY
+        value: ""
+      - key: JINA_READER_API_KEY
+        value: ""
+      - key: KEYWORDS_EVERYWHERE_API_KEY
+        value: ""
