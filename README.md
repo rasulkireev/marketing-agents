@@ -1,18 +1,13 @@
+- [Deployment](#deployment)
+  - [Render](#render)
+  - [Custom Deployment on Caprover](#custom-deployment-on-caprover)
+- [Local Development](#local-development)
+  - [Getting Started](#getting-started)
+  - [Next steps](#next-steps)
+  - [Stripe](#stripe)
+  - [Notes](#notes)
+- [Star History](#star-history)
 
-# Marketing Agents
-
-## Table of Contents
-- [Marketing Agents](#marketing-agents)
-  - [Table of Contents](#table-of-contents)
-  - [Deployment](#deployment)
-    - [Render](#render)
-    - [Custom Deployment on Caprover](#custom-deployment-on-caprover)
-  - [Local Development](#local-development)
-    - [Getting Started](#getting-started)
-    - [Next steps](#next-steps)
-    - [Stripe](#stripe)
-    - [Notes](#notes)
-  - [Star History](#star-history)
 
 ## Deployment
 
