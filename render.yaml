@@ -28,7 +28,7 @@ services:
     runtime: python
     buildCommand: |
       pip install -r requirements.txt
-    startCommand: python manage.py qcluster & python -m http.server 8000
+    startCommand: python manage.py qcluster & python -m http.server $PORT
     plan: free
     healthCheckPath: /
 
