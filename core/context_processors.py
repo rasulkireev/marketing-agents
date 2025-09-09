@@ -1,3 +1,4 @@
+from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 
 
@@ -13,3 +14,21 @@ def pro_subscription_status(request):
 
 def posthog_api_key(request):
     return {"posthog_api_key": settings.POSTHOG_API_KEY}
+
+
+def github_social_auth_available(request):
+    """
+    Checks if GitHub social authentication is available.
+    Returns True if GitHub is configured in SOCIALACCOUNT_PROVIDERS and
+    a corresponding SocialApp exists in the database.
+    """
+    # Check if GitHub is configured in settings
+    if "github" not in getattr(settings, "SOCIALACCOUNT_PROVIDERS", {}):
+        return {"github_auth_available": False}
+
+    # Check if SocialApp exists in database
+    try:
+        SocialApp.objects.get(provider="github")
+        return {"github_auth_available": True}
+    except SocialApp.DoesNotExist:
+        return {"github_auth_available": False}

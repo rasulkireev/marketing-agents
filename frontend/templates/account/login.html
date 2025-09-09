@@ -57,6 +57,7 @@
                 </div>
             </form>
 
+            {% if github_auth_available %}
             <div>
               <div class="relative mt-10">
                 <div class="flex absolute inset-0 items-center" aria-hidden="true">
@@ -79,6 +80,7 @@
                 </form>
               </div>
             </div>
+            {% endif %}
         </div>
     </div>
 {% endblock content %}

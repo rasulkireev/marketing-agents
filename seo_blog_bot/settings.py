@@ -105,6 +105,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.pro_subscription_status",
                 "core.context_processors.posthog_api_key",
+                "core.context_processors.github_social_auth_available",
             ],
         },
     },
@@ -235,17 +236,17 @@ ACCOUNT_FORMS = {
 if ENVIRONMENT != "dev":
     ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 
+SOCIALACCOUNT_PROVIDERS = {}
+
 GITHUB_CLIENT_ID = env("GITHUB_CLIENT_ID", default="")
 if GITHUB_CLIENT_ID != "":
-    SOCIALACCOUNT_PROVIDERS = {
-        "github": {
-            "VERIFIED_EMAIL": True,
-            "EMAIL_AUTHENTICATION": True,
-            "AUTO_SIGNUP": True,
-            "APP": {
-                "client_id": env("GITHUB_CLIENT_ID"),
-                "secret": env("GITHUB_CLIENT_SECRET"),
-            },
+    SOCIALACCOUNT_PROVIDERS["github"] = {
+        "VERIFIED_EMAIL": True,
+        "EMAIL_AUTHENTICATION": True,
+        "AUTO_SIGNUP": True,
+        "APP": {
+            "client_id": env("GITHUB_CLIENT_ID"),
+            "secret": env("GITHUB_CLIENT_SECRET"),
         },
     }
 
