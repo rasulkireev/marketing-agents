@@ -105,7 +105,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.pro_subscription_status",
                 "core.context_processors.posthog_api_key",
-                "core.context_processors.github_social_auth_available",
+                "core.context_processors.available_social_providers",
             ],
         },
     },

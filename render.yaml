@@ -38,7 +38,7 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: marketingagents-redis
           property: connectionString
 

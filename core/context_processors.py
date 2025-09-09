@@ -16,19 +16,26 @@ def posthog_api_key(request):
     return {"posthog_api_key": settings.POSTHOG_API_KEY}
 
 
-def github_social_auth_available(request):
+def available_social_providers(request):
     """
-    Checks if GitHub social authentication is available.
-    Returns True if GitHub is configured in SOCIALACCOUNT_PROVIDERS and
-    a corresponding SocialApp exists in the database.
+    Checks which social authentication providers are available.
+    Returns a list of provider names that are both configured in
+    SOCIALACCOUNT_PROVIDERS and have corresponding SocialApp entries in the database.
     """
-    # Check if GitHub is configured in settings
-    if "github" not in getattr(settings, "SOCIALACCOUNT_PROVIDERS", {}):
-        return {"github_auth_available": False}
+    available_providers = []
 
-    # Check if SocialApp exists in database
-    try:
-        SocialApp.objects.get(provider="github")
-        return {"github_auth_available": True}
-    except SocialApp.DoesNotExist:
-        return {"github_auth_available": False}
+    # Get configured providers from settings
+    configured_providers = getattr(settings, "SOCIALACCOUNT_PROVIDERS", {})
+
+    # Check each configured provider for a corresponding SocialApp
+    for provider_name in configured_providers.keys():
+        try:
+            SocialApp.objects.get(provider=provider_name)
+            available_providers.append(provider_name)
+        except SocialApp.DoesNotExist:
+            continue
+
+    return {
+        "available_social_providers": available_providers,
+        "has_social_providers": len(available_providers) > 0,
+    }
