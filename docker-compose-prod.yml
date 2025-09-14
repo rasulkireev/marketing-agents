@@ -1,3 +1,5 @@
+# docker-compose -f docker-compose.yml -p "marketing-agents" up --detach --remove-orphans || true
+
 services:
   db:
     image: rasulkireev/custom-postgres:17
@@ -26,17 +28,12 @@ services:
   backend:
     image: ghcr.io/rasulkireev/marketing-agents:latest
     working_dir: /app
-    command: sh -c "python manage.py migrate && gunicorn seo_blog_bot.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --reload"
-    volumes:
-      - .:/app
     ports:
-      - "8000:8000"
+      - "8000:80"
     depends_on:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
-      frontend:
         condition: service_started
     env_file:
       - .env
@@ -44,9 +41,6 @@ services:
   workers:
     image: ghcr.io/rasulkireev/marketing-agents-workers:latest
     working_dir: /app
-    command: python manage.py qcluster
-    volumes:
-      - .:/app
     depends_on:
       db:
         condition: service_healthy
