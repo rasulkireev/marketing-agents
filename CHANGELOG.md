@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.5] - 2025-09-08
 **Added**
+- Instruction on how to deploy via docker compose and pure python/django.
+
+**Changed**
+- The name of the app to 'TuxSSEO'.
+
+
+## [0.0.5] - 2025-09-08
+**Added**
 - Automatic super-simple deployment via Render
 
 
