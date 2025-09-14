@@ -32,7 +32,7 @@ jobs:
           context: .
           push: true
           file: deployment/Dockerfile.server
-          tags: ghcr.io/${{ github.repository }}
+          tags: ghcr.io/${{ github.repository.lower() }}
 
       - name: Deploy to CapRover
         uses: caprover/deploy-from-github@main
@@ -40,4 +40,4 @@ jobs:
             server: ${{ secrets.CAPROVER_SERVER }}
             app: ${{ env.PROJECT_NAME }}
             token: ${{ secrets.APP_TOKEN }}
-            image: ghcr.io/${{ github.repository }}
+            image: ghcr.io/${{ github.repository.lower() }}
