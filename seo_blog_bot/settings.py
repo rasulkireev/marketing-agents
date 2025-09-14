@@ -49,7 +49,10 @@ SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 
 SITE_URL = env("SITE_URL")
-ALLOWED_HOSTS = [SITE_URL]
+
+# Remove the port from the SITE_URL and the https prefix (mostly for dev)
+ALLOWED_HOSTS = [SITE_URL.replace("http://", "").replace("https://", "").split(":")[0]]
+
 CSRF_TRUSTED_ORIGINS = [SITE_URL]
 
 INSTALLED_APPS = [
@@ -121,7 +124,7 @@ WSGI_APPLICATION = "seo_blog_bot.wsgi.application"
 POSTGRES_DB = env("POSTGRES_DB")
 POSTGRES_USER = env("POSTGRES_USER")
 POSTGRES_PASSWORD = env("POSTGRES_PASSWORD")
-POSTGRES_HOST = env("POSTGRES_HOST", default="localhost")
+POSTGRES_HOST = env("POSTGRES_HOST")
 POSTGRES_PORT = env("POSTGRES_PORT", default="5432")
 
 DATABASES = {
