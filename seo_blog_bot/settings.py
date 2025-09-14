@@ -271,10 +271,10 @@ if GITHUB_CLIENT_ID != "":
 MAILGUN_API_KEY = env("MAILGUN_API_KEY", default="")
 ANYMAIL = {
     "MAILGUN_API_KEY": MAILGUN_API_KEY,
-    "MAILGUN_SENDER_DOMAIN": "mg.marketingagents.net",
+    "MAILGUN_SENDER_DOMAIN": "mg.tuxseo.com",
 }
-DEFAULT_FROM_EMAIL = "Rasul from Marketing Agents <rasul@marketingagents.net>"
-SERVER_EMAIL = "Marketing Agents Errors <error@marketingagents.net>"
+DEFAULT_FROM_EMAIL = "Rasul from TuxSEO <rasul@tuxseo.com>"
+SERVER_EMAIL = "TuxSEO Errors <error@tuxseo.com>"
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

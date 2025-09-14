@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: marketingagents-web
+    name: tuxseo-web
     runtime: python
     buildCommand: |
       pip install -r requirements.txt &&
@@ -15,42 +15,42 @@ services:
       - fromGroup: app-env
       - key: POSTGRES_DB
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: database
       - key: POSTGRES_USER
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: user
       - key: POSTGRES_PASSWORD
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: password
       - key: POSTGRES_HOST
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: host
       - key: POSTGRES_PORT
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: port
       - key: REDIS_HOST
         fromService:
           type: keyvalue
-          name: marketingagents-redis
+          name: tuxseo-redis
           property: host
       - key: REDIS_PORT
         fromService:
           type: keyvalue
-          name: marketingagents-redis
+          name: tuxseo-redis
           property: port
       - key: REDIS_PASSWORD
         fromService:
           type: keyvalue
-          name: marketingagents-redis
+          name: tuxseo-redis
           property: password
 
   - type: web
-    name: marketingagents-workers
+    name: tuxseo-workers
     runtime: python
     buildCommand: |
       pip install -r requirements.txt
@@ -62,50 +62,50 @@ services:
       - fromGroup: app-env
       - key: POSTGRES_DB
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: database
       - key: POSTGRES_USER
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: user
       - key: POSTGRES_PASSWORD
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: password
       - key: POSTGRES_HOST
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: host
       - key: POSTGRES_PORT
         fromDatabase:
-          name: marketingagents-db
+          name: tuxseo-db
           property: port
       - key: REDIS_HOST
         fromService:
           type: keyvalue
-          name: marketingagents-redis
+          name: tuxseo-redis
           property: host
       - key: REDIS_PORT
         fromService:
           type: keyvalue
-          name: marketingagents-redis
+          name: tuxseo-redis
           property: port
       - key: REDIS_PASSWORD
         fromService:
           type: keyvalue
-          name: marketingagents-redis
+          name: tuxseo-redis
           property: password
 
   - type: keyvalue
-    name: marketingagents-redis
+    name: tuxseo-redis
     plan: free
     ipAllowList: []
     maxmemoryPolicy: allkeys-lfu
 
 databases:
-  - name: marketingagents-db
-    databaseName: marketingagents
-    user: marketingagents_user
+  - name: tuxseo-db
+    databaseName: tuxseo
+    user: tuxseo_user
     plan: free
 
 

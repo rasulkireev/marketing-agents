@@ -1,5 +1,7 @@
 - [Deployment](#deployment)
   - [Render](#render)
+  - [Docker Compose](#docker-compose)
+  - [Pure Python / Django deployment](#pure-python--django-deployment)
   - [Custom Deployment on Caprover](#custom-deployment-on-caprover)
 - [Local Development](#local-development)
   - [Getting Started](#getting-started)
@@ -13,7 +15,7 @@
 
 ### Render
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rasulkireev/marketing-agents)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rasulkireev/tuxseo)
 
 The only required env vars are:
 - GEMINI_API_KEY
@@ -35,7 +37,34 @@ The rest are optional.
 
 **Reality Check**: The website functionality should be usable on the free tier - you'll only pay for API costs. Manual operations work fine, but automated background tasks (especially when adding multiple projects) may occasionally fail due to memory constraints. It's not super comfortable for heavy automated use, but perfectly functional for manual content generation.
 
-If you know of any other services like Render that allow deployment via a button and provide free Redis, Postgres, and web services, please let me know in the [Issues](https://github.com/rasulkireev/marketing-agents/issues) section. I can try to create deployments for those. Bear in mind that free services are usually not large enough to run this application reliably.
+If you know of any other services like Render that allow deployment via a button and provide free Redis, Postgres, and web services, please let me know in the [Issues](https://github.com/rasulkireev/tuxseo/issues) section. I can try to create deployments for those. Bear in mind that free services are usually not large enough to run this application reliably.
+
+
+### Docker Compose
+
+This should also be pretty streamlined. On your server you can create a folder in which you will have 2 files:
+
+1. `.env`
+Copy the contents of `.env.example` into `.env` and update all the necessary values.
+
+2. docker-compose.yml
+Cope the contents of `docker-compose-prod.yml` into `docker-compose.yml` and run the suggested command from the top of the `docker-compose-prod.yml` file.
+
+How you are going to expose the backend container is up to you. I usually do it via Nginx Reverse Proxy with `http://tuxseo-backend-1:80` UPSTREAM_HTTP_ADDRESS.
+
+
+### Pure Python / Django deployment
+
+Not recommended due to not being too safe for production and not being tested by me.
+
+If you are not into Docker or Render and just wanto to run this via regular commands you will need to have 5 processes running:
+- `python manage.py collectstatic --noinput && python manage.py migrate && gunicorn ${PROJECT_NAME}.wsgi:application --bind 0.0.0.0:80 --workers 3 --threads 2`
+- `python manage.py qcluster`
+- `npm install && npm run start`
+- `postgres`
+- `redis`
+
+You'd still need to make sure .env has correct values.
 
 ### Custom Deployment on Caprover
 
@@ -58,6 +87,8 @@ If you know of any other services like Render that allow deployment via a button
    - `REGISTRY_TOKEN`
 
 5. Then just push main branch.
+
+6. Github Workflow in this repo should take care of the rest.
 
 ## Local Development
 
@@ -104,4 +135,4 @@ The following notes are applicable only after you got the app running locally vi
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=rasulkireev/marketing-agents&type=Date)](https://www.star-history.com/#rasulkireev/marketing-agents&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=rasulkireev/tuxseo&type=Date)](https://www.star-history.com/#rasulkireev/tuxseo&Date)

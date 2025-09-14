@@ -1,4 +1,4 @@
-# docker-compose -f docker-compose.yml -p "marketing-agents" up --detach --remove-orphans || true
+# docker-compose -f docker-compose.yml -p "tuxseo" up --detach --remove-orphans || true
 
 services:
   db:
@@ -26,7 +26,7 @@ services:
       - .env
 
   backend:
-    image: ghcr.io/rasulkireev/marketing-agents:latest
+    image: ghcr.io/rasulkireev/tuxseo:latest
     working_dir: /app
     ports:
       - "8000:80"
@@ -39,7 +39,7 @@ services:
       - .env
 
   workers:
-    image: ghcr.io/rasulkireev/marketing-agents-workers:latest
+    image: ghcr.io/rasulkireev/tuxseo-workers:latest
     working_dir: /app
     depends_on:
       db:
