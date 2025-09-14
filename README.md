@@ -1,3 +1,12 @@
+<p align="center"><img src="https://minio.cr.lvtd.dev/api/v1/buckets/seo-blog-bot-prod/objects/download?preview=true&prefix=bG9nbzUxMi5wbmc=&version_id=null" width="230" alt="TuxSEO Logo"></p>
+
+<div align="center">
+<p style="font-size:18px;">TuxSEO</p>
+<b>Automated Blog Content Creation for Founders Who Hate Writing</b>
+</div>
+
+***
+
 - [Deployment](#deployment)
   - [Render](#render)
   - [Docker Compose](#docker-compose)
