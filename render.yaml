@@ -13,15 +13,41 @@ services:
 
     envVars:
       - fromGroup: app-env
-      - key: DATABASE_URL
+      - key: POSTGRES_DB
         fromDatabase:
           name: marketingagents-db
-          property: connectionString
-      - key: REDIS_URL
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: marketingagents-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: marketingagents-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: marketingagents-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: marketingagents-db
+          property: port
+      - key: REDIS_HOST
         fromService:
           type: keyvalue
           name: marketingagents-redis
-          property: connectionString
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: keyvalue
+          name: marketingagents-redis
+          property: port
+      - key: REDIS_PASSWORD
+        fromService:
+          type: keyvalue
+          name: marketingagents-redis
+          property: password
 
   - type: web
     name: marketingagents-workers
@@ -34,15 +60,41 @@ services:
 
     envVars:
       - fromGroup: app-env
-      - key: DATABASE_URL
+      - key: POSTGRES_DB
         fromDatabase:
           name: marketingagents-db
-          property: connectionString
-      - key: REDIS_URL
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: marketingagents-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: marketingagents-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: marketingagents-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: marketingagents-db
+          property: port
+      - key: REDIS_HOST
         fromService:
           type: keyvalue
           name: marketingagents-redis
-          property: connectionString
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: keyvalue
+          name: marketingagents-redis
+          property: port
+      - key: REDIS_PASSWORD
+        fromService:
+          type: keyvalue
+          name: marketingagents-redis
+          property: password
 
   - type: keyvalue
     name: marketingagents-redis
@@ -69,12 +121,6 @@ envVarGroups:
       - key: SECRET_KEY
         generateValue: true
 
-      # Auto-configure hosts
-      - key: ALLOWED_HOSTS
-        value: ".onrender.com,localhost,127.0.0.1"
-      - key: CSRF_TRUSTED_ORIGINS
-        value: "https://*.onrender.com"
-
       # Optional. If not specified, local FileSystemStorage is used for media files.
       - key: AWS_S3_ENDPOINT_URL
         value: ""
@@ -86,6 +132,10 @@ envVarGroups:
       # Basic email setup - can be configured later
       - key: MAILGUN_API_KEY
         value: ""
+
+      # Redis Database Number
+      - key: REDIS_DB
+        value: "0"
 
       # AI Keys
       - key: GEMINI_API_KEY
