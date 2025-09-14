@@ -1,11 +1,25 @@
-<p align="center"><img src="https://minio.cr.lvtd.dev/api/v1/buckets/seo-blog-bot-prod/objects/download?preview=true&prefix=bG9nbzUxMi5wbmc=&version_id=null" width="230" alt="TuxSEO Logo"></p>
+<p align="center"><img src="https://minio-api.cr.lvtd.dev/seo-blog-bot-prod/logo512.png" width="230" alt="TuxSEO Logo"></p>
 
 <div align="center">
-<p style="font-size:18px;">TuxSEO</p>
+
+<img src="https://minio-api.cr.lvtd.dev/seo-blog-bot-prod/logo-large.png" width="230" alt="TuxSEO Name">
+
 <b>Automated Blog Content Creation for Founders Who Hate Writing</b>
 </div>
 
 ***
+
+## Overview
+
+- TuxSEO learns about your business analyzes the market which lets you...
+- Generate content ideas for you business blog to drive traffic from searches.
+- Stop wasting time and money on research and writing, let TuxSEO do it for you.
+- TuxSEO is open-source, self-hostable. Always.
+- Run it privately on [your computer](#deployment) or try it on our [cloud app](https://tuxseo.com).
+
+***
+
+## TOC
 
 - [Deployment](#deployment)
   - [Render](#render)
