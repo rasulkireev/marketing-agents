@@ -48,8 +48,12 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS")
+SITE_URL = env("SITE_URL")
+
+# Remove the port from the SITE_URL and the https prefix (mostly for dev)
+ALLOWED_HOSTS = [SITE_URL.replace("http://", "").replace("https://", "").split(":")[0]]
+
+CSRF_TRUSTED_ORIGINS = [SITE_URL]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -117,8 +121,21 @@ WSGI_APPLICATION = "seo_blog_bot.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+POSTGRES_DB = env("POSTGRES_DB")
+POSTGRES_USER = env("POSTGRES_USER")
+POSTGRES_PASSWORD = env("POSTGRES_PASSWORD")
+POSTGRES_HOST = env("POSTGRES_HOST")
+POSTGRES_PORT = env("POSTGRES_PORT", default="5432")
+
 DATABASES = {
-    "default": env.db_url(),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": POSTGRES_DB,
+        "USER": POSTGRES_USER,
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": POSTGRES_HOST,
+        "PORT": POSTGRES_PORT,
+    }
 }
 
 # Password validation
@@ -272,13 +289,23 @@ else:
     else:
         EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 
+REDIS_HOST = env("REDIS_HOST", default="localhost")
+REDIS_PORT = env("REDIS_PORT", default="6379")
+REDIS_PASSWORD = env("REDIS_PASSWORD", default="")
+REDIS_DB = env("REDIS_DB", default="0")
+
 Q_CLUSTER = {
     "name": "seo_blog_bot-q",
     "timeout": 90,
     "retry": 120,
     "workers": 4,
     "max_attempts": 2,
-    "redis": env("REDIS_URL"),
+    "redis": {
+        "host": REDIS_HOST,
+        "port": int(REDIS_PORT),
+        "db": int(REDIS_DB),
+        "password": REDIS_PASSWORD if REDIS_PASSWORD else None,
+    },
     "error_reporter": {
         "sentry": {
             "dsn": SENTRY_DSN,
