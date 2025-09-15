@@ -1,8 +1,8 @@
-<p align="center"><img src="https://minio-api.cr.lvtd.dev/seo-blog-bot-prod/logo512.png" width="230" alt="TuxSEO Logo"></p>
+<p align="center"><img src="https://minio-api.cr.lvtd.dev/tuxseo-prod/logo512.png" width="230" alt="TuxSEO Logo"></p>
 
 <div align="center">
 
-<img src="https://minio-api.cr.lvtd.dev/seo-blog-bot-prod/logo-large.png" width="230" alt="TuxSEO Name">
+<img src="https://minio-api.cr.lvtd.dev/tuxseo-prod/logo-large.png" width="230" alt="TuxSEO Name">
 
 <b>Automated Blog Content Creation for Founders Who Hate Writing</b>
 </div>
@@ -21,16 +21,14 @@
 
 ## TOC
 
+- [Overview](#overview)
+- [TOC](#toc)
 - [Deployment](#deployment)
   - [Render](#render)
   - [Docker Compose](#docker-compose)
   - [Pure Python / Django deployment](#pure-python--django-deployment)
   - [Custom Deployment on Caprover](#custom-deployment-on-caprover)
 - [Local Development](#local-development)
-  - [Getting Started](#getting-started)
-  - [Next steps](#next-steps)
-  - [Stripe](#stripe)
-  - [Notes](#notes)
 - [Star History](#star-history)
 
 
@@ -94,14 +92,14 @@ You'd still need to make sure .env has correct values.
 ### Custom Deployment on Caprover
 
 1. Create 4 apps on CapRover.
-  - `seo-blog-bot`
-  - `seo-blog-bot-workers`
-  - `seo-blog-bot-postgres`
-  - `seo-blog-bot-redis`
+  - `tuxseo`
+  - `tuxseo-workers`
+  - `tuxseo-postgres`
+  - `tuxseo-redis`
 
 2. Create a new CapRover app token for:
-   - `seo-blog-bot`
-   - `seo-blog-bot-workers`
+   - `tuxseo`
+   - `tuxseo-workers`
 
 3. Add Environment Variables to those same apps from `.env`.
 
@@ -116,8 +114,6 @@ You'd still need to make sure .env has correct values.
 6. Github Workflow in this repo should take care of the rest.
 
 ## Local Development
-
-### Getting Started
 
 All the information on how to run, develop and update your new application can be found in the documentation.
 
