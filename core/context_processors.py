@@ -23,25 +23,25 @@ def posthog_api_key(request):
 def available_social_providers(request):
     """
     Checks which social authentication providers are available.
-    Returns a list of provider names that are both configured in
-    SOCIALACCOUNT_PROVIDERS and have corresponding SocialApp entries in the database.
+    Returns a list of provider names from either SOCIALACCOUNT_PROVIDERS settings
+    or SocialApp database entries, as django-allauth supports both configuration methods.
     """
-    available_providers = []
+    available_providers = set()
 
-    # Get configured providers from settings
     configured_providers = getattr(settings, "SOCIALACCOUNT_PROVIDERS", {})
 
-    logger.debug("Configured providers", configured_providers=configured_providers)
+    available_providers.update(configured_providers.keys())
 
-    # Check each configured provider for a corresponding SocialApp
-    for provider_name in configured_providers.keys():
-        try:
-            SocialApp.objects.get(provider=provider_name)
-            available_providers.append(provider_name)
-        except SocialApp.DoesNotExist:
-            continue
+    try:
+        social_apps = SocialApp.objects.all()
+        for social_app in social_apps:
+            available_providers.add(social_app.provider)
+    except Exception as e:
+        logger.warning("Error retrieving SocialApp entries", error=str(e))
+
+    available_providers_list = sorted(list(available_providers))
 
     return {
-        "available_social_providers": available_providers,
-        "has_social_providers": len(available_providers) > 0,
+        "available_social_providers": available_providers_list,
+        "has_social_providers": len(available_providers_list) > 0,
     }
