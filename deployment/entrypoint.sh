@@ -8,7 +8,7 @@ else
     server=false
 fi
 
-export PROJECT_NAME=seo_blog_bot
+export PROJECT_NAME=tuxseo
 export DJANGO_SETTINGS_MODULE="${PROJECT_NAME}.settings"
 
 while getopts ":sw" option; do

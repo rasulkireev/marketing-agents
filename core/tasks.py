@@ -20,9 +20,9 @@ from core.models import (
     ProjectPage,
 )
 from core.utils import save_keyword
-from seo_blog_bot.utils import get_seo_blog_bot_logger
+from tuxseo.utils import get_tuxseo_logger
 
-logger = get_seo_blog_bot_logger(__name__)
+logger = get_tuxseo_logger(__name__)
 
 
 def add_email_to_buttondown(email, tag):
@@ -33,7 +33,7 @@ def add_email_to_buttondown(email, tag):
         "email_address": str(email),
         "metadata": {"source": tag},
         "tags": [tag],
-        "referrer_url": "https://seo_blog_bot.app",
+        "referrer_url": "https://tuxseo.app",
         "subscriber_type": "regular",
     }
 
