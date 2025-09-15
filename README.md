@@ -11,7 +11,7 @@
 
 ## Overview
 
-- TuxSEO learns about your business analyzes the market which lets you...
+- TuxSEO learns about your business, analyzes the market which lets you...
 - Generate content ideas for you business blog to drive traffic from searches.
 - Stop wasting time and money on research and writing, let TuxSEO do it for you.
 - TuxSEO is open-source, self-hostable. Always.
