@@ -68,10 +68,12 @@ If you know of any other services like Render that allow deployment via a button
 This should also be pretty streamlined. On your server you can create a folder in which you will have 2 files:
 
 1. `.env`
+
 Copy the contents of `.env.example` into `.env` and update all the necessary values.
 
-2. docker-compose.yml
-Cope the contents of `docker-compose-prod.yml` into `docker-compose.yml` and run the suggested command from the top of the `docker-compose-prod.yml` file.
+2. `docker-compose.yml`
+
+Copy the contents of `docker-compose-prod.yml` into `docker-compose.yml` and run the suggested command from the top of the `docker-compose-prod.yml` file.
 
 How you are going to expose the backend container is up to you. I usually do it via Nginx Reverse Proxy with `http://tuxseo-backend-1:80` UPSTREAM_HTTP_ADDRESS.
 
