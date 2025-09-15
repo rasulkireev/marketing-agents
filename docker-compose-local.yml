@@ -4,24 +4,26 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U tuxseo"]
       interval: 5s
       timeout: 5s
       retries: 5
-    env_file:
-      - .env
+    environment:
+      - POSTGRES_USER=tuxseo
+      - POSTGRES_PASSWORD=tuxseo
+      - POSTGRES_DB=tuxseo
 
   redis:
     image: redis:7-alpine
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass tuxseo
     ports:
-      - "6378:${REDIS_PORT}"
+      - "6378:6379"
     volumes:
       - redis_data:/data
-    env_file:
-      - .env
+    environment:
+      - REDIS_PASSWORD=tuxseo
 
   backend:
     build:
