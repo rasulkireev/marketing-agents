@@ -119,6 +119,7 @@ All the information on how to run, develop and update your new application can b
 
 1. Update the name of the `.env.example` to `.env` and update relevant variables.
 2. Run `make serve`
+3. Run `make restart-worker` just in case, it sometimes has troubles connecting to REDIS on first deployment.
 
 ## Star History
 

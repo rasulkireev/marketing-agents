@@ -6,7 +6,7 @@ on:
         - main
 
 env:
-  PROJECT_NAME: seo-blog-bot
+  PROJECT_NAME: tuxseo
   IMAGE_NAME: tuxseo
 
 jobs:

@@ -1,6 +1,10 @@
 from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 
+from tuxseo.utils import get_tuxseo_logger
+
+logger = get_tuxseo_logger(__name__)
+
 
 def pro_subscription_status(request):
     """
@@ -26,6 +30,8 @@ def available_social_providers(request):
 
     # Get configured providers from settings
     configured_providers = getattr(settings, "SOCIALACCOUNT_PROVIDERS", {})
+
+    logger.debug("Configured providers", configured_providers=configured_providers)
 
     # Check each configured provider for a corresponding SocialApp
     for provider_name in configured_providers.keys():
