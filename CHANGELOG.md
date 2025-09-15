@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [0.0.6] - 2025-09-15
+**Fixed**
+- Github login not showing up.
+
+
+## [0.0.6] - 2025-09-15
 **Added**
 - Instruction on how to deploy via docker compose and pure python/django.
 
